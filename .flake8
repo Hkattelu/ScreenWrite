@@ -1,0 +1,63 @@
+[flake8]
+# Flake8 configuration for vid-orchestrator project
+
+# Maximum line length
+max-line-length = 100
+
+# Exclude patterns
+exclude =
+    .git,
+    __pycache__,
+    .venv,
+    venv,
+    env,
+    .eggs,
+    *.egg,
+    build,
+    dist,
+    .tox,
+    .kiro
+
+# Ignore specific error codes
+ignore =
+    # E203: whitespace before ':' (conflicts with Black)
+    E203,
+    # W503: line break before binary operator (conflicts with Black)
+    W503,
+    # E501: line too long (handled by max-line-length)
+    # Allow longer lines in some cases
+    
+# Per-file ignores
+per-file-ignores =
+    # Allow unused imports in __init__.py files
+    __init__.py:F401,F403
+    # Allow star imports in __init__.py
+    __init__.py:F405
+
+# Enable additional checks
+select =
+    # Pyflakes errors (F)
+    F,
+    # PEP 8 errors (E)
+    E,
+    # PEP 8 warnings (W)
+    W,
+    # McCabe complexity (C)
+    C,
+    # Naming conventions (N)
+    N
+
+# Complexity settings
+max-complexity = 15
+
+# Show source code for errors
+show-source = True
+
+# Show the error's position in the line
+show-pep8 = True
+
+# Count errors
+count = True
+
+# Print total number of errors
+statistics = True
