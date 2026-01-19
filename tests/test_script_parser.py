@@ -5,6 +5,7 @@ Tests the markdown parsing, beat generation, and query generation functionality.
 """
 
 import unittest
+import shutil
 import tempfile
 from pathlib import Path
 
@@ -24,7 +25,6 @@ class TestScriptParser(unittest.TestCase):
     
     def tearDown(self):
         """Clean up test files."""
-        import shutil
         if self.temp_path.exists():
             shutil.rmtree(self.temp_path)
     

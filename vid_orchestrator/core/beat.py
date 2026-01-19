@@ -58,7 +58,11 @@ class Beat:
         )
     
     def __repr__(self) -> str:
-        """Return a detailed string representation of the beat."""
+        """Return a detailed string representation of the beat.
+        
+        Returns:
+            Formatted string representation of the Beat object
+        """
         return (
             f"Beat(id='{self.id}', duration={self.duration:.1f}s, "
             f"words={len(self.text.split())}, text='{self.text[:50]}...')"

@@ -206,7 +206,7 @@ class YouTubeClient(AssetFetcher):
             
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 # Search for videos
-                search_results = ydl.extract_info(query, download=False)
+                search_results = ydl.extract_info(f"ytsearch1:{query}", download=False)
                 
                 if not search_results or 'entries' not in search_results:
                     return None
@@ -258,9 +258,17 @@ class YouTubeClient(AssetFetcher):
             
             output_template = str(self.output_dir / f"youtube_{safe_query}_%(id)s.%(ext)s")
             
+            # Determine format based on ffmpeg availability
+            # If ffmpeg is missing, we must avoid formats that need merging (video+audio)
+            if self._ffmpeg_available:
+                format_selector = 'best[height<=720]/best'
+            else:
+                # Select best format that has both video and audio (pre-merged)
+                format_selector = 'best[height<=720][vcodec!=none][acodec!=none]/best[vcodec!=none][acodec!=none]/best'
+
             # Configure yt-dlp for download
             ydl_opts = {
-                'format': 'best[height<=720]/best',  # Prefer 720p or lower for speed
+                'format': format_selector,
                 'outtmpl': output_template,
                 'quiet': True,
                 'no_warnings': True,

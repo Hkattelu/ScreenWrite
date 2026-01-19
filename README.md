@@ -6,6 +6,8 @@ A Python CLI tool that automates video timeline creation from markdown scripts w
 
 vid-orchestrator converts markdown video scripts into DaVinci Resolve-compatible FCPXML timelines with automatically fetched B-roll footage from YouTube and Pexels. It parses your script, breaks it into timed segments (beats), generates search queries, fetches relevant video clips, and outputs a complete timeline ready for editing.
 
+> **Note:** FFmpeg is a mandatory dependency for asset fetching. It is required for downloading specific video segments and merging audio/video streams.
+
 ## Features
 
 - **Markdown Script Parsing** - Write your video script in plain markdown with natural language
@@ -21,8 +23,8 @@ vid-orchestrator converts markdown video scripts into DaVinci Resolve-compatible
 ### Prerequisites
 
 - Python 3.7+
-- ffmpeg (for video trimming)
-- yt-dlp (for YouTube downloads)
+- **FFmpeg (Mandatory)** - Required for video downloading, trimming, and stream merging
+- **yt-dlp** - Required for YouTube downloads
 - Optional: DaVinci Resolve (for direct import)
 
 ### Install Dependencies

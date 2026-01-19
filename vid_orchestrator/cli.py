@@ -17,8 +17,10 @@ from .utils.error_handling import (
     validate_markdown_file,
     ensure_output_directory,
     validate_api_key,
+    check_dependency,
     InputValidationError,
     OutputError,
+    DependencyError,
     log_error_with_context
 )
 
@@ -110,49 +112,59 @@ def validate_arguments(args: argparse.Namespace) -> None:
         args: Parsed command-line arguments
         
     Raises:
-        SystemExit: If validation fails with clear error message
+        InputValidationError: If validation fails
+        OutputError: If output validation fails
     """
     # Validate script file using comprehensive validation
     try:
         validation_result = validate_markdown_file(args.script)
         
         if not validation_result.is_valid:
-            print(f"Error: {validation_result.error_message}", file=sys.stderr)
-            print(f"Please check the script file and try again.", file=sys.stderr)
-            sys.exit(1)
+            raise InputValidationError(validation_result.error_message)
         
         # Print any warnings from script validation
         for warning in validation_result.warnings:
             print(f"Warning: {warning}", file=sys.stderr)
             
+    except InputValidationError:
+        raise
     except Exception as e:
-        print(f"Error: Failed to validate script file: {e}", file=sys.stderr)
-        sys.exit(1)
+        raise InputValidationError(f"Failed to validate script file: {e}")
     
     # Validate and ensure output directory
     try:
         output_result = ensure_output_directory(args.output)
         
         if not output_result.is_valid:
-            print(f"Error: {output_result.error_message}", file=sys.stderr)
-            sys.exit(1)
+            raise OutputError(output_result.error_message)
         
         # Print any warnings from output validation
         for warning in output_result.warnings:
             print(f"Info: {warning}", file=sys.stderr)
             
+    except OutputError:
+        raise
     except Exception as e:
-        print(f"Error: Failed to validate output path: {e}", file=sys.stderr)
-        sys.exit(1)
+        raise OutputError(f"Failed to validate output path: {e}")
+    
+    # Check for FFmpeg dependency (now mandatory for fetching)
+    if not args.no_fetch:
+        ffmpeg_result = check_dependency('ffmpeg', 'FFmpeg')
+        if not ffmpeg_result.is_valid:
+            raise DependencyError(
+                f"FFmpeg is required for asset fetching. Details: {ffmpeg_result.error_message}\n"
+                f"Please install FFmpeg and ensure it is in your system PATH, or use --no-fetch."
+            )
     
     # Validate API key configuration
     pexels_key = args.pexels_key or os.getenv('PEXELS_API_KEY')
     if pexels_key and not args.disable_pexels:
         validation_result = validate_api_key(pexels_key, 'Pexels')
         if not validation_result.is_valid:
-            print(f"Error: {validation_result.error_message}", file=sys.stderr)
-            print(f"Please provide a valid Pexels API key or use --disable-pexels", file=sys.stderr)
-            sys.exit(1)
+            raise InputValidationError(
+                f"Invalid Pexels API key: {validation_result.error_message}\n"
+                f"Please provide a valid key or use --disable-pexels"
+            )
         
         # Print any API key warnings
         for warning in validation_result.warnings:
@@ -167,16 +179,18 @@ def validate_arguments(args: argparse.Namespace) -> None:
     
     # Check for conflicting options
     if args.disable_youtube and args.disable_pexels and not args.no_fetch:
-        print(f"Error: Cannot disable both YouTube and Pexels fetching without --no-fetch", file=sys.stderr)
-        print(f"Either enable at least one fetcher or use --no-fetch for empty timeline.", file=sys.stderr)
-        sys.exit(1)
+        raise InputValidationError(
+            "Cannot disable both YouTube and Pexels fetching without --no-fetch. "
+            "Either enable at least one fetcher or use --no-fetch for empty timeline."
+        )
     
     # Validate output directory if specified
     if args.output_dir:
         output_dir_path = Path(args.output_dir)
         if output_dir_path.exists() and not output_dir_path.is_dir():
-            print(f"Error: Output directory path exists but is not a directory: {args.output_dir}", file=sys.stderr)
-            sys.exit(1)
+            raise OutputError(
+                f"Output directory path exists but is not a directory: {args.output_dir}"
+            )
 
 
 def setup_logging(verbose: bool) -> None:
@@ -300,6 +314,10 @@ def main() -> int:
     
     except OutputError as e:
         print(f"\nOutput error: {e}", file=sys.stderr)
+        return 1
+    
+    except DependencyError as e:
+        print(f"\nDependency error: {e}", file=sys.stderr)
         return 1
     
     except Exception as e:

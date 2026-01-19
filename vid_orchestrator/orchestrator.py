@@ -202,7 +202,7 @@ class VideoOrchestrator:
             error_msg = f"Workflow failed: {e}"
             logger.error(error_msg)
             workflow_result['errors'].append(error_msg)
-            raise
+            raise RuntimeError(error_msg) from e
         
         return workflow_result
     
