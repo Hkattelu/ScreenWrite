@@ -5,6 +5,7 @@ Tests FCPXML 1.8 generation, validation, and structure.
 """
 
 import unittest
+import shutil
 import tempfile
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -47,7 +48,6 @@ class TestXMLGenerator(unittest.TestCase):
     
     def tearDown(self):
         """Clean up test files."""
-        import shutil
         if self.temp_path.exists():
             shutil.rmtree(self.temp_path)
     

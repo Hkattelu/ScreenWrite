@@ -15,6 +15,7 @@ from .core.beat import Beat
 from .parsing.script_parser import ScriptParser
 from .fetchers.asset_orchestrator import AssetOrchestrator
 from .generators.xml_generator import XMLGenerator
+from .config import MIN_FCPXML_FILE_SIZE
 from .utils.error_handling import (
     ensure_output_directory,
     InputValidationError,
@@ -362,7 +363,7 @@ class VideoOrchestrator:
             file_size = os.path.getsize(fcpxml_path)
             if file_size == 0:
                 raise OutputError(f"FCPXML file is empty: {fcpxml_path}")
-            elif file_size < 100:  # Less than 100 bytes is suspicious
+            elif file_size < MIN_FCPXML_FILE_SIZE:
                 logger.warning(f"FCPXML file is very small ({file_size} bytes): {fcpxml_path}")
             
             # Log timeline summary

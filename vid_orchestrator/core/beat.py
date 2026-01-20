@@ -8,6 +8,8 @@ and metadata for B-roll asset fetching.
 from dataclasses import dataclass, field
 from typing import Dict, Optional
 
+from ..config import WORDS_PER_SECOND, BEAT_TEXT_TRUNCATION_LENGTH
+
 
 @dataclass
 class Beat:
@@ -34,9 +36,9 @@ class Beat:
     asset_paths: Dict[str, Optional[str]] = field(default_factory=dict)
     
     def __post_init__(self):
-        """Auto-calculate duration from word count using 2.5 words per second heuristic."""
+        """Auto-calculate duration from word count using the configured words per second heuristic."""
         word_count = len(self.text.split())
-        self.duration = word_count / 2.5
+        self.duration = word_count / WORDS_PER_SECOND
         self.validate()
     
     def validate(self):
@@ -65,5 +67,5 @@ class Beat:
         """
         return (
             f"Beat(id='{self.id}', duration={self.duration:.1f}s, "
-            f"words={len(self.text.split())}, text='{self.text[:50]}...')"
+            f"words={len(self.text.split())}, text='{self.text[:BEAT_TEXT_TRUNCATION_LENGTH]}...')"
         )

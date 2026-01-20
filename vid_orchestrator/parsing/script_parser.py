@@ -16,6 +16,13 @@ import logging
 from pathlib import Path
 from typing import List, Optional, Tuple
 from ..core.beat import Beat
+from ..config import (
+    TARGET_MIN_DURATION,
+    TARGET_MAX_DURATION,
+    WORDS_PER_SECOND,
+    SUPPORTED_ENCODINGS,
+    BEAT_TEXT_TRUNCATION_LENGTH,
+)
 from ..utils.error_handling import (
     validate_markdown_file,
     InputValidationError,
@@ -35,9 +42,9 @@ class ScriptParser:
     
     def __init__(self):
         """Initialize the script parser."""
-        self.target_min_duration = 5.0  # Minimum beat duration in seconds
-        self.target_max_duration = 10.0  # Maximum beat duration in seconds
-        self.words_per_second = 2.5  # Heuristic for duration calculation
+        self.target_min_duration = TARGET_MIN_DURATION
+        self.target_max_duration = TARGET_MAX_DURATION
+        self.words_per_second = WORDS_PER_SECOND
     
     def parse(self, file_path: str) -> List[Beat]:
         """
@@ -75,9 +82,8 @@ class ScriptParser:
             
             # Try UTF-8 first, then fallback encodings
             content = None
-            encodings = ['utf-8', 'latin-1', 'cp1252', 'iso-8859-1']
             
-            for encoding in encodings:
+            for encoding in SUPPORTED_ENCODINGS:
                 try:
                     with open(script_path, 'r', encoding=encoding) as f:
                         content = f.read().strip()

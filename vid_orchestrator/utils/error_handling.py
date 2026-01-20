@@ -13,6 +13,13 @@ from pathlib import Path
 from typing import Optional, Callable, Any, Dict, List, Union
 from dataclasses import dataclass
 
+from ..config import (
+    MAX_FILE_SIZE,
+    VALID_MARKDOWN_EXTENSIONS,
+    MIN_API_KEY_LENGTH,
+    MAX_API_KEY_LENGTH,
+    LOW_DISK_SPACE_THRESHOLD,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -79,11 +86,10 @@ def validate_markdown_file(file_path: str) -> ValidationResult:
         
         # Check file extension
         script_path = Path(file_path)
-        valid_extensions = ['.md', '.markdown', '.txt']
-        if script_path.suffix.lower() not in valid_extensions:
+        if script_path.suffix.lower() not in VALID_MARKDOWN_EXTENSIONS:
             result.warnings.append(
                 f"File '{file_path}' does not have a markdown extension "
-                f"({', '.join(valid_extensions)}). Proceeding anyway."
+                f"({', '.join(VALID_MARKDOWN_EXTENSIONS)}). Proceeding anyway."
             )
         
         # Check file size (reasonable limits)
@@ -92,7 +98,7 @@ def validate_markdown_file(file_path: str) -> ValidationResult:
             result.error_message = f"Script file is empty: {file_path}"
             return result
         
-        if file_size > 10 * 1024 * 1024:  # 10MB limit
+        if file_size > MAX_FILE_SIZE:
             result.warnings.append(
                 f"Script file is very large ({file_size / 1024 / 1024:.1f}MB). "
                 "Processing may be slow."
@@ -215,11 +221,11 @@ def ensure_output_directory(output_path: str) -> ValidationResult:
                 return result
             result.warnings.append(f"Will overwrite existing file: {output_path}")
         
-        # Check available disk space (warn if less than 100MB)
+        # Check available disk space
         try:
             import shutil
             free_space = shutil.disk_usage(output_dir).free
-            if free_space < 100 * 1024 * 1024:  # 100MB
+            if free_space < LOW_DISK_SPACE_THRESHOLD:
                 result.warnings.append(
                     f"Low disk space in output directory: {free_space / 1024 / 1024:.1f}MB available"
                 )
@@ -369,12 +375,12 @@ def validate_api_key(api_key: str, service_name: str) -> ValidationResult:
     # Basic format validation
     api_key = api_key.strip()
     
-    if len(api_key) < 10:
-        result.error_message = f"{service_name} API key appears too short (less than 10 characters)"
+    if len(api_key) < MIN_API_KEY_LENGTH:
+        result.error_message = f"{service_name} API key appears too short (less than {MIN_API_KEY_LENGTH} characters)"
         return result
     
-    if len(api_key) > 200:
-        result.error_message = f"{service_name} API key appears too long (more than 200 characters)"
+    if len(api_key) > MAX_API_KEY_LENGTH:
+        result.error_message = f"{service_name} API key appears too long (more than {MAX_API_KEY_LENGTH} characters)"
         return result
     
     # Check for common issues

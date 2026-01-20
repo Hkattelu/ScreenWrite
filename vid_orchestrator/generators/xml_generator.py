@@ -12,6 +12,12 @@ from pathlib import Path
 import os
 
 from ..core.beat import Beat
+from ..config import (
+    DEFAULT_FRAMERATE,
+    DEFAULT_VIDEO_WIDTH,
+    DEFAULT_VIDEO_HEIGHT,
+    MIN_FCPXML_FILE_SIZE,
+)
 
 
 class XMLGenerator:
@@ -25,7 +31,7 @@ class XMLGenerator:
     - Valid FCPXML 1.8 structure
     """
     
-    def __init__(self, framerate: int = 30):
+    def __init__(self, framerate: int = DEFAULT_FRAMERATE):
         """
         Initialize the XML generator.
         
@@ -111,13 +117,13 @@ class XMLGenerator:
         return resources
     
     def _create_format(self) -> ET.Element:
-        """Create format resource for 1920x1080 30fps."""
+        """Create format resource for the timeline."""
         format_elem = ET.Element("format")
         format_elem.set("id", self.format_id)
-        format_elem.set("name", "FFVideoFormat1080p30")
-        format_elem.set("frameDuration", "100/3000s")  # 30fps
-        format_elem.set("width", "1920")
-        format_elem.set("height", "1080")
+        format_elem.set("name", f"FFVideoFormat{DEFAULT_VIDEO_HEIGHT}p{self.framerate}")
+        format_elem.set("frameDuration", f"{100000//self.framerate}/3000000s")
+        format_elem.set("width", str(DEFAULT_VIDEO_WIDTH))
+        format_elem.set("height", str(DEFAULT_VIDEO_HEIGHT))
         format_elem.set("colorSpace", "1-1-1 (Rec. 709)")
         return format_elem
     
