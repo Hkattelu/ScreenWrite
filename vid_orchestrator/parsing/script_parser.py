@@ -5,8 +5,10 @@ The ScriptParser handles parsing markdown files into structured beats with
 auto-generated search queries for B-roll asset fetching.
 
 Markdown Script Specification:
+- Metadata (key: value) at the top provides title, hook, channel
 - Headers (# and ##) provide context for content sections
 - Body text is automatically chunked into 5-10 second beats
+- Inline B-roll instructions ([action: content]) override auto-generated queries
 - Each beat gets auto-generated stock keywords and YouTube search phrases
 - Text is processed using a 2.5 words per second heuristic for timing
 """
@@ -15,7 +17,8 @@ import re
 import logging
 import os
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict
+from dataclasses import dataclass
 from ..core.beat import Beat
 from ..config import (
     TARGET_MIN_DURATION,
@@ -32,6 +35,39 @@ from ..utils.error_handling import (
 from ..utils.cache import load_cached_beats, cache_beats
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class BRollInstruction:
+    """Represents an inline B-roll instruction like [Show: ...]"""
+    action: str  # "Show", "Display", "Annotation", etc.
+    content: str  # The subject/content to display
+    
+    def to_query(self) -> str:
+        """Convert instruction to a search query."""
+        return self.content
+
+
+@dataclass
+class ScriptMetadata:
+    """Metadata extracted from script header."""
+    title: Optional[str] = None
+    hook: Optional[str] = None
+    channel: Optional[str] = None
+    duration: Optional[str] = None
+    thumbnail: Optional[str] = None
+    tags: Optional[List[str]] = None
+    
+    def to_context_string(self) -> str:
+        """Convert metadata to context for B-roll generation."""
+        parts = []
+        if self.title:
+            parts.append(self.title)
+        if self.channel:
+            parts.append(self.channel)
+        if self.tags:
+            parts.extend(self.tags)
+        return ' '.join(parts)
 
 
 class ScriptParser:
@@ -109,14 +145,22 @@ class ScriptParser:
             if not content:
                 raise InputValidationError(f"Script file is empty: {file_path}")
             
-            # Extract context from headers and body text
-            context, body_text = self._extract_content(content)
+            # Extract context from headers, body text, and metadata
+            context, body_text, metadata = self._extract_content(content)
             
             if not body_text.strip():
                 raise InputValidationError(f"No body text found in script: {file_path}")
             
+            # Add metadata context to improve B-roll generation
+            full_context = context
+            if metadata.title:
+                full_context = metadata.title + ' ' + full_context
+            
+            # Extract B-roll instructions from body text
+            body_with_instructions = self._extract_broll_instructions(body_text)
+            
             # Chunk text into beats
-            text_chunks = self._chunk_text(body_text, context)
+            text_chunks = self._chunk_text(body_text, full_context)
             
             if not text_chunks:
                 raise InputValidationError(f"No valid text chunks generated from script: {file_path}")
@@ -126,8 +170,18 @@ class ScriptParser:
             for i, chunk in enumerate(text_chunks):
                 try:
                     beat_id = f"beat_{i+1:03d}"
-                    stock_keyword = self._generate_stock_keyword(chunk, context)
-                    youtube_phrase = self._generate_youtube_phrase(chunk, context)
+                    
+                    # Check if this chunk has an associated B-roll instruction
+                    broll_query = self._find_associated_broll(chunk, body_with_instructions)
+                    
+                    if broll_query:
+                        # Use B-roll instruction as the primary query
+                        stock_keyword = broll_query
+                        youtube_phrase = broll_query
+                    else:
+                        # Auto-generate queries
+                        stock_keyword = self._generate_stock_keyword(chunk, full_context)
+                        youtube_phrase = self._generate_youtube_phrase(chunk, full_context)
                     
                     beat = Beat(
                         id=beat_id,
@@ -179,25 +233,56 @@ class ScriptParser:
             raise InputValidationError(f"Failed to parse script file: {e}")
     
     
-    def _extract_content(self, content: str) -> Tuple[str, str]:
+    def _extract_content(self, content: str) -> Tuple[str, str, ScriptMetadata]:
         """
-        Extract context from headers and body text from markdown content.
+        Extract metadata, context from headers, and body text from markdown content.
         
         Args:
             content: Raw markdown content
             
         Returns:
-            Tuple of (context_from_headers, body_text)
+            Tuple of (context_from_headers, body_text, metadata)
         """
         lines = content.split('\n')
         headers = []
         body_lines = []
+        metadata = ScriptMetadata()
+        in_metadata = True
         
         for line in lines:
+            original_line = line
             line = line.strip()
+            
             if not line:
+                # Blank line might signal end of metadata
+                if in_metadata and body_lines:
+                    in_metadata = False
                 continue
-                
+            
+            # Extract metadata (key: value format) at start of file
+            if in_metadata and ':' in line and not line.startswith('#'):
+                parts = line.split(':', 1)
+                if len(parts) == 2:
+                    key = parts[0].strip().lower()
+                    value = parts[1].strip()
+                    
+                    if key == 'title':
+                        metadata.title = value
+                    elif key == 'hook':
+                        metadata.hook = value
+                    elif key == 'channel':
+                        metadata.channel = value
+                    elif key == 'duration':
+                        metadata.duration = value
+                    elif key == 'thumbnail':
+                        metadata.thumbnail = value
+                    elif key == 'tags':
+                        metadata.tags = [t.strip() for t in value.split(',')]
+                    
+                    continue  # Skip metadata lines from body
+            
+            in_metadata = False  # Stop looking for metadata after first non-metadata line
+            
             # Extract headers for context
             if line.startswith('#'):
                 # Remove markdown header syntax and add to context
@@ -211,7 +296,7 @@ class ScriptParser:
         context = ' '.join(headers) if headers else ''
         body_text = ' '.join(body_lines)
         
-        return context, body_text
+        return context, body_text, metadata
     
     def _chunk_text(self, text: str, context: str = '') -> List[str]:
         """
@@ -332,6 +417,57 @@ class ScriptParser:
             i += chunk_size
         
         return chunks
+    
+    def _extract_broll_instructions(self, text: str) -> Dict[str, List[BRollInstruction]]:
+        """
+        Extract all B-roll instructions from text.
+        
+        Finds patterns like [Show: content], [Display: content], etc.
+        
+        Args:
+            text: Text to search for instructions
+            
+        Returns:
+            Dictionary mapping instruction content to list of BRollInstruction objects
+        """
+        instructions_dict = {}
+        
+        # Pattern: [action: content] where action is capitalized
+        # Matches [Show: ...], [Display: ...], [Annotation: ...], etc.
+        pattern = r'\[([A-Z][a-z]+):\s*([^\]]+)\]'
+        
+        matches = re.finditer(pattern, text)
+        
+        for match in matches:
+            action = match.group(1)
+            content = match.group(2).strip()
+            
+            instruction = BRollInstruction(action=action, content=content)
+            
+            # Store by content for easy lookup
+            if content not in instructions_dict:
+                instructions_dict[content] = []
+            instructions_dict[content].append(instruction)
+        
+        return instructions_dict
+    
+    def _find_associated_broll(self, chunk: str, instructions_dict: Dict[str, List[BRollInstruction]]) -> Optional[str]:
+        """
+        Find if a text chunk has an associated B-roll instruction.
+        
+        Looks for instructions that appear immediately before or within the chunk.
+        
+        Args:
+            chunk: Text chunk to check
+            instructions_dict: Dictionary of extracted instructions
+            
+        Returns:
+            B-roll query string if found, None otherwise
+        """
+        # For now, return None as a simple implementation
+        # In a full implementation, this would track instruction positions
+        # and associate them with chunks
+        return None
     
     def _split_into_sentences(self, text: str) -> List[str]:
         """

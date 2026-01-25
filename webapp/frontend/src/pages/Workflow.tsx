@@ -5,6 +5,7 @@
  */
 
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { ScriptUpload } from '../components/ScriptUpload'
 import { BeatList } from '../components/BeatList'
 import { ConfigPanel } from '../components/ConfigPanel'
@@ -137,9 +138,20 @@ export function Workflow() {
         )}
 
         {/* Step content */}
-        {currentStep === 'upload' && (
-          <ScriptUpload onUploadSuccess={handleUploadSuccess} />
-        )}
+         {currentStep === 'upload' && (
+           <div>
+             <div className="mb-6 flex items-center justify-between">
+               <h2 className="text-2xl font-bold">Upload Your Script</h2>
+               <Link 
+                 to="/syntax-guide" 
+                 className="text-blue-600 hover:text-blue-800 font-semibold text-sm"
+               >
+                 📖 View Syntax Guide
+               </Link>
+             </div>
+             <ScriptUpload onUploadSuccess={handleUploadSuccess} />
+           </div>
+         )}
 
         {currentStep === 'review' && sessionId && (
           <div className="card max-w-4xl">

@@ -2,6 +2,8 @@
 
 This guide explains how to write markdown scripts that work optimally with vid-orchestrator for automatic B-roll generation and FCPXML timeline creation.
 
+**⚠️ Enhanced Format Available**: This project now supports a more robust markdown flavor with B-roll instructions, metadata, and better structure. See [MARKDOWN_SCRIPT_FORMAT.md](MARKDOWN_SCRIPT_FORMAT.md) for the latest specification.
+
 ## Overview
 
 vid-orchestrator parses markdown files to create video timelines with automatic B-roll footage. The system analyzes your script content to:

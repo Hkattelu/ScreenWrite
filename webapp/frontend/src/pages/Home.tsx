@@ -113,25 +113,40 @@ export function Home() {
           <p className="text-gray-700 mb-6">Your markdown script should look like this:</p>
 
           <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-sm mb-6">
-{`## Introduction
-This is the opening scene. We need
-footage of a sunrise over mountains
-with a peaceful vibe.
+        {`## Introduction
+        This is the opening scene. We need
+        footage of a sunrise over mountains
+        with a peaceful vibe.
+        
+        ## Main Section  
+        Show people working in a modern office.
+        Quick cuts of collaboration, computers,
+        and teamwork.
 
-## Main Section  
-Show people working in a modern office.
-Quick cuts of collaboration, computers,
-and teamwork.
-
-## Conclusion
-End with an inspiring shot of the team
-looking out over the city at sunset.`}
+        ## Conclusion
+        End with an inspiring shot of the team
+        looking out over the city at sunset.`}
           </pre>
 
-          <p className="text-gray-600">
+          <p className="text-gray-600 mb-6">
             Each section starts with a header (##) and is followed by a description. The system automatically calculates
             durations and generates search keywords for B-roll.
           </p>
+
+          <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded mb-6">
+            <p className="text-gray-900 font-semibold mb-2">💡 Best Practice: 13-25 words per beat</p>
+            <p className="text-gray-700 text-sm">
+              This creates optimal 5-10 second video segments. Include specific tools, actions, and visual elements 
+              for better B-roll matching.
+            </p>
+          </div>
+
+          <Link 
+            to="/syntax-guide" 
+            className="text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center gap-2"
+          >
+            View Complete Syntax Guide →
+          </Link>
         </div>
       </div>
     </div>
