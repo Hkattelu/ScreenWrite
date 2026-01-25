@@ -220,6 +220,8 @@ python -m vid_orchestrator script.md -o timeline.fcpxml --disable-pexels
 ### Environment Variables
 
 - `PEXELS_API_KEY` - Your Pexels API key for stock footage access
+- `VID_ORCHESTRATOR_CACHE_BEATS` - Set to `1` to enable beat caching (faster re-runs with same script)
+- `VID_ORCHESTRATOR_SKIP_FAILED_BEATS` - Set to `1` to continue processing even if some assets fail to fetch
 
 ### Getting API Keys
 

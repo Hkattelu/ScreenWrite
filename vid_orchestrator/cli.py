@@ -12,7 +12,10 @@ import sys
 from pathlib import Path
 from typing import Optional
 
+from . import __version__
 from .orchestrator import VideoOrchestrator
+from .utils.logging import setup_logging, get_logger
+from .utils.script_linter import lint_script_file, print_lint_issues
 from .utils.error_handling import (
     validate_markdown_file,
     ensure_output_directory,
@@ -99,6 +102,24 @@ Examples:
         '--disable-pexels',
         action='store_true',
         help='Disable Pexels asset fetching'
+    )
+    
+    parser.add_argument(
+        '--version',
+        action='version',
+        version=f'%(prog)s {__version__}'
+    )
+    
+    parser.add_argument(
+        '--dry-run',
+        action='store_true',
+        help='Parse and generate FCPXML without fetching assets (implies --no-fetch)'
+    )
+    
+    parser.add_argument(
+        '--skip-failed-beats',
+        action='store_true',
+        help='Continue processing if some beats fail to fetch assets (graceful degradation)'
     )
     
     return parser
@@ -193,26 +214,7 @@ def validate_arguments(args: argparse.Namespace) -> None:
             )
 
 
-def setup_logging(verbose: bool) -> None:
-    """
-    Configure logging based on verbosity level.
-    
-    Args:
-        verbose: Enable debug logging if True
-    """
-    level = logging.DEBUG if verbose else logging.INFO
-    
-    # Configure root logger
-    logging.basicConfig(
-        level=level,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        force=True  # Override any existing configuration
-    )
-    
-    # Reduce noise from external libraries in non-verbose mode
-    if not verbose:
-        logging.getLogger('urllib3').setLevel(logging.WARNING)
-        logging.getLogger('requests').setLevel(logging.WARNING)
+
 
 
 def print_workflow_summary(result: dict) -> None:
@@ -230,9 +232,29 @@ def print_workflow_summary(result: dict) -> None:
     print(f"Script: {result['script_path']}")
     print(f"Output: {result['output_path']}")
     print(f"Beats processed: {result['beats_count']}")
+    
+    # Display timeline duration if available
+    if 'total_duration' in result and result['total_duration']:
+        minutes, seconds = divmod(int(result['total_duration']), 60)
+        if minutes > 0:
+            duration_str = f"{minutes}m {seconds}s"
+        else:
+            duration_str = f"{seconds}s"
+        print(f"Timeline duration: {duration_str}")
+    
     print(f"Assets fetched: {result['assets_fetched']}")
     print(f"FCPXML generated: {'Yes' if result['fcpxml_generated'] else 'No'}")
     print(f"Resolve imported: {'Yes' if result['resolve_imported'] else 'No'}")
+    
+    # Print detailed metrics
+    if result['beats_count'] > 0:
+        success_rate = (result['assets_fetched'] / result['beats_count']) * 100 if result['beats_count'] > 0 else 0
+        print(f"\nAsset Fetching Metrics:")
+        print(f"  Total beats: {result['beats_count']}")
+        print(f"  Assets fetched: {result['assets_fetched']}")
+        print(f"  Success rate: {success_rate:.1f}%")
+        if result['beats_count'] != result['assets_fetched']:
+            print(f"  Skipped/failed: {result['beats_count'] - result['assets_fetched']}")
     
     # Print warnings
     if result['warnings']:
@@ -261,11 +283,24 @@ def main() -> int:
         parser = create_parser()
         args = parser.parse_args()
         
+        # Handle dry-run mode
+        if args.dry_run:
+            args.no_fetch = True
+            print("Dry-run mode: skipping asset fetching", file=sys.stderr)
+        
         # Set up logging
         setup_logging(args.verbose)
         
         # Validate arguments with comprehensive error handling
         validate_arguments(args)
+        
+        # Lint script for quality issues (verbose mode)
+        if args.verbose:
+            try:
+                lint_issues = lint_script_file(args.script)
+                print_lint_issues(lint_issues, verbose=True)
+            except Exception as e:
+                logger.debug(f"Script linting failed: {e}")
         
         # Get API key from argument or environment
         pexels_key = args.pexels_key or os.getenv('PEXELS_API_KEY')
@@ -277,17 +312,27 @@ def main() -> int:
             'youtube_enabled': not args.disable_youtube,
             'pexels_enabled': not args.disable_pexels and bool(pexels_key),
             'resolve_enabled': args.resolve,
+            'skip_failed_beats': args.skip_failed_beats,
             'verbose': args.verbose
         }
+        
+        # Get logger for status messages
+        logger = logging.getLogger(__name__)
         
         print(f"Starting vid-orchestrator...")
         print(f"Script: {args.script}")
         print(f"Output: {args.output}")
         
         if args.verbose:
-            print(f"Configuration:")
-            for key, value in orchestrator_config.items():
-                print(f"  {key}: {value}")
+            logger.debug("Configuration:")
+            logger.debug(f"  Script: {args.script}")
+            logger.debug(f"  Output: {args.output}")
+            logger.debug(f"  Output directory: {args.output_dir or 'default'}")
+            logger.debug(f"  YouTube enabled: {orchestrator_config['youtube_enabled']}")
+            logger.debug(f"  Pexels enabled: {orchestrator_config['pexels_enabled']}")
+            logger.debug(f"  Resolve integration: {orchestrator_config['resolve_enabled']}")
+            logger.debug(f"  Pexels API key: {'*' * 5 + pexels_key[-5:] if pexels_key else 'Not set'}")
+            logger.debug(f"  FFmpeg: Available")
         
         # Create and run orchestrator
         with VideoOrchestrator(**orchestrator_config) as orchestrator:

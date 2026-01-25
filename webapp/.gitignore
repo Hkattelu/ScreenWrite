@@ -1,0 +1,69 @@
+# Backend
+venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+.env
+.env.local
+*.log
+
+# Frontend
+node_modules/
+dist/
+build/
+.next/
+out/
+*.tsbuildinfo
+.env.local
+.env.*.local
+.cache/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.sublime-project
+.sublime-workspace
+
+# OS
+Thumbs.db
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Session data
+sessions/
+uploads/
+output/
+*.fcpxml
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.nyc_output
+coverage/

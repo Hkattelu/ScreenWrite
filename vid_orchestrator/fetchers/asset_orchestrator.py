@@ -14,6 +14,12 @@ from .base_fetcher import AssetFetcher
 from .youtube_client import YouTubeClient
 from .pexels_client import PexelsClient
 
+try:
+    from rich.progress import track
+    HAS_RICH = True
+except ImportError:
+    HAS_RICH = False
+
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +76,8 @@ class AssetOrchestrator:
     def fetch_asset(self, 
                    youtube_query: str, 
                    stock_query: str, 
-                   duration: float) -> Optional[str]:
+                   duration: float,
+                   beat_id: str = None) -> Optional[str]:
         """
         Fetch an asset using the fallback strategy.
         
@@ -82,16 +89,19 @@ class AssetOrchestrator:
             youtube_query: Search query for YouTube
             stock_query: Search query for stock footage (Pexels)
             duration: Target duration in seconds
+            beat_id: Optional beat identifier for logging context
             
         Returns:
             Path to downloaded video file, or None if all fetchers failed
         """
+        beat_context = f"[{beat_id}] " if beat_id else ""
+        
         if not self.fetchers:
-            logger.error("No asset fetchers available")
+            logger.error(f"{beat_context}No asset fetchers available")
             return None
         
         if not youtube_query.strip() and not stock_query.strip():
-            logger.error("Both YouTube and stock queries are empty")
+            logger.error(f"{beat_context}Both YouTube and stock queries are empty")
             return None
         
         # Track which fetchers we've tried for logging
@@ -103,21 +113,21 @@ class AssetOrchestrator:
                 if isinstance(fetcher, YouTubeClient):
                     query = youtube_query
                     if not query.strip():
-                        logger.debug(f"Skipping {fetcher.name} - empty YouTube query")
+                        logger.debug(f"{beat_context}Skipping {fetcher.name} - empty YouTube query")
                         continue
                 elif isinstance(fetcher, PexelsClient):
                     query = stock_query
                     if not query.strip():
-                        logger.debug(f"Skipping {fetcher.name} - empty stock query")
+                        logger.debug(f"{beat_context}Skipping {fetcher.name} - empty stock query")
                         continue
                 else:
                     # For any other fetcher types, try YouTube query first, then stock
                     query = youtube_query if youtube_query.strip() else stock_query
                     if not query.strip():
-                        logger.debug(f"Skipping {fetcher.name} - no valid query")
+                        logger.debug(f"{beat_context}Skipping {fetcher.name} - no valid query")
                         continue
                 
-                logger.info(f"Attempting to fetch asset using {fetcher.name} with query: '{query}'")
+                logger.info(f"{beat_context}Attempting to fetch asset using {fetcher.name} with query: '{query}'")
                 attempted_fetchers.append(fetcher.name)
                 
                 # Try to fetch the asset
@@ -128,25 +138,25 @@ class AssetOrchestrator:
                     try:
                         file_path = Path(asset_path)
                         if file_path.exists() and file_path.stat().st_size > 0:
-                            logger.info(f"Successfully fetched asset using {fetcher.name}: {asset_path}")
+                            logger.info(f"{beat_context}Successfully fetched asset using {fetcher.name}: {asset_path}")
                             return asset_path
                         else:
-                            logger.warning(f"{fetcher.name} returned invalid file path: {asset_path}")
+                            logger.warning(f"{beat_context}{fetcher.name} returned invalid file path: {asset_path}")
                     except Exception as e:
-                        logger.warning(f"Error verifying file from {fetcher.name}: {e}")
+                        logger.warning(f"{beat_context}Error verifying file from {fetcher.name}: {e}")
                 else:
-                    logger.info(f"{fetcher.name} failed to fetch asset for query: '{query}'")
+                    logger.info(f"{beat_context}{fetcher.name} failed to fetch asset for query: '{query}'")
                     
             except Exception as e:
-                logger.error(f"Unexpected error with {fetcher.name} fetcher: {e}")
+                logger.error(f"{beat_context}Unexpected error with {fetcher.name} fetcher: {e}")
                 attempted_fetchers.append(f"{fetcher.name} (error)")
                 continue
         
         # All fetchers failed
         if attempted_fetchers:
-            logger.warning(f"All asset fetchers failed. Tried: {', '.join(attempted_fetchers)}")
+            logger.warning(f"{beat_context}All asset fetchers failed. Tried: {', '.join(attempted_fetchers)}")
         else:
-            logger.warning("No suitable fetchers available for the given queries")
+            logger.warning(f"{beat_context}No suitable fetchers available for the given queries")
         
         return None
     
@@ -173,7 +183,10 @@ class AssetOrchestrator:
         
         logger.info(f"Starting batch fetch for {len(queries)} assets")
         
-        for i, query_info in enumerate(queries, 1):
+        # Use rich progress bar if available, otherwise fall back to simple iteration
+        iterator = track(queries, description="Fetching assets...", disable=not HAS_RICH) if HAS_RICH else queries
+        
+        for i, query_info in enumerate(iterator, 1):
             try:
                 query_id = query_info.get('id', f'query_{i}')
                 youtube_query = query_info.get('youtube_query', '')
@@ -182,7 +195,7 @@ class AssetOrchestrator:
                 
                 logger.debug(f"Processing batch item {i}/{len(queries)}: {query_id}")
                 
-                asset_path = self.fetch_asset(youtube_query, stock_query, duration)
+                asset_path = self.fetch_asset(youtube_query, stock_query, duration, beat_id=query_id)
                 results[query_id] = asset_path
                 
                 if asset_path:

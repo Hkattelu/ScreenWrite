@@ -10,6 +10,8 @@ from typing import Dict, Optional
 
 from ..config import WORDS_PER_SECOND, BEAT_TEXT_TRUNCATION_LENGTH
 
+__all__ = ['Beat']
+
 
 @dataclass
 class Beat:
@@ -58,6 +60,14 @@ class Beat:
             f"Beat {self.id}: Duration {self.duration:.1f}s not in 5-10 second range. "
             f"Text has {len(self.text.split())} words."
         )
+    
+    def __str__(self) -> str:
+        """Return a human-readable string representation of the beat.
+        
+        Returns:
+            Readable string representation of the Beat object
+        """
+        return f"[{self.id}] {self.duration:.1f}s: {self.text[:BEAT_TEXT_TRUNCATION_LENGTH]}..."
     
     def __repr__(self) -> str:
         """Return a detailed string representation of the beat.

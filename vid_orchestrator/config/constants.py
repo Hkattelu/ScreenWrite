@@ -17,6 +17,26 @@ TARGET_MAX_DURATION = 10.0
 # Based on typical speaking rate of 2.5 words per second
 WORDS_PER_SECOND = 2.5
 
+
+def _validate_beat_constants():
+    """Validate beat generation constants at import time."""
+    errors = []
+    
+    if TARGET_MIN_DURATION <= 0:
+        errors.append("TARGET_MIN_DURATION must be positive")
+    if TARGET_MAX_DURATION <= 0:
+        errors.append("TARGET_MAX_DURATION must be positive")
+    if TARGET_MIN_DURATION >= TARGET_MAX_DURATION:
+        errors.append(f"TARGET_MIN_DURATION ({TARGET_MIN_DURATION}) must be less than TARGET_MAX_DURATION ({TARGET_MAX_DURATION})")
+    if WORDS_PER_SECOND <= 0:
+        errors.append("WORDS_PER_SECOND must be positive")
+    
+    if errors:
+        raise ValueError("Configuration validation errors in beat constants:\n  " + "\n  ".join(errors))
+
+
+_validate_beat_constants()
+
 # ============================================================================
 # File Encoding Constants
 # ============================================================================
@@ -37,6 +57,26 @@ MAX_FILE_SIZE = 10 * 1024 * 1024
 # Valid markdown file extensions
 VALID_MARKDOWN_EXTENSIONS = ['.md', '.markdown', '.txt']
 
+
+def _validate_file_constants():
+    """Validate file handling constants at import time."""
+    errors = []
+    
+    if MIN_FILE_SIZE < 0:
+        errors.append("MIN_FILE_SIZE must be non-negative")
+    if MAX_FILE_SIZE <= 0:
+        errors.append("MAX_FILE_SIZE must be positive")
+    if MIN_FILE_SIZE >= MAX_FILE_SIZE:
+        errors.append(f"MIN_FILE_SIZE ({MIN_FILE_SIZE}) must be less than MAX_FILE_SIZE ({MAX_FILE_SIZE})")
+    if not VALID_MARKDOWN_EXTENSIONS:
+        errors.append("VALID_MARKDOWN_EXTENSIONS cannot be empty")
+    
+    if errors:
+        raise ValueError("Configuration validation errors in file constants:\n  " + "\n  ".join(errors))
+
+
+_validate_file_constants()
+
 # ============================================================================
 # API Key Validation Constants
 # ============================================================================
@@ -44,6 +84,24 @@ VALID_MARKDOWN_EXTENSIONS = ['.md', '.markdown', '.txt']
 # API key length bounds
 MIN_API_KEY_LENGTH = 10
 MAX_API_KEY_LENGTH = 200
+
+
+def _validate_api_constants():
+    """Validate API key constants at import time."""
+    errors = []
+    
+    if MIN_API_KEY_LENGTH <= 0:
+        errors.append("MIN_API_KEY_LENGTH must be positive")
+    if MAX_API_KEY_LENGTH <= 0:
+        errors.append("MAX_API_KEY_LENGTH must be positive")
+    if MIN_API_KEY_LENGTH > MAX_API_KEY_LENGTH:
+        errors.append(f"MIN_API_KEY_LENGTH ({MIN_API_KEY_LENGTH}) cannot exceed MAX_API_KEY_LENGTH ({MAX_API_KEY_LENGTH})")
+    
+    if errors:
+        raise ValueError("Configuration validation errors in API constants:\n  " + "\n  ".join(errors))
+
+
+_validate_api_constants()
 
 # ============================================================================
 # Disk Space Constants

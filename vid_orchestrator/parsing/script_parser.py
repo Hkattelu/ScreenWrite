@@ -13,6 +13,7 @@ Markdown Script Specification:
 
 import re
 import logging
+import os
 from pathlib import Path
 from typing import List, Optional, Tuple
 from ..core.beat import Beat
@@ -28,6 +29,7 @@ from ..utils.error_handling import (
     InputValidationError,
     log_error_with_context
 )
+from ..utils.cache import load_cached_beats, cache_beats
 
 logger = logging.getLogger(__name__)
 
@@ -46,12 +48,13 @@ class ScriptParser:
         self.target_max_duration = TARGET_MAX_DURATION
         self.words_per_second = WORDS_PER_SECOND
     
-    def parse(self, file_path: str) -> List[Beat]:
+    def parse(self, file_path: str, use_cache: bool = True) -> List[Beat]:
         """
         Parse a markdown script file into Beat objects.
         
         Args:
             file_path: Path to the markdown script file
+            use_cache: Whether to use cached beats if available (default: True)
             
         Returns:
             List of Beat objects with auto-generated metadata
@@ -59,6 +62,13 @@ class ScriptParser:
         Raises:
             InputValidationError: If the script file is invalid or cannot be processed
         """
+        # Check cache first if enabled
+        if use_cache and os.getenv('VID_ORCHESTRATOR_CACHE_BEATS'):
+            cached_beats = load_cached_beats(file_path)
+            if cached_beats:
+                logger.info(f"Loaded {len(cached_beats)} beats from cache")
+                return cached_beats
+        
         # Validate input file using comprehensive validation
         validation_result = validate_markdown_file(file_path)
         
@@ -147,6 +157,11 @@ class ScriptParser:
                 f"Successfully parsed script: {len(beats)} beats, "
                 f"{total_duration:.1f}s total duration"
             )
+            
+            # Cache beats if caching is enabled
+            if os.getenv('VID_ORCHESTRATOR_CACHE_BEATS'):
+                cache_beats(file_path, beats)
+                logger.debug(f"Cached {len(beats)} beats for {file_path}")
             
             return beats
             
@@ -282,6 +297,41 @@ class ScriptParser:
             final_chunks = [text.strip()]
         
         return final_chunks
+    
+    def _split_long_chunk(self, chunk: str, min_words: int, max_words: int) -> List[str]:
+        """
+        Split a chunk that's too long into smaller valid chunks.
+        
+        Args:
+            chunk: Text chunk that's too long
+            min_words: Minimum words per chunk
+            max_words: Maximum words per chunk
+            
+        Returns:
+            List of smaller chunks
+        """
+        words: List[str] = chunk.split()
+        chunks: List[str] = []
+        
+        # Split into chunks of target size
+        target_size: int = (min_words + max_words) // 2  # ~19 words
+        
+        i: int = 0
+        while i < len(words):
+            # Take target_size words, but don't exceed max_words
+            chunk_size: int = min(target_size, max_words, len(words) - i)
+            
+            # If this would leave a remainder that's too small, adjust
+            remaining: int = len(words) - i - chunk_size
+            if remaining > 0 and remaining < min_words:
+                # Reduce current chunk size to leave enough for next chunk
+                chunk_size = max(min_words, len(words) - i - min_words)
+            
+            chunk_words: List[str] = words[i:i + chunk_size]
+            chunks.append(' '.join(chunk_words))
+            i += chunk_size
+        
+        return chunks
     
     def _split_into_sentences(self, text: str) -> List[str]:
         """

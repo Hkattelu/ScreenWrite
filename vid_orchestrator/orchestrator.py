@@ -49,6 +49,7 @@ class VideoOrchestrator:
                  youtube_enabled: bool = True,
                  pexels_enabled: bool = True,
                  resolve_enabled: bool = False,
+                 skip_failed_beats: bool = False,
                  verbose: bool = False):
         """
         Initialize the video orchestrator.
@@ -59,6 +60,7 @@ class VideoOrchestrator:
             youtube_enabled: Whether to enable YouTube fetching
             pexels_enabled: Whether to enable Pexels fetching  
             resolve_enabled: Whether to enable DaVinci Resolve integration
+            skip_failed_beats: Continue processing if some beats fail to fetch assets
             verbose: Enable debug logging
         """
         # Configure logging level
@@ -87,7 +89,11 @@ class VideoOrchestrator:
         
         # Configuration
         self.resolve_enabled = resolve_enabled
+        self.skip_failed_beats = skip_failed_beats
         self.resolve_integration = None
+        
+        if skip_failed_beats:
+            logger.info("Skip failed beats mode enabled - will continue processing if some assets fail to fetch")
         
         # Initialize Resolve integration if enabled
         if resolve_enabled:
@@ -137,6 +143,7 @@ class VideoOrchestrator:
             'script_path': script_path,
             'output_path': output_path,
             'beats_count': 0,
+            'total_duration': 0.0,
             'assets_fetched': 0,
             'fcpxml_generated': False,
             'resolve_imported': False,
@@ -149,7 +156,10 @@ class VideoOrchestrator:
             logger.info("Step 1: Parsing script into beats")
             beats = self._parse_script(script_path)
             workflow_result['beats_count'] = len(beats)
-            logger.info(f"Successfully parsed {len(beats)} beats from script")
+            total_duration = self.estimate_duration(beats)
+            workflow_result['total_duration'] = total_duration
+            duration_str = self.format_duration(total_duration)
+            logger.info(f"Successfully parsed {len(beats)} beats from script ({duration_str} total)")
             
             # Step 2: Fetch assets (unless skipped)
             asset_map = {}
@@ -253,6 +263,33 @@ class VideoOrchestrator:
             )
             raise InputValidationError(f"Failed to parse script: {e}")
     
+    
+    def estimate_duration(self, beats: List[Beat]) -> float:
+        """
+        Estimate the total timeline duration from beats.
+        
+        Args:
+            beats: List of Beat objects
+            
+        Returns:
+            Total duration in seconds
+        """
+        return sum(beat.duration for beat in beats)
+    
+    def format_duration(self, seconds: float) -> str:
+        """
+        Format duration in seconds to human-readable format.
+        
+        Args:
+            seconds: Duration in seconds
+            
+        Returns:
+            Formatted string (e.g., "2m 35s")
+        """
+        minutes, secs = divmod(int(seconds), 60)
+        if minutes > 0:
+            return f"{minutes}m {secs}s"
+        return f"{secs}s"
     
     def _fetch_assets(self, beats: List[Beat]) -> Dict[str, str]:
         """
