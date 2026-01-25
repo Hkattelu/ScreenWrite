@@ -92,14 +92,10 @@ Continue with more content. Each paragraph will be analyzed for visual keywords.
               </thead>
               <tbody className="divide-y divide-gray-300">
                 {[
-                  { action: 'Show', purpose: 'Display footage/image', example: '[Show: game menu screenshots]' },
-                  { action: 'Display', purpose: 'Overlay/present content', example: '[Display: magazine cover]' },
-                  { action: 'Annotation', purpose: 'On-screen text', example: '[Annotation: "Est. 1981"]' },
-                  { action: 'Screenshot', purpose: 'Software UI', example: '[Screenshot: website interface]' },
-                  { action: 'B-roll', purpose: 'Supporting footage', example: '[B-roll: person playing game]' },
-                  { action: 'Footage', purpose: 'Video clip', example: '[Footage: interview clip]' },
-                  { action: 'Interview', purpose: 'Interview/discussion', example: '[Interview: expert commentary]' },
-                  { action: 'Visual', purpose: 'General reference', example: '[Visual: vintage arcade cabinet]' },
+                  { action: 'Image', purpose: 'Images, screenshots, diagrams, UI', example: '[Image: game menu screenshots]' },
+                  { action: 'B-roll', purpose: 'Video footage, interviews, gameplay', example: '[B-roll: person playing game]' },
+                  { action: 'Annotation', purpose: 'Prominent on-screen text/labels', example: '[Annotation: "Est. 1981"]' },
+                  { action: 'Citation', purpose: 'Source attribution (bottom left)', example: '[Citation: Wikipedia - History]' },
                 ].map((item, idx) => (
                   <tr key={idx} className={idx % 2 === 0 ? 'bg-gray-50' : ''}>
                     <td className="px-3 py-2"><code className="bg-gray-200 px-2 py-1 rounded text-xs font-mono">{item.action}</code></td>
@@ -111,9 +107,9 @@ Continue with more content. Each paragraph will be analyzed for visual keywords.
             </table>
           </div>
 
-          <h3 className="text-lg font-semibold text-gray-900 mb-3">B-Roll Examples</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-3">Instruction Examples</h3>
           <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-sm mb-4">
-{`[Show: old text-based walkthrough guide]
+{`[Image: old text-based walkthrough guide]
 The walkthrough format has changed dramatically over the years.
 
 [Annotation: "1981 - First video game guidebook"]
@@ -122,17 +118,20 @@ The earliest instances of walkthroughs came from physical books.
 [B-roll: person reading guide book at desk]
 These guides were carefully crafted with precision.
 
-[Screenshot: GameFAQs.com interface with guides listed]
-The internet changed everything about how we access walkthroughs.`}
+[Image: GameFAQs.com interface with guides listed]
+The internet changed everything about how we access walkthroughs.
+
+[Citation: GameFAQs Archive - https://gamefaqs.gamespot.com]`}
           </pre>
 
           <h3 className="text-lg font-semibold text-gray-900 mb-3 mt-6">Chaining Instructions</h3>
           <p className="text-gray-700 mb-3">Combine multiple instructions together for complex sequences:</p>
           <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-sm">
-{`[Show: screenshots of multiple walkthroughs]
+{`[Image: screenshots of multiple walkthroughs]
 
-[Display: browser tabs with different guides]
-[Annotation: "Est. 2000s - Peak of text-based walkthroughs"]`}
+[Image: browser tabs with different guides]
+[Annotation: "Est. 2000s - Peak of text-based walkthroughs"]
+[Citation: Game Archive - source.org]`}
           </pre>
         </div>
 
@@ -275,30 +274,30 @@ This creates confusing associations.`}
           </ul>
         </div>
 
-        {/* B-Roll Instruction Examples */}
+        {/* Instruction Type Examples */}
         <div className="card mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">B-Roll Instruction Examples</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Instruction Type Examples</h2>
           <div className="space-y-6">
             {[
               {
-                title: 'Using Show for Images/Screenshots',
-                good: '[Show: Python.org homepage]\nVisit the official Python website and download the latest version.',
-                bad: '[Show: website]\nVisit the official Python website.',
+                title: 'Image - For Visual Content',
+                good: '[Image: Python.org homepage with download button]\nVisit the official Python website and download the latest version.',
+                bad: '[Image: website]\nVisit the official Python website.',
               },
               {
-                title: 'Using Annotation for On-Screen Text',
+                title: 'Annotation - For Prominent On-Screen Text',
                 good: '[Annotation: "Python 3.12 - Latest Version"]\nMake sure you install the latest stable version.',
                 bad: '[Annotation: "Latest"]\nGet the latest version.',
               },
               {
-                title: 'Using B-roll for Supporting Footage',
-                good: '[B-roll: person typing code in VS Code]\nType your Python code carefully and run it.',
+                title: 'B-roll - For Video Footage (including interviews)',
+                good: '[B-roll: person typing code in VS Code and executing program]\nType your Python code carefully and run it.',
                 bad: '[B-roll: person at computer]\nWrite your code.',
               },
               {
-                title: 'Using Screenshot for Software UI',
-                good: '[Screenshot: Visual Studio Code with Python syntax highlighting]\nOpen VS Code and create a new Python file.',
-                bad: '[Screenshot: text editor]\nOpen an editor.',
+                title: 'Citation - For Source Attribution',
+                good: '[Citation: Python Official Site - https://python.org]\nCrediting the source of information.',
+                bad: '[Citation: website]\nSource reference.',
               },
             ].map((example, idx) => (
               <div key={idx} className="border-l-4 border-blue-500 pl-4">
@@ -376,24 +375,26 @@ Why should you learn Python? It's one of the most popular languages.
 
 ### Part 1: Installation
 
-[Show: Python.org homepage]
+[Image: Python.org homepage]
 First, visit the official Python website and download the latest version.
 
-[Screenshot: installer wizard dialog]
+[Image: installer wizard dialog]
 Run the installation wizard and follow the prompts to complete setup.
 
 [Annotation: "Python 3.12 recommended"]
 Make sure you install the latest stable version available.
 
+[Citation: Python.org - Official Downloads]
+
 ### Part 2: Your First Program
 
-[Display: text editor with code]
+[Image: text editor with code]
 Create a new file called hello.py and write your first program.
 
-[B-roll: code appearing on screen]
+[B-roll: person typing code, terminal executing]
 Type the print statement to display text on the screen.
 
-[Show: terminal output]
+[Image: terminal output showing result]
 Run your script and see the result appear in the terminal.
 
 ## Call to Action

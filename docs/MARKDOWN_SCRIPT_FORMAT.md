@@ -68,19 +68,15 @@ Specify visual assets to show using bracket notation:
 
 | Action | Purpose | Example |
 |--------|---------|---------|
-| `Show` | Display footage/image | `[Show: screenshots of game menus]` |
-| `Display` | Overlay/present content | `[Display: old Nintendo Power magazine cover]` |
-| `Annotation` | On-screen text | `[Annotation: "Est. 1981"]` |
-| `Visual` | General visual reference | `[Visual: vintage arcade cabinet]` |
-| `B-roll` | Specific B-roll footage | `[B-roll: people playing retro games]` |
-| `Screenshot` | Software/game screenshot | `[Screenshot: Cheatcodes.com homepage]` |
-| `Footage` | Video clip or recording | `[Footage: Nintendo hotline commercial]` |
-| `Interview` | Interview clip | `[Interview: AV Club Nintendo counselor discussion]` |
+| `Image` | Display images, screenshots, UI, or visual content | `[Image: screenshots of game menus]` |
+| `B-roll` | Video footage or recordings (includes interviews and gameplay) | `[B-roll: people playing retro games]` |
+| `Annotation` | Prominent on-screen text/labels | `[Annotation: "Est. 1981"]` |
+| `Citation` | Source attribution in bottom left corner | `[Citation: Wikipedia - Video Game Walkthrough]` |
 
 #### Examples
 
 ```markdown
-[Show: old text-based walkthrough guide]
+[Image: old text-based walkthrough guide]
 The walkthrough format has changed dramatically over the years.
 
 [Annotation: "1981 - First video game guidebook"]
@@ -89,8 +85,11 @@ The earliest instances of walkthroughs came from physical books.
 [B-roll: person reading guide book at desk]
 These guides were carefully crafted with precision.
 
-[Screenshot: GameFAQs.com interface with multiple guides listed]
+[Image: GameFAQs.com interface with multiple guides listed]
 The internet changed everything about how we access walkthroughs.
+
+[Citation: GameFAQs Archive - https://gamefaqs.gamespot.com]
+Community-written guides became the standard resource.
 ```
 
 #### Grouped Instructions
@@ -98,9 +97,9 @@ The internet changed everything about how we access walkthroughs.
 Combine multiple instructions together:
 
 ```markdown
-[Show: screenshots of Jak&Daxter, FF12, FF10 walkthroughs]
+[Image: screenshots of Jak&Daxter, FF12, FF10 walkthroughs]
 
-[Display: multiple browser tabs with different guides]
+[Image: multiple browser tabs with different guides]
 [Annotation: "Est. 2000s - Peak of text-based walkthroughs"]
 ```
 
@@ -255,7 +254,7 @@ Hook: In this video, we'll learn Python from scratch.
 
 ## Getting Started
 
-[Show: Python logo and website]
+[Image: Python logo and website]
 First, you need to install Python on your computer.
 
 [Annotation: "Python 3.12 recommended"]
@@ -266,7 +265,7 @@ Visit the official Python website and download the latest version.
 [B-roll: person typing in text editor]
 Create a new file called hello.py and type your first program.
 
-[Show: code appearing on screen]
+[Image: code appearing on screen]
 The basic "Hello World" program demonstrates how to print text.
 ```
 
@@ -285,28 +284,33 @@ I want to discuss the past and present of video game walkthroughs...
 
 ### Section 1: Guide Books and Hotlines
 
-[Show: cover of "Mastering Pac-Man" book]
+[Image: cover of "Mastering Pac-Man" book]
 The earliest instances of walkthroughs came from 1981...
 
-[Display: vintage arcade machine]
+[Image: vintage arcade machine]
 The arcade culture of the early 80s shaped gaming help...
 
-[Show: Nintendo Power hotline advertisement]
+[Image: Nintendo Power hotline advertisement]
 The Nintendo Power Hotline ran from 1987 to 2005...
 
-[Footage: interview clip with former Nintendo counselor]
+[B-roll: interview clip with former Nintendo counselor]
 Real-time feedback was a game-changer for players...
+
+[Citation: Nintendo Power Archives - archive.org]
+Historical documentation of the hotline service.
 
 ### Section 2: Rise of Internet Walkthroughs
 
-[Screenshot: GameFAQs.com with multiple guides]
+[Image: GameFAQs.com with multiple guides]
 When I was growing up, my favorite walkthroughs were text-based...
 
-[Show: Cheatcodes.com homepage layout]
+[Image: Cheatcodes.com homepage layout]
 These sites hosted thousands of community-written guides...
 
 [B-roll: person using Ctrl+F to search in guide]
 The searchability of text-based guides was revolutionary...
+
+[Citation: GameFAQs Archive - https://gamefaqs.gamespot.com]
 
 ## Call to Action
 
@@ -323,17 +327,17 @@ What's your favorite walkthrough format? Let me know in the comments!
 
 ### Do's
 
-✅ Use **specific subject names** in B-roll instructions
+✅ Use **specific subject names** in instructions
 ```markdown
-✅ [Show: Nintendo Power magazine cover from 1990]
-❌ [Show: old magazine]
+✅ [Image: Nintendo Power magazine cover from 1990]
+❌ [Image: old magazine]
 ```
 
 ✅ **Chain instructions** for logical sequences
 ```markdown
-[Show: person booting up computer]
-[Display: Windows 95 startup animation]
-[Screenshot: dialup modem connection]
+[Image: person booting up computer]
+[Image: Windows 95 startup animation]
+[B-roll: dialup modem connecting]
 The dial-up era was slow but magical...
 ```
 
@@ -345,34 +349,39 @@ The dial-up era was slow but magical...
 
 ✅ Place instructions **near related text**
 ```markdown
-[Show: old arcade cabinet]
+[Image: old arcade cabinet]
 Arcade cabinets of the 80s didn't come with instructions...
+```
+
+✅ Use **Citation** for source attribution
+```markdown
+[Citation: Wikipedia - Video Game Walkthrough]
 ```
 
 ### Don'ts
 
 ❌ Vague instructions
 ```markdown
-❌ [Show: stuff]
-❌ [Visual: things from the past]
+❌ [Image: stuff]
+❌ [B-roll: things from the past]
 ```
 
 ❌ Orphaned instructions (disconnected from text)
 ```markdown
-❌ [Show: random footage]
-❌ [Display: something]
+❌ [Image: random screenshot]
+❌ [B-roll: something]
 Text that has nothing to do with above...
 ```
 
 ❌ Over-instructing
 ```markdown
-❌ Every sentence has a [Show: ...] instruction
+❌ Every sentence has a [Image: ...] instruction
 ```
 
 ❌ Mixing instruction formats
 ```markdown
-❌ [show: lowercase]
-❌ Show: without brackets
+❌ [image: lowercase]
+❌ Image: without brackets
 ```
 
 ## Markdown Validation

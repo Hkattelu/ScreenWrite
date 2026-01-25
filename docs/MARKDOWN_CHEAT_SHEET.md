@@ -20,17 +20,13 @@ Tags: tag1, tag2, tag3
 ### Subsection (H3 - detailed sections)
 ```
 
-## B-Roll Instructions
+## Content Instructions
 
 ```markdown
-[Show: specific footage or image]
-[Display: overlay or presentation]
-[Annotation: on-screen text or label]
-[Screenshot: software interface or UI]
-[B-roll: video footage or recording]
-[Footage: specific video clip]
-[Interview: interview or discussion clip]
-[Visual: general visual reference]
+[Image: images, screenshots, diagrams, or UI]
+[B-roll: video footage, interviews, or gameplay]
+[Annotation: prominent on-screen text or labels]
+[Citation: source attribution (bottom left corner)]
 ```
 
 ## Common Patterns
@@ -39,7 +35,7 @@ Tags: tag1, tag2, tag3
 ```markdown
 ## Topic Name
 
-[Show: relevant footage]
+[Image: relevant image or screenshot]
 Main content text here...
 ```
 
@@ -47,25 +43,28 @@ Main content text here...
 ```markdown
 ## Complex Topic
 
-[Show: first visual element]
+[Image: first visual element]
 Introductory text...
 
-[Display: second visual element]
+[B-roll: video footage or interview]
 More detailed explanation...
 
-[B-roll: supporting footage]
+[Image: supporting image]
 Final details...
 ```
 
-### Section with Annotations
+### Section with Annotations and Citations
 ```markdown
 ## Historical Context
 
 [Annotation: "Year: 1985"]
 This happened in 1985 and it was important.
 
-[Show: historical photograph or document]
+[Image: historical photograph or document]
 Here's what it looked like.
+
+[Citation: Wikipedia - Historical Events]
+Documentation of this moment.
 ```
 
 ### Title Options
@@ -97,25 +96,27 @@ Why does this video matter?
 
 ## Hook
 
-[Show: eye-catching footage]
+[Image: eye-catching image or screenshot]
 Your opening statement that hooks viewers...
 
 ## Content
 
 ### Section 1: First Topic
 
-[Show: relevant visuals]
+[Image: relevant image]
 Content for first section...
 
 ### Section 2: Second Topic
 
-[Display: related content]
+[B-roll: supporting video or interview]
 Content for second section...
 
 ### Section 3: Third Topic
 
-[B-roll: supporting footage]
+[Image: visual reference]
 Content for third section...
+
+[Citation: Source Name - source.com]
 
 ## Call to Action
 
@@ -134,54 +135,60 @@ Final message and call to action...
 
 - Use specific, visual descriptions
   ```markdown
-  ✅ [Show: Python code in Visual Studio Code editor]
+  ✅ [Image: Python code in Visual Studio Code editor]
   ```
 
 - Place instructions near relevant text
   ```markdown
-  ✅ [Show: website homepage]
+  ✅ [Image: website homepage]
      Visit the website and click signup.
   ```
 
 - Chain instructions logically
   ```markdown
-  ✅ [Show: download button]
-     [Display: file saving dialog]
+  ✅ [Image: download button on website]
+     [B-roll: file saving dialog animation]
      [Annotation: "Choose your location"]
   ```
 
-- Use consistent action verbs
+- Use consistent instruction types
   ```markdown
-  ✅ [Show: ...]
-     [Display: ...]
+  ✅ [Image: ...]
+     [B-roll: ...]
      [Annotation: ...]
+     [Citation: ...]
+  ```
+
+- Add citations for sources
+  ```markdown
+  ✅ [Citation: Wikipedia - Video Game History]
   ```
 
 ### ❌ Don't
 
 - Be vague
   ```markdown
-  ❌ [Show: stuff]
-  ❌ [Display: things]
+  ❌ [Image: stuff]
+  ❌ [B-roll: things]
   ```
 
 - Use wrong capitalization
   ```markdown
-  ❌ [show: lowercase action]
-  ❌ [SHOW: ALL CAPS]
-  ❌ Show: no brackets
+  ❌ [image: lowercase action]
+  ❌ [IMAGE: ALL CAPS]
+  ❌ Image: no brackets
   ```
 
 - Leave orphaned instructions
   ```markdown
-  ❌ [Show: random footage]
+  ❌ [Image: random screenshot]
      [Complete tangent content]
   ```
 
 - Over-instruct every sentence
   ```markdown
-  ❌ [Show: something] Text here. [Show: another thing] More text.
-  ❌ [Show: yet another] Final text.
+  ❌ [Image: something] Text here. [Image: another thing] More text.
+  ❌ [B-roll: yet another] Final text.
   ```
 
 ## Word Count Guide
@@ -213,18 +220,20 @@ Hook: Learn Python in 15 minutes!
 
 ### Installation
 
-[Show: Python.org homepage]
+[Image: Python.org homepage]
 Visit python.org and download the latest version.
 
-[Screenshot: installation wizard]
+[Image: installation wizard]
 Run the installer and follow the prompts.
+
+[Citation: Python.org - Official Download]
 
 ### Your First Program
 
-[Display: Python code on screen]
+[Image: Python code in editor]
 Create a file called hello.py and type print("Hello World").
 
-[B-roll: code editor with output]
+[B-roll: code editor executing program]
 Run the script and see your message appear.
 ```
 
@@ -237,16 +246,18 @@ Hook: Master Photoshop in one video
 
 ### Opening a File
 
-[Show: File menu in Photoshop]
+[Image: File menu in Photoshop]
 Click File, then Open to load your image.
 
-[Screenshot: file dialog]
+[Image: file dialog with image selected]
 Select your image and click Open.
 
 ### Basic Editing
 
 [B-roll: cropping and resizing demonstration]
 Use the crop tool to adjust your image composition.
+
+[Citation: Adobe Photoshop Official Documentation]
 ```
 
 ### Game Walkthrough
@@ -257,7 +268,7 @@ Title: [Game Name] Walkthrough
 
 ### Level 1
 
-[Show: level map or overview]
+[Image: level map and overview]
 Start at the beginning and move forward.
 
 [Annotation: "Collect all coins for achievement"]
@@ -285,13 +296,15 @@ Why this matters...
 
 ### Part 1: Basics
 
-[Show: diagram of key concepts]
+[Image: diagram of key concepts]
 Here's the foundation...
 
 ### Part 2: Advanced
 
-[Display: complex example]
+[B-roll: animated explanation or example]
 Now let's apply it...
+
+[Citation: Educational Source - edu.org]
 
 ## Call to Action
 
@@ -312,14 +325,10 @@ Questions? Comment below!
 
 | Action | Use for | Example |
 |--------|---------|---------|
-| `Show` | Display images/footage | `[Show: book cover from 1981]` |
-| `Display` | Present content/overlay | `[Display: magazine page]` |
-| `Annotation` | On-screen text/labels | `[Annotation: "Est. 1950"]` |
-| `Screenshot` | Software/UI interfaces | `[Screenshot: Gmail inbox]` |
-| `B-roll` | Supporting video footage | `[B-roll: person coding]` |
-| `Footage` | Specific video recording | `[Footage: interview clip]` |
-| `Interview` | Interview or discussion | `[Interview: expert talking]` |
-| `Visual` | General visual reference | `[Visual: sunset landscape]` |
+| `Image` | Images, screenshots, diagrams, UI | `[Image: book cover from 1981]` |
+| `B-roll` | Video footage, interviews, gameplay | `[B-roll: person coding]` |
+| `Annotation` | Prominent on-screen text/labels | `[Annotation: "Est. 1950"]` |
+| `Citation` | Source attribution (bottom left) | `[Citation: Wikipedia - History]` |
 
 ## Upgrade Checklist
 
