@@ -10,19 +10,50 @@ export function SyntaxGuide() {
       <div className="max-w-4xl mx-auto px-4">
         <h1 className="text-4xl font-bold text-gray-900 mb-8">Markdown Script Syntax Guide</h1>
         <p className="text-xl text-gray-700 mb-12">
-          Learn how to write markdown scripts that generate optimal B-roll and timelines.
+          Learn how to write markdown scripts that generate optimal B-roll and timelines with our enhanced format.
         </p>
+
+        {/* Metadata Section */}
+        <div className="card mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Metadata (Top of File)</h2>
+          <p className="text-gray-700 mb-4">
+            Start your script with metadata that provides context for B-roll generation:
+          </p>
+          <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-sm mb-4">
+{`Title: The Lost Art of Text-Based Game Walkthroughs
+Hook: Welcome viewers. Today I'll take you through gaming history.
+Channel: Gaming History
+Duration: 12:30
+Tags: gaming, history, walkthroughs`}
+          </pre>
+          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-4">
+            <p className="font-semibold text-gray-900 mb-3">Supported Metadata Keys:</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+              {[
+                { key: 'Title', desc: 'Video title (primary context)' },
+                { key: 'Hook', desc: 'Opening/hook statement' },
+                { key: 'Channel', desc: 'Your channel name' },
+                { key: 'Duration', desc: 'Estimated video length' },
+                { key: 'Thumbnail', desc: 'Thumbnail concept' },
+                { key: 'Tags', desc: 'Content tags' },
+              ].map((item, idx) => (
+                <div key={idx}>
+                  <code className="bg-gray-200 px-2 py-1 rounded font-mono text-xs">{item.key}</code>
+                  <p className="text-gray-700 text-xs mt-1">{item.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
 
         {/* Basic Structure Section */}
         <div className="card mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Basic Structure</h2>
           <p className="text-gray-700 mb-4">
-            Scripts use standard markdown with headers and paragraphs:
+            After metadata, use headers to organize your content:
           </p>
           <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-sm mb-4">
-{`# Main Title
-
-## Section Header
+{`## Main Section
 
 Your script content goes here. Write naturally as you would speak in your video.
 
@@ -31,11 +62,78 @@ Your script content goes here. Write naturally as you would speak in your video.
 Continue with more content. Each paragraph will be analyzed for visual keywords.`}
           </pre>
           <ul className="list-disc list-inside text-gray-700 space-y-2">
-            <li>Use <code className="bg-gray-100 px-2 py-1 rounded">#</code> for the main title</li>
-            <li>Use <code className="bg-gray-100 px-2 py-1 rounded">##</code> for section headers</li>
+            <li>Use <code className="bg-gray-100 px-2 py-1 rounded">##</code> (H2) for main sections</li>
+            <li>Use <code className="bg-gray-100 px-2 py-1 rounded">###</code> (H3) for subsections</li>
             <li>Write naturally as you would speak</li>
             <li>Include visual keywords (specific tools, objects, actions)</li>
+            <li>Headers provide context that influences B-roll selection</li>
           </ul>
+        </div>
+
+        {/* B-Roll Instructions Section */}
+        <div className="card mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">B-Roll Instructions</h2>
+          <p className="text-gray-700 mb-4">
+            Use bracket notation to specify what visuals should accompany your text:
+          </p>
+          <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-sm mb-4">
+{`[action: description]`}
+          </pre>
+
+          <h3 className="text-lg font-semibold text-gray-900 mb-3 mt-6">Supported Actions</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm mb-6">
+              <thead className="bg-gray-200">
+                <tr>
+                  <th className="px-3 py-2 text-left font-semibold">Action</th>
+                  <th className="px-3 py-2 text-left font-semibold">Purpose</th>
+                  <th className="px-3 py-2 text-left font-semibold">Example</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-300">
+                {[
+                  { action: 'Show', purpose: 'Display footage/image', example: '[Show: game menu screenshots]' },
+                  { action: 'Display', purpose: 'Overlay/present content', example: '[Display: magazine cover]' },
+                  { action: 'Annotation', purpose: 'On-screen text', example: '[Annotation: "Est. 1981"]' },
+                  { action: 'Screenshot', purpose: 'Software UI', example: '[Screenshot: website interface]' },
+                  { action: 'B-roll', purpose: 'Supporting footage', example: '[B-roll: person playing game]' },
+                  { action: 'Footage', purpose: 'Video clip', example: '[Footage: interview clip]' },
+                  { action: 'Interview', purpose: 'Interview/discussion', example: '[Interview: expert commentary]' },
+                  { action: 'Visual', purpose: 'General reference', example: '[Visual: vintage arcade cabinet]' },
+                ].map((item, idx) => (
+                  <tr key={idx} className={idx % 2 === 0 ? 'bg-gray-50' : ''}>
+                    <td className="px-3 py-2"><code className="bg-gray-200 px-2 py-1 rounded text-xs font-mono">{item.action}</code></td>
+                    <td className="px-3 py-2 text-gray-700">{item.purpose}</td>
+                    <td className="px-3 py-2 text-gray-600 font-mono text-xs">{item.example}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <h3 className="text-lg font-semibold text-gray-900 mb-3">B-Roll Examples</h3>
+          <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-sm mb-4">
+{`[Show: old text-based walkthrough guide]
+The walkthrough format has changed dramatically over the years.
+
+[Annotation: "1981 - First video game guidebook"]
+The earliest instances of walkthroughs came from physical books.
+
+[B-roll: person reading guide book at desk]
+These guides were carefully crafted with precision.
+
+[Screenshot: GameFAQs.com interface with guides listed]
+The internet changed everything about how we access walkthroughs.`}
+          </pre>
+
+          <h3 className="text-lg font-semibold text-gray-900 mb-3 mt-6">Chaining Instructions</h3>
+          <p className="text-gray-700 mb-3">Combine multiple instructions together for complex sequences:</p>
+          <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-sm">
+{`[Show: screenshots of multiple walkthroughs]
+
+[Display: browser tabs with different guides]
+[Annotation: "Est. 2000s - Peak of text-based walkthroughs"]`}
+          </pre>
         </div>
 
         {/* Timing Section */}
@@ -144,6 +242,82 @@ First, you need to install Python on your computer. Visit the official Python we
           </div>
         </div>
 
+        {/* B-Roll Instruction Placement */}
+        <div className="card mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">B-Roll Instruction Placement</h2>
+          <p className="text-gray-700 mb-4">
+            Instructions are linked to the text that follows them:
+          </p>
+          
+          <h3 className="text-lg font-semibold text-gray-900 mb-3">✅ Correct Placement</h3>
+          <pre className="bg-green-50 text-green-900 p-4 rounded-lg overflow-x-auto text-sm mb-6 border-l-4 border-green-500">
+{`[Show: old arcade cabinet]
+Arcade cabinets of the 80s didn't come with instructions.
+
+[Annotation: "Year: 1983"]
+This was the golden age of arcade gaming.`}
+          </pre>
+
+          <h3 className="text-lg font-semibold text-gray-900 mb-3">❌ Incorrect Placement</h3>
+          <pre className="bg-red-50 text-red-900 p-4 rounded-lg overflow-x-auto text-sm border-l-4 border-red-500">
+{`[Show: random footage]
+Text that has nothing to do with the instruction above.
+This creates confusing associations.`}
+          </pre>
+
+          <h3 className="text-lg font-semibold text-gray-900 mb-3 mt-6">💡 Key Rules</h3>
+          <ul className="list-disc list-inside text-gray-700 space-y-2">
+            <li>Place instructions <strong>immediately before</strong> the text they accompany</li>
+            <li>Instructions apply to the paragraph following them</li>
+            <li>Multiple instructions can be chained together</li>
+            <li>Be specific - don't use vague descriptions like "stuff" or "things"</li>
+            <li>Use consistent capitalization: <code className="bg-gray-100 px-2 py-1 rounded text-xs">[Action: description]</code></li>
+          </ul>
+        </div>
+
+        {/* B-Roll Instruction Examples */}
+        <div className="card mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">B-Roll Instruction Examples</h2>
+          <div className="space-y-6">
+            {[
+              {
+                title: 'Using Show for Images/Screenshots',
+                good: '[Show: Python.org homepage]\nVisit the official Python website and download the latest version.',
+                bad: '[Show: website]\nVisit the official Python website.',
+              },
+              {
+                title: 'Using Annotation for On-Screen Text',
+                good: '[Annotation: "Python 3.12 - Latest Version"]\nMake sure you install the latest stable version.',
+                bad: '[Annotation: "Latest"]\nGet the latest version.',
+              },
+              {
+                title: 'Using B-roll for Supporting Footage',
+                good: '[B-roll: person typing code in VS Code]\nType your Python code carefully and run it.',
+                bad: '[B-roll: person at computer]\nWrite your code.',
+              },
+              {
+                title: 'Using Screenshot for Software UI',
+                good: '[Screenshot: Visual Studio Code with Python syntax highlighting]\nOpen VS Code and create a new Python file.',
+                bad: '[Screenshot: text editor]\nOpen an editor.',
+              },
+            ].map((example, idx) => (
+              <div key={idx} className="border-l-4 border-blue-500 pl-4">
+                <h4 className="font-semibold text-gray-900 mb-3">{example.title}</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="bg-green-50 p-3 rounded border-l-2 border-green-500">
+                    <span className="text-green-700 font-semibold">✅ Specific: </span>
+                    <pre className="mt-2 text-xs bg-green-100 p-2 rounded overflow-x-auto">{example.good}</pre>
+                  </div>
+                  <div className="bg-red-50 p-3 rounded border-l-2 border-red-500">
+                    <span className="text-red-700 font-semibold">❌ Vague: </span>
+                    <pre className="mt-2 text-xs bg-red-100 p-2 rounded overflow-x-auto">{example.bad}</pre>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Best Practices */}
         <div className="card mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Best Practices</h2>
@@ -158,6 +332,9 @@ First, you need to install Python on your computer. Visit the official Python we
                 <li>✓ Reference colors, positions, and UI elements</li>
                 <li>✓ Keep sections focused on single topics</li>
                 <li>✓ Use consistent terminology throughout</li>
+                <li>✓ Place instructions before their associated text</li>
+                <li>✓ Be specific in instruction descriptions</li>
+                <li>✓ Use proper capitalization: <code className="bg-gray-100 px-1 rounded text-xs">[Action: ...]</code></li>
               </ul>
             </div>
             <div>
@@ -169,9 +346,65 @@ First, you need to install Python on your computer. Visit the official Python we
                 <li>✗ Write exclusively in passive voice</li>
                 <li>✗ Use vague references ("this", "that", "it")</li>
                 <li>✗ Include placeholder text like "[TODO]"</li>
+                <li>✗ Use vague instructions like <code className="bg-gray-100 px-1 rounded text-xs">[Show: stuff]</code></li>
+                <li>✗ Mix capitalization: <code className="bg-gray-100 px-1 rounded text-xs">[show: ...]</code> or <code className="bg-gray-100 px-1 rounded text-xs">Show:</code></li>
+                <li>✗ Leave orphaned instructions disconnected from text</li>
+                <li>✗ Over-instruct every sentence</li>
               </ul>
             </div>
           </div>
+        </div>
+
+        {/* Complete Template */}
+        <div className="card mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Complete Script Template</h2>
+          <p className="text-gray-700 mb-4">
+            A full template combining all elements for a professional video script:
+          </p>
+          <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-sm mb-4">
+{`Title: Python Beginners Tutorial
+Hook: Learn Python from scratch in 15 minutes
+Channel: Tech Tutorials
+Duration: 15:00
+Tags: python, tutorial, programming
+
+## Motivation
+
+Why should you learn Python? It's one of the most popular languages.
+
+## Content
+
+### Part 1: Installation
+
+[Show: Python.org homepage]
+First, visit the official Python website and download the latest version.
+
+[Screenshot: installer wizard dialog]
+Run the installation wizard and follow the prompts to complete setup.
+
+[Annotation: "Python 3.12 recommended"]
+Make sure you install the latest stable version available.
+
+### Part 2: Your First Program
+
+[Display: text editor with code]
+Create a new file called hello.py and write your first program.
+
+[B-roll: code appearing on screen]
+Type the print statement to display text on the screen.
+
+[Show: terminal output]
+Run your script and see the result appear in the terminal.
+
+## Call to Action
+
+Subscribe for more Python tutorials and programming content!
+
+## Sources
+
+- [Official Python Site](https://python.org)
+- [Python Documentation](https://docs.python.org)`}
+          </pre>
         </div>
 
         {/* Common Patterns */}
