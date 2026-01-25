@@ -73,7 +73,7 @@ def upload_script():
 
         # Parse script
         parser = ScriptParser()
-        beats = parser.parse_file(filepath)
+        beats = parser.parse(filepath)
 
         if not beats:
             return {
@@ -95,8 +95,7 @@ def upload_script():
                 'text': beat.text,
                 'duration': beat.duration,
                 'stock_keyword': beat.stock_keyword,
-                'youtube_phrase': beat.youtube_phrase,
-                'header': beat.header
+                'youtube_phrase': beat.youtube_search_phrase
             }
             for beat in beats
         ]

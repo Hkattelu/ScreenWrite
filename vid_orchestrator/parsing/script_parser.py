@@ -455,18 +455,31 @@ class ScriptParser:
         """
         Find if a text chunk has an associated B-roll instruction.
         
-        Looks for instructions that appear immediately before or within the chunk.
+        Looks for instructions that appear near the chunk text (before or within).
         
         Args:
             chunk: Text chunk to check
-            instructions_dict: Dictionary of extracted instructions
+            instructions_dict: Dictionary of extracted instructions (content -> list of BRollInstructions)
             
         Returns:
             B-roll query string if found, None otherwise
         """
-        # For now, return None as a simple implementation
-        # In a full implementation, this would track instruction positions
-        # and associate them with chunks
+        if not instructions_dict:
+            return None
+        
+        # Check if any instruction content appears in or near this chunk
+        chunk_lower = chunk.lower()
+        
+        for content, instructions in instructions_dict.items():
+            content_lower = content.lower()
+            
+            # Look for the instruction content in the chunk
+            # This handles cases like "[Display: pages from Mastering Pac-Man...]" 
+            # appearing just before the chunk text
+            if content_lower in chunk_lower:
+                # Return the original content (preserves capitalization and phrasing)
+                return content
+        
         return None
     
     def _split_into_sentences(self, text: str) -> List[str]:

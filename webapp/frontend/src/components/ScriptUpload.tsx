@@ -4,7 +4,7 @@
  * Handles markdown file upload and displays parsed beats
  */
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { uploadScript, getErrorMessage } from '../services/api'
 import type { Beat, UploadResponse } from '../types/models'
 
@@ -13,6 +13,7 @@ interface ScriptUploadProps {
 }
 
 export function ScriptUpload({ onUploadSuccess }: ScriptUploadProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -93,18 +94,21 @@ export function ScriptUpload({ onUploadSuccess }: ScriptUploadProps) {
           <p className="text-gray-700 font-medium mb-2">Drop your markdown script here</p>
           <p className="text-gray-500 text-sm mb-4">or</p>
 
-          <label className="inline-block">
-            <input
-              type="file"
-              accept=".md,.txt"
-              onChange={handleFileInput}
-              disabled={isLoading}
-              className="hidden"
-            />
-            <button className="btn-primary" disabled={isLoading}>
-              {isLoading ? 'Uploading...' : 'Choose File'}
-            </button>
-          </label>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".md,.txt"
+            onChange={handleFileInput}
+            disabled={isLoading}
+            className="hidden"
+          />
+          <button 
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isLoading}
+            className="btn-primary"
+          >
+            {isLoading ? 'Uploading...' : 'Choose File'}
+          </button>
 
           <p className="text-gray-500 text-xs mt-4">Markdown (.md) or Text (.txt) files only</p>
         </div>

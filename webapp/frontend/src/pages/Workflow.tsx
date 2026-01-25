@@ -4,8 +4,8 @@
  * Multi-step wizard for the entire video generation process
  */
 
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import { ScriptUpload } from '../components/ScriptUpload'
 import { BeatList } from '../components/BeatList'
 import { ConfigPanel } from '../components/ConfigPanel'
@@ -15,6 +15,7 @@ import type { UploadResponse, Config, Beat } from '../types/models'
 type WorkflowStep = 'upload' | 'review' | 'configure' | 'export'
 
 export function Workflow() {
+  const location = useLocation()
   const [currentStep, setCurrentStep] = useState<WorkflowStep>('upload')
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [beats, setBeats] = useState<Beat[]>([])
@@ -26,6 +27,16 @@ export function Workflow() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [exportResult, setExportResult] = useState<any>(null)
+
+  // Initialize from Home page if upload was done there
+  useEffect(() => {
+    const state = location.state as any
+    if (state?.uploadData) {
+      setSessionId(state.uploadData.sessionId)
+      setBeats(state.uploadData.beats)
+      setCurrentStep('review')
+    }
+  }, [])
 
   const handleUploadSuccess = (data: UploadResponse) => {
     setSessionId(data.sessionId)

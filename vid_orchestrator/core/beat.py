@@ -48,16 +48,17 @@ class Beat:
         Validate that the beat meets requirements.
         
         Raises:
-            AssertionError: If duration is not in 5-10 second range or text is empty
+            AssertionError: If duration is invalid or text is empty
         """
         # Check required fields first
         assert self.text.strip(), f"Beat {self.id}: Text cannot be empty"
         assert self.stock_keyword.strip(), f"Beat {self.id}: Stock keyword cannot be empty"
         assert self.youtube_search_phrase.strip(), f"Beat {self.id}: YouTube search phrase cannot be empty"
         
-        # Then check duration bounds
-        assert 5 <= self.duration <= 10, (
-            f"Beat {self.id}: Duration {self.duration:.1f}s not in 5-10 second range. "
+        # Allow beats 3-10 seconds (more lenient for edge cases)
+        # Minimum 3s for short transitions, maximum 10s for content
+        assert 3 <= self.duration <= 10, (
+            f"Beat {self.id}: Duration {self.duration:.1f}s not in 3-10 second range. "
             f"Text has {len(self.text.split())} words."
         )
     
