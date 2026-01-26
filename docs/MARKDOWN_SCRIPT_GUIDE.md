@@ -1,290 +1,92 @@
-﻿# Markdown Script Guide for screenwrite
+# Markdown Script Guide
 
-This guide explains how to write markdown scripts that work optimally with screenwrite for automatic B-roll generation and FCPXML timeline creation.
-
-**âš ï¸ Enhanced Format Available**: This project now supports a more robust markdown flavor with B-roll instructions, metadata, and better structure. See [MARKDOWN_SCRIPT_FORMAT.md](MARKDOWN_SCRIPT_FORMAT.md) for the latest specification.
+This guide explains how to write markdown scripts that work optimally with **ScreenWrite** for automatic B-roll generation and FCPXML timeline creation.
 
 ## Overview
 
-screenwrite parses markdown files to create video timelines with automatic B-roll footage. The system analyzes your script content to:
+ScreenWrite parses markdown files to create video timelines with automatic B-roll footage. The system analyzes your script content to:
 
-1. **Break text into beats** - 5-10 second segments based on word count
-2. **Generate search queries** - Create stock footage and YouTube search terms
-3. **Fetch B-roll assets** - Download relevant video clips automatically
-4. **Create FCPXML timeline** - Generate a timeline ready for DaVinci Resolve
+1.  **Break text into beats**: 5-10 second segments based on word count.
+2.  **Generate search queries**: Create stock footage and YouTube search terms.
+3.  **Fetch B-roll assets**: Download relevant video clips automatically.
+4.  **Create FCPXML timeline**: Generate a timeline ready for DaVinci Resolve.
+
+---
 
 ## Script Structure
 
+### Metadata
+Start your script with metadata keys to provide high-level context.
+
+```markdown
+Title: Python Tutorial
+Hook: Learn to code in 10 minutes.
+Tags: python, coding, tutorial
+```
+
 ### Basic Format
+Use standard Markdown headers to define sections.
 
 ```markdown
 # Main Title
 
 ## Section Header
+Your script content goes here. Write naturally as you would speak in your video. 
 
-Your script content goes here. Write naturally as you would speak in your video. The system will automatically break this into appropriate segments for B-roll placement.
-
-## Another Section
-
-Continue with more content. Each paragraph or section will be analyzed for relevant visual keywords.
+[B-roll: close up of person typing]
+The system will automatically break this into appropriate segments.
 ```
 
-### Key Principles
+### Visual Instructions
+You can explicitly request visuals using bracket notation. Place these **immediately before** the text they relate to.
 
-1. **Write conversationally** - Use natural speech patterns
-2. **Include visual keywords** - Mention concrete objects, actions, and concepts
-3. **Use descriptive language** - Help the system understand what visuals would be relevant
-4. **Structure with headers** - Use `#` and `##` to organize content sections
+| Action | Description | Example |
+| :--- | :--- | :--- |
+| `[B-roll: ...]` | Background video footage | `[B-roll: mountain sunset]` |
+| `[Image: ...]` | Static images or screenshots | `[Image: software logo]` |
+| `[Annotation: ...]` | On-screen text overlays | `[Annotation: "Tip #1"]` |
+| `[Citation: ...]` | Source credits | `[Citation: Wikipedia]` |
+
+---
 
 ## Timing and Beat Generation
 
-### Word Count Guidelines
+The system uses a **2.5 words per second** heuristic to calculate timing.
 
-The system uses a **2.5 words per second** heuristic to calculate timing:
+- **13-25 words**: 5-10 second beat (optimal range).
+- **Short segments**: Automatically merged.
+- **Long segments**: Automatically split.
 
-- **13-25 words** = 5-10 second beat (optimal range)
-- **Shorter segments** may be combined with adjacent text
-- **Longer segments** will be automatically split
-
-### Example Beat Breakdown
-
+### Example
 ```markdown
-## Getting Started with Python
-
-First, you need to install Python on your computer. Visit the official Python website and download the latest version for your operating system.
+## Installation
+Visit the official Python website and download the latest version for your operating system.
 ```
+*Word count: 15 words ≈ 6 seconds.*
 
-This becomes **2 beats**:
-- Beat 1: "First, you need to install Python on your computer." (10 words â‰ˆ 4 seconds)
-- Beat 2: "Visit the official Python website and download the latest version for your operating system." (15 words â‰ˆ 6 seconds)
-
-## Optimizing for B-Roll Generation
-
-### Include Visual Keywords
-
-The system generates two types of search queries for each beat:
-
-1. **Stock Keywords** - For stock footage libraries (Pexels)
-2. **YouTube Phrases** - For YouTube content searches
-
-#### Good Examples
-
-```markdown
-# Coding Tutorial
-
-Open your favorite text editor or IDE like Visual Studio Code. We'll start by creating a simple "Hello World" program in Python.
-
-Navigate to the terminal window and type the following command to run your script. You should see the output displayed in the console.
-```
-
-**Generated queries might include:**
-- Stock: "text editor", "programming", "code typing"
-- YouTube: "Visual Studio Code tutorial", "Python Hello World", "terminal command"
-
-#### What Works Well
-
-- **Specific software names**: "Visual Studio Code", "Photoshop", "Chrome"
-- **Concrete actions**: "typing", "clicking", "installing", "downloading"
-- **Visible objects**: "keyboard", "screen", "mouse", "computer"
-- **Technical terms**: "terminal", "code", "website", "application"
-
-### Avoid Abstract Concepts
-
-Less effective for B-roll generation:
-```markdown
-# Philosophy of Programming
-
-Programming is fundamentally about problem-solving and logical thinking. It requires patience, persistence, and creativity to develop elegant solutions.
-```
-
-Better approach:
-```markdown
-# Learning to Code
-
-Start by opening your code editor and creating a new file. Practice writing simple programs that solve everyday problems, like calculating tips or organizing your music library.
-```
-
-## Content Guidelines
-
-### Headers and Structure
-
-Use headers to provide context that influences B-roll selection:
-
-```markdown
-# Web Development Tutorial
-
-## Setting Up Your Environment
-
-Download and install Node.js from the official website. Open your terminal and verify the installation by typing 'node --version'.
-
-## Creating Your First Project
-
-Navigate to your project folder and initialize a new Node.js project. Create an index.html file and open it in your browser.
-```
-
-Headers like "Web Development Tutorial" and "Setting Up Your Environment" provide context that helps generate more relevant search queries.
-
-### Writing Style Tips
-
-1. **Be specific about tools and technologies**
-   ```markdown
-   âœ… "Open Visual Studio Code and create a new Python file"
-   âŒ "Open your editor and create a new file"
-   ```
-
-2. **Mention visual elements**
-   ```markdown
-   âœ… "Click the green 'Run' button in the toolbar"
-   âŒ "Execute the program"
-   ```
-
-3. **Include step-by-step actions**
-   ```markdown
-   âœ… "Right-click on the desktop and select 'New Folder'"
-   âŒ "Create a new folder"
-   ```
-
-4. **Reference UI elements**
-   ```markdown
-   âœ… "In the sidebar, expand the 'Files' panel"
-   âŒ "Look at the file structure"
-   ```
-
-## File Organization
-
-### Recommended Structure
-
-```
-project/
-â”œâ”€â”€ scripts/
-â”‚   â”œâ”€â”€ tutorial-intro.md
-â”‚   â”œâ”€â”€ setup-guide.md
-â”‚   â””â”€â”€ advanced-topics.md
-â”œâ”€â”€ output/
-â”‚   â”œâ”€â”€ tutorial-intro.fcpxml
-â”‚   â””â”€â”€ assets/
-â””â”€â”€ README.md
-```
-
-### Naming Conventions
-
-- Use descriptive filenames: `python-basics-tutorial.md`
-- Avoid spaces: use hyphens or underscores
-- Keep names concise but clear
-
-## Common Patterns
-
-### Tutorial Structure
-
-```markdown
-# [Technology] Tutorial: [Topic]
-
-## Introduction
-Brief overview of what you'll learn and why it's useful.
-
-## Prerequisites
-What viewers need before starting (software, knowledge, etc.).
-
-## Step 1: [Action]
-Detailed instructions with specific steps and visual cues.
-
-## Step 2: [Next Action]
-Continue with logical progression.
-
-## Troubleshooting
-Common issues and solutions.
-
-## Conclusion
-Summary and next steps.
-```
-
-### Product Demo Structure
-
-```markdown
-# [Product Name] Demo: [Feature]
-
-## Overview
-What the product does and key benefits.
-
-## Getting Started
-How to access and initial setup.
-
-## Key Features
-Demonstrate main functionality with specific actions.
-
-## Use Cases
-Real-world examples and scenarios.
-
-## Wrap Up
-Summary and call-to-action.
-```
+---
 
 ## Best Practices
 
-### Do's
+### ✅ DO
+- **Be specific**: "Open Visual Studio Code" is better than "Open your editor."
+- **Use active voice**: "Click the button" instead of "The button should be clicked."
+- **Mention visual elements**: Reference colors, positions, and UI labels.
+- **Write for the ear**: Read your script aloud to ensure it sounds natural.
 
-- âœ… Write as you would speak in the video
-- âœ… Include specific software, website, and tool names
-- âœ… Mention visual elements (buttons, menus, windows)
-- âœ… Use action verbs (click, type, drag, select)
-- âœ… Reference colors, positions, and UI elements
-- âœ… Keep sections focused on single topics
-- âœ… Use consistent terminology throughout
+### ❌ DON'T
+- **Use abstract concepts**: "Logical thinking" is hard to fetch; "typing code" is easy.
+- **Write long paragraphs**: Keep segments under 30 words for better pacing.
+- **Include code blocks**: The parser ignores code blocks; describe the code instead.
 
-### Don'ts
-
-- âŒ Write overly long paragraphs (>50 words)
-- âŒ Use only abstract concepts without visual elements
-- âŒ Include complex formatting (tables, code blocks)
-- âŒ Write in passive voice exclusively
-- âŒ Use vague references ("this", "that", "it")
-- âŒ Include placeholder text like "[TODO]"
-
-## Troubleshooting
-
-### If Beats Are Too Short
-
-**Problem**: Generated beats are under 5 seconds
-**Solution**: Write longer sentences or combine related ideas
-
-```markdown
-âŒ "Install Python. Open the terminal. Run the command."
-âœ… "Install Python from the official website, then open your terminal and run the python --version command to verify the installation."
-```
-
-### If Beats Are Too Long
-
-**Problem**: Generated beats exceed 10 seconds
-**Solution**: Break complex ideas into simpler sentences
-
-```markdown
-âŒ "Navigate to the Python website, download the installer for your operating system, run the installation wizard, accept the license agreement, choose your installation directory, and wait for the process to complete."
-âœ… "Navigate to the Python website and download the installer for your operating system. Run the installation wizard and follow the prompts to complete the setup."
-```
-
-### If B-Roll Queries Are Generic
-
-**Problem**: Generated search terms are too vague
-**Solution**: Include more specific visual keywords
-
-```markdown
-âŒ "We'll work on the project now."
-âœ… "Open Visual Studio Code and create a new React project using the terminal."
-```
+---
 
 ## Testing Your Scripts
 
-Before running the full pipeline, you can test your script structure:
-
-1. **Check word count**: Aim for 13-25 words per intended beat
-2. **Review for visual keywords**: Ensure each paragraph mentions concrete, visual elements
-3. **Read aloud**: Does it sound natural when spoken?
-4. **Verify specificity**: Are tool names, actions, and UI elements clearly mentioned?
-
-Use the `--no-fetch` flag to test script parsing without downloading assets:
+Use the CLI to test your script structure without downloading assets:
 
 ```bash
-python -m screenwrite your-script.md --output test.fcpxml --no-fetch
+screenwrite your-script.md --output test.fcpxml --no-fetch --verbose
 ```
 
-This will show you how your script gets broken into beats without fetching B-roll footage.
+This will show you exactly how your script is segmented and what search queries are generated.

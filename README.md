@@ -1,23 +1,23 @@
-﻿# ðŸŽ¬ ScreenWrite
+# 🎬 ScreenWrite
 
 **Script to Timeline, Automatically.**
 
-ScreenWrite is an automated video production engine that transforms Markdown scripts into professionally structured DaVinci Resolve timelines. It parses your script, generates intelligent B-roll search queries, and fetches high-quality assets from YouTube and Pexelsâ€”all in one workflow.
+ScreenWrite is an automated video production engine that transforms Markdown scripts into professionally structured DaVinci Resolve timelines. It parses your script, generates intelligent B-roll search queries, and fetches high-quality assets from YouTube and Pexels—all in one workflow.
 
 ---
 
-## âœ¨ Features
+## ✨ Features
 
-- **ðŸ“ Editorial Markdown Parser**: Converts standard markdown into timed video "beats" (5-10s segments).
-- **ðŸŽ¬ Automated B-roll**: Intelligently fetches footage from YouTube (yt-dlp) and Pexels Stock.
-- **âš¡ Pro-Grade Export**: Generates FCPXML 1.8 files ready for direct import into DaVinci Resolve or Final Cut Pro.
-- **ðŸ–¥ï¸ Minimalist Web UI**: A clean, "editorial-style" web interface for reviewing and fine-tuning your timeline.
-- **ðŸ› ï¸ Powerful CLI**: Robust command-line tool for automated batch processing.
-- **ðŸŽ¯ Smart Fallback**: Prioritizes specific YouTube clips with seamless fallback to Pexels stock footage.
+- **📝 Editorial Markdown Parser**: Converts standard markdown into timed video "beats" (5-10s segments).
+- **🎬 Automated B-roll**: Intelligently fetches footage from YouTube (yt-dlp) and Pexels Stock.
+- **⚡ Pro-Grade Export**: Generates FCPXML 1.8 files ready for direct import into DaVinci Resolve or Final Cut Pro.
+- **🖥️ Minimalist Web UI**: A clean, "editorial-style" web interface for reviewing and fine-tuning your timeline.
+- **🛠️ Powerful CLI**: Robust command-line tool for automated batch processing.
+- **🎯 Smart Fallback**: Prioritizes specific YouTube clips with seamless fallback to Pexels stock footage.
 
 ---
 
-## ðŸš€ Quick Start
+## 🚀 Quick Start
 
 ### 1. Installation
 
@@ -57,7 +57,7 @@ Visit `http://localhost:3000` to start your project.
 
 ---
 
-## ðŸ“– The Script Format
+## 📖 The Script Format
 
 ScreenWrite uses a refined Markdown syntax designed for video creators.
 
@@ -80,18 +80,18 @@ of our place in the world.
 
 ---
 
-## ðŸ› ï¸ Architecture
+## 🛠️ Architecture
 
 ScreenWrite is built on a modular pipeline designed for extensibility:
 
-1.  **Parser**: Text â†’ Timing â†’ Search Queries
+1.  **Parser**: Text → Timing → Search Queries
 2.  **Orchestrator**: Coordinates multi-source asset fetching.
 3.  **Fetchers**: YouTube (yt-dlp) & Pexels (API) integrations.
 4.  **Generator**: Produces standard FCPXML 1.8 manifests.
 
 ---
 
-## âš™ï¸ Configuration
+## ⚙️ Configuration
 
 Set your Pexels API key to enable high-quality stock footage:
 
@@ -105,8 +105,6 @@ export PEXELS_API_KEY="your_key_here"
 
 ---
 
-## âš–ï¸ License
+## ⚖️ License
 
 MIT License. See `LICENSE` for details.
-
-

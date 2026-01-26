@@ -1,305 +1,55 @@
-﻿# ScreenWrite Web App
+# ScreenWrite Web UI
 
-A modern web interface for the **screenwrite** CLI tool. Convert markdown video scripts into DaVinci Resolve-compatible timelines with automatic B-roll fetching, all through an intuitive web UI.
+A modern web interface for the **ScreenWrite** engine. Convert markdown scripts into DaVinci Resolve timelines with automatic B-roll fetching through an intuitive, editorial-style interface.
 
 ## Features
 
-- **ðŸ“ Upload & Parse**: Upload markdown scripts and automatically parse into beat segments
-- **ðŸŽ¬ Visual Preview**: See parsed beats with durations, keywords, and search queries
-- **âš™ï¸ Configure Fetching**: Choose YouTube and/or Pexels as asset sources
-- **ðŸ“¥ Auto B-roll**: Automatically fetch footage based on your script descriptions
-- **ðŸŽ¯ Smart Fallback**: Seamlessly switch between YouTube and Pexels when content unavailable
-- **âš¡ Generate Timeline**: Create FCPXML files ready for DaVinci Resolve import
-- **ðŸ“Š Real-time Progress**: Track asset downloading with live progress updates
+- **📝 Upload & Parse**: Instantly convert markdown into timed video beats.
+- **🎬 Visual Review**: Fine-tune your script and visual search queries.
+- **⚙️ Source Control**: Choose between YouTube, Pexels, or intentional empty gaps.
+- **⚡ Pro Export**: Generate and download FCPXML 1.8 files.
+
+---
+
+## Quick Start
+
+### 1. Backend Setup (Flask)
+```bash
+cd webapp/backend
+python -m venv venv
+source venv/Scripts/activate # Windows
+pip install -r requirements.txt
+python app.py
+```
+
+### 2. Frontend Setup (React)
+```bash
+cd webapp/frontend
+npm install
+npm run dev
+```
+
+Visit `http://localhost:3000` to begin.
+
+---
 
 ## Project Structure
 
 ```
 webapp/
-â”œâ”€â”€ backend/                    # Flask REST API
-â”‚   â”œâ”€â”€ routes/                # API endpoint handlers
-â”‚   â”‚   â”œâ”€â”€ upload.py          # File upload & parsing
-â”‚   â”‚   â”œâ”€â”€ api.py             # Session management
-â”‚   â”‚   â””â”€â”€ export.py          # FCPXML generation
-â”‚   â”œâ”€â”€ app.py                 # Flask application
-â”‚   â””â”€â”€ requirements.txt        # Python dependencies
-â”œâ”€â”€ frontend/                   # React + Vite UI
-â”‚   â”œâ”€â”€ src/
-â”‚   â”‚   â”œâ”€â”€ components/        # Reusable React components
-â”‚   â”‚   â”œâ”€â”€ pages/             # Page components
-â”‚   â”‚   â”œâ”€â”€ services/          # API client
-â”‚   â”‚   â”œâ”€â”€ types/             # TypeScript definitions
-â”‚   â”‚   â””â”€â”€ styles/            # CSS & Tailwind
-â”‚   â”œâ”€â”€ package.json
-â”‚   â””â”€â”€ vite.config.ts
-â””â”€â”€ README.md                   # This file
+├── backend/          # Flask REST API
+│   ├── routes/       # API endpoints (Upload, Session, Export)
+│   └── app.py        # Entry point
+├── frontend/         # React + Vite (TypeScript)
+│   ├── src/          # Components, Pages, and Services
+│   └── package.json  # Dependencies
+└── README.md         # This file
 ```
 
-## Quick Start
-
-### Prerequisites
-- Python 3.8+
-- Node.js 16+
-- npm or yarn
-
-### Backend Setup
-
-```bash
-cd webapp/backend
-
-# Create virtual environment
-python -m venv venv
-source venv/Scripts/activate  # Windows
-# or
-source venv/bin/activate      # macOS/Linux
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Create .env file (optional)
-cp .env.example .env
-
-# Run Flask server
-python app.py
-# Server runs on http://localhost:5000
-```
-
-### Frontend Setup
-
-```bash
-cd webapp/frontend
-
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-# App runs on http://localhost:3000
-```
-
-The frontend is configured to proxy API requests to the backend, so you can develop without CORS issues.
-
-## Usage
-
-1. **Visit the web app**: Open http://localhost:3000 in your browser
-2. **Upload a script**: Select or drag-drop a markdown file
-3. **Review beats**: Check auto-parsed beats and edit if needed
-4. **Configure**: Choose YouTube/Pexels sources and add API keys (if using Pexels)
-5. **Export**: Generate FCPXML timeline
-6. **Download**: Get your FCPXML file ready for DaVinci Resolve
-
-## Script Format
-
-Your markdown script should follow this pattern:
-
-```markdown
-## Introduction
-This is the opening. We need footage of
-a sunrise with a peaceful vibe.
-
-## Main Section
-Show office workers collaborating.
-Quick cuts of teamwork in action.
-
-## Conclusion  
-End with an inspiring sunset shot.
-```
-
-Each section:
-- Starts with a header (##)
-- Contains a description of the footage needed
-- Duration is auto-calculated from text length
-- Stock keywords and YouTube phrases are generated automatically
-
-## API Endpoints
-
-### Upload & Parse
-```
-POST /api/upload
-Content-Type: multipart/form-data
-Body: { file: File }
-
-Response:
-{
-  sessionId: string,
-  beats: Beat[],
-  summary: {
-    totalBeats: number,
-    estimatedDuration: number,
-    warnings: string[]
-  }
-}
-```
-
-### Session Management
-```
-GET /api/session/:sessionId
-GET /api/session/:sessionId/status
-PUT /api/session/:sessionId/config
-PUT /api/session/:sessionId/beats
-DELETE /api/session/:sessionId/delete
-```
-
-### Export
-```
-POST /api/session/:sessionId/export
-Body: { filename?: string, resolveIntegration?: boolean }
-
-Response:
-{
-  fcpxmlPath: string,
-  downloadUrl: string,
-  assetCount: number,
-  beatCount: number,
-  estimatedDuration: number
-}
-```
+---
 
 ## Configuration
 
-### Backend (.env)
-```
-FLASK_ENV=development          # development or production
-FLASK_PORT=5000                # Server port
-UPLOAD_FOLDER=./uploads         # Temp upload location
-SESSION_FOLDER=./sessions       # Session data storage
-```
+The Web UI uses the same core engine as the CLI. Set your `PEXELS_API_KEY` in your environment to enable stock footage fallback.
 
-### Frontend (vite.config.ts)
-```typescript
-server: {
-  port: 3000,
-  proxy: {
-    '/api': {
-      target: 'http://localhost:5000',  // Backend URL
-      changeOrigin: true,
-    },
-  },
-}
-```
-
-## Development
-
-### Building
-```bash
-# Frontend
-cd webapp/frontend
-npm run build  # Produces dist/ directory
-
-# Backend
-# No build step required - runs directly with Python
-```
-
-### Testing
-```bash
-# Backend tests (when added)
-cd webapp/backend
-python -m pytest tests/
-
-# Frontend tests (when added)
-cd webapp/frontend
-npm run test
-```
-
-### Linting
-```bash
-# Frontend
-cd webapp/frontend
-npm run lint
-
-# Backend (if configured)
-cd webapp/backend
-flake8 . 
-pylint .
-```
-
-## Deployment
-
-### Production Build
-```bash
-# Build frontend
-cd webapp/frontend
-npm run build
-
-# This creates an optimized `dist/` directory
-
-# Backend: Use production-grade WSGI server
-pip install gunicorn
-gunicorn app:app --workers 4 --bind 0.0.0.0:5000
-```
-
-### Docker (Optional)
-Create a `Dockerfile` in the webapp directory to containerize the entire application.
-
-## Known Limitations
-
-- File upload size limited to 16MB
-- Asset download timeout: 60 seconds per beat
-- YouTube/Pexels API rate limits apply
-- FCPXML generation requires all beats to have parsed data
-
-## Troubleshooting
-
-### "Failed to upload file"
-- Check file is markdown (.md) or text (.txt)
-- Ensure file size < 16MB
-- Verify backend is running (http://localhost:5000/api/health)
-
-### "No beats generated from script"
-- Check markdown formatting (headers must use ##)
-- Ensure sections have descriptive text
-- Avoid empty sections
-
-### "Pexels API errors"
-- Verify API key is correct (if using paid tier)
-- Check API key has appropriate permissions
-- Pexels free tier has rate limits
-
-### "DaVinci Resolve won't import FCPXML"
-- Verify Resolve version supports FCPXML 1.8
-- Check that asset paths are correct and accessible
-- Try generating with a simpler script first
-
-## Environment Variables
-
-### Backend Required
-- None (defaults work fine for development)
-
-### Backend Optional
-- `FLASK_ENV`: Set to `production` for production use
-- `FLASK_PORT`: Custom port (default: 5000)
-- `UPLOAD_FOLDER`: Custom upload directory (default: ./uploads)
-- `SESSION_FOLDER`: Custom session directory (default: ./sessions)
-
-### Frontend
-- All configuration is in `vite.config.ts`
-- Update the proxy target if backend is on a different host/port
-
-## Contributing
-
-This is part of the **footage** project. See the main [README.md](../README.md) for contribution guidelines.
-
-## License
-
-MIT License - See LICENSE file
-
-## Support
-
-For issues and questions:
-- Check the [main README](../README.md)
-- Review the [troubleshooting guide](./docs/TROUBLESHOOTING.md) (when created)
-- Open an issue on GitHub
-
-## Roadmap
-
-Future enhancements planned:
-- [ ] Real-time progress streaming (SSE/WebSocket)
-- [ ] Asset gallery with video previews
-- [ ] Project persistence and loading
-- [ ] Batch script processing
-- [ ] Custom beat templates
-- [ ] Direct Resolve integration (optional)
-- [ ] Asset caching and reuse
-- [ ] Analytics and usage tracking
-
-
+For deployment configuration, see the `.env.example` file in the backend directory.
