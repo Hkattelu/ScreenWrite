@@ -28,6 +28,65 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
+@upload_bp.route('/upload/sample', methods=['POST'])
+def upload_sample():
+    """
+    Process the pre-defined sample script for onboarding.
+    Returns parsed beats and session ID, similar to upload_script.
+    """
+    try:
+        # Use the example script from the project docs
+        sample_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../docs/DOCUMENTARY_EXAMPLE.md'))
+        
+        if not os.path.exists(sample_path):
+            return {'error': 'Sample script not found'}, 404
+
+        # Create session directory
+        session_id = str(uuid.uuid4())
+        session_dir = os.path.join(current_app.config['SESSION_FOLDER'], session_id)
+        os.makedirs(session_dir, exist_ok=True)
+
+        # Copy sample to session dir for consistency
+        target_path = os.path.join(session_dir, 'sample_script.md')
+        with open(sample_path, 'r', encoding='utf-8') as src, open(target_path, 'w', encoding='utf-8') as dst:
+            dst.write(src.read())
+
+        # Parse script
+        parser = ScriptParser()
+        beats = parser.parse(target_path)
+
+        # Convert beats to dict for JSON serialization
+        beats_data = [
+            {
+                'id': beat.id,
+                'text': beat.text,
+                'duration': beat.duration,
+                'stock_keyword': beat.stock_keyword,
+                'youtube_phrase': beat.youtube_search_phrase
+            }
+            for beat in beats
+        ]
+
+        total_duration = sum(beat.duration for beat in beats) if beats else 0
+
+        response = {
+            'sessionId': session_id,
+            'beats': beats_data,
+            'summary': {
+                'totalBeats': len(beats),
+                'estimatedDuration': total_duration,
+                'warnings': []
+            }
+        }
+
+        logger.info(f'Session {session_id} created using sample script')
+        return response, 200
+
+    except Exception as e:
+        logger.error(f'Sample upload error: {str(e)}', exc_info=True)
+        return {'error': f'Sample upload failed: {str(e)}'}, 500
+
+
 @upload_bp.route('/upload', methods=['POST'])
 def upload_script():
     """

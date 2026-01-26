@@ -28,6 +28,14 @@ export async function uploadScript(file: File): Promise<UploadResponse> {
 }
 
 /**
+ * Process the onboarding sample script
+ */
+export async function uploadSample(): Promise<UploadResponse> {
+  const response = await apiClient.post<UploadResponse>('/upload/sample')
+  return response.data
+}
+
+/**
  * Get current session state
  */
 export async function getSession(sessionId: string): Promise<SessionState> {

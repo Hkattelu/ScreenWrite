@@ -17,43 +17,39 @@ ScreenWrite is an automated video production engine that transforms Markdown scr
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Quick Start (GitHub)
 
-### 1. Installation
-
-ScreenWrite requires **FFmpeg** for video processing.
-
-```bash
-# Clone the repository
-git clone https://github.com/Hkattelu/ScreenWrite.git
-cd ScreenWrite
-
-# Install as a local package
-pip install -e .
-
-# (Windows) Install FFmpeg via Chocolatey
-choco install ffmpeg
+### The One-Command Way
+If you are on **Windows**, run:
+```powershell
+./setup.ps1
 ```
 
-### 2. Start the Engine (CLI)
-Convert a script directly from your terminal:
+If you are on **macOS** or **Linux**, run:
 ```bash
-screenwrite script.md -o timeline.fcpxml
+chmod +x setup.sh && ./setup.sh
 ```
 
-### 3. Launch the Web UI
-For a more visual experience, run the included web application:
+### The Manual Way
 
-**Backend:**
+**1. Backend Setup:**
 ```bash
-cd webapp/backend && python app.py
+cd webapp/backend
+python -m venv venv
+./venv/Scripts/activate # or source venv/bin/activate
+pip install -r requirements.txt
+python app.py
 ```
 
-**Frontend:**
+**2. Frontend Setup:**
 ```bash
-cd webapp/frontend && npm install && npm run dev
+cd webapp/frontend
+npm install
+npm run dev
 ```
-Visit `http://localhost:3000` to start your project.
+
+Visit `http://localhost:3000`. 
+**💡 Pro Tip:** Don't have a script ready? Click **"Try with an Example"** on the upload screen to see ScreenWrite in action immediately.
 
 ---
 

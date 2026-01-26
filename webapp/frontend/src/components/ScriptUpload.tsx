@@ -1,14 +1,8 @@
-/**
- * Script upload component
- *
- * Handles markdown file upload and displays parsed beats
- */
-
 import { useState, useRef } from 'react'
-import { uploadScript, getErrorMessage } from '../services/api'
+import { uploadScript, uploadSample, getErrorMessage } from '../services/api'
 import type { UploadResponse } from '../types/models'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Upload, AlertCircle, FilePlus, Sparkles } from 'lucide-react'
+import { Upload, AlertCircle, FilePlus, Sparkles, Wand2 } from 'lucide-react'
 
 interface ScriptUploadProps {
   onUploadSuccess: (data: UploadResponse) => void
@@ -56,6 +50,20 @@ export function ScriptUpload({ onUploadSuccess }: ScriptUploadProps) {
 
     try {
       const response = await uploadScript(file)
+      onUploadSuccess(response)
+    } catch (err) {
+      setError(getErrorMessage(err))
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleTrySample = async () => {
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const response = await uploadSample()
       onUploadSuccess(response)
     } catch (err) {
       setError(getErrorMessage(err))
@@ -135,6 +143,26 @@ export function ScriptUpload({ onUploadSuccess }: ScriptUploadProps) {
           className="hidden"
         />
       </motion.div>
+
+      <div className="mt-8 flex flex-col items-center gap-4">
+        <div className="flex items-center gap-4 w-full">
+          <div className="h-px bg-gray-100 flex-grow" />
+          <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">or</span>
+          <div className="h-px bg-gray-100 flex-grow" />
+        </div>
+
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            handleTrySample()
+          }}
+          disabled={isLoading}
+          className="group flex items-center gap-3 px-6 py-3 rounded-xl border border-blue-100 bg-blue-50/30 text-blue-600 hover:bg-blue-50 hover:border-blue-200 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <Wand2 size={16} className="group-hover:rotate-12 transition-transform" />
+          <span className="text-xs font-bold uppercase tracking-wider">Try with an Example</span>
+        </button>
+      </div>
 
       <AnimatePresence>
         {error && (
