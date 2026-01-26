@@ -1,4 +1,4 @@
-"""
+﻿"""
 File upload route handler.
 
 Handles markdown script uploads, validation, and beat parsing.
@@ -10,12 +10,12 @@ import logging
 from flask import Blueprint, request, jsonify, current_app
 from werkzeug.utils import secure_filename
 
-# Import from parent vid_orchestrator module
+# Import from parent screenwrite module
 import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../')))
 
-from vid_orchestrator.parsing.script_parser import ScriptParser
-from vid_orchestrator.core.beat import Beat
+from screenwrite.parsing.script_parser import ScriptParser
+from screenwrite.core.beat import Beat
 
 upload_bp = Blueprint('upload', __name__)
 logger = logging.getLogger(__name__)
@@ -116,3 +116,4 @@ def upload_script():
     except Exception as e:
         logger.error(f'Upload error: {str(e)}', exc_info=True)
         return {'error': f'Upload failed: {str(e)}'}, 500
+

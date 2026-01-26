@@ -1,4 +1,4 @@
-# Tech Stack: vid-orchestrator
+﻿# Tech Stack: screenwrite
 
 ## Core Language & Runtime
 - **Python 3.7+:** The primary language for orchestration, parsing, and CLI logic.
@@ -19,3 +19,4 @@
 ## Quality Assurance
 - **unittest:** Standard Python testing framework for unit and integration tests.
 - **flake8/pylint:** (Detected) For maintaining code quality and PEP 8 compliance.
+

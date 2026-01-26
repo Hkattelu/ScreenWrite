@@ -1,5 +1,5 @@
-/**
- * API client service for footage web app
+﻿/**
+ * API client service for ScreenWrite web app
  */
 
 import axios, { AxiosError } from 'axios'
@@ -103,3 +103,4 @@ export function getErrorMessage(error: unknown): string {
   }
   return 'An unexpected error occurred'
 }
+

@@ -1,4 +1,4 @@
-# Footage Web App Setup Guide
+﻿# ScreenWrite Web App Setup Guide
 
 Complete step-by-step instructions for setting up the web app locally for development.
 
@@ -92,14 +92,14 @@ You should see:
 ```
   VITE v5.0.0  ready in XXX ms
 
-  ➜  Local:   http://localhost:3000/
-  ➜  press h to show help
+  âžœ  Local:   http://localhost:3000/
+  âžœ  press h to show help
 ```
 
 ## Step 3: Verify Everything Works
 
 1. **Open browser**: Visit http://localhost:3000
-2. **See the home page**: You should see the Footage welcome screen
+2. **See the home page**: You should see the ScreenWrite welcome screen
 3. **Click "Get Started"**: Navigate to the workflow page
 4. **Test upload**: Try uploading a sample markdown file
 
@@ -122,10 +122,10 @@ out over the city at sunset with hope for the future.
 ```
 
 Upload this file and verify:
-- ✅ File uploads successfully
-- ✅ Beats are parsed (should have 3 beats)
-- ✅ Durations are calculated
-- ✅ Can click through to Review and Configure steps
+- âœ… File uploads successfully
+- âœ… Beats are parsed (should have 3 beats)
+- âœ… Durations are calculated
+- âœ… Can click through to Review and Configure steps
 
 ## Troubleshooting
 
@@ -311,9 +311,10 @@ curl -X POST http://localhost:5000/api/health
 ## Success!
 
 You should now have:
-- ✅ Backend running on http://localhost:5000
-- ✅ Frontend running on http://localhost:3000
-- ✅ Hot-reloading for both backend and frontend
-- ✅ Ready to develop new features
+- âœ… Backend running on http://localhost:5000
+- âœ… Frontend running on http://localhost:3000
+- âœ… Hot-reloading for both backend and frontend
+- âœ… Ready to develop new features
 
 Happy coding!
+

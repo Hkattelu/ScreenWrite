@@ -1,6 +1,6 @@
-# Example Markdown Scripts
+﻿# Example Markdown Scripts
 
-This document provides complete example markdown scripts demonstrating proper formatting for vid-orchestrator.
+This document provides complete example markdown scripts demonstrating proper formatting for screenwrite.
 
 ---
 
@@ -71,7 +71,7 @@ Launch the video editor application from your programs folder or dock. The inter
 
 Click the new project button and enter a name for your video. Choose your preferred resolution and frame rate from the dropdown menus then click create to open the editing workspace.
 
-## Importing Your Footage
+## Importing Your ScreenWrite
 
 Navigate to the File menu at the top of the screen and select import media. A file browser window will appear where you can locate and select your video clips from your computer.
 
@@ -310,10 +310,10 @@ Each paragraph in these examples targets 15-20 words, which translates to 6-8 se
 
 ### Testing Your Scripts
 
-Run any of these examples through vid-orchestrator:
+Run any of these examples through screenwrite:
 
 ```powershell
-python -m vid_orchestrator docs\python-quickstart.md --output test.fcpxml --no-fetch --verbose
+python -m screenwrite docs\python-quickstart.md --output test.fcpxml --no-fetch --verbose
 ```
 
 Check the console output to see:
@@ -322,3 +322,5 @@ Check the console output to see:
 - Generated search queries for stock footage and YouTube
 
 Adjust your writing if beats are consistently too short (<5s) or too long (>10s).
+
+

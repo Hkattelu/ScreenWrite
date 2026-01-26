@@ -1,16 +1,16 @@
-[build-system]
+﻿[build-system]
 requires = ["setuptools>=45", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "vid-orchestrator"
+name = "screenwrite"
 version = "0.1.0"
 description = "Convert markdown video scripts into DaVinci Resolve timelines with automatic B-roll fetching"
 readme = "README.md"
 requires-python = ">=3.8"
 license = {text = "MIT"}
 authors = [
-    {name = "vid-orchestrator contributors"}
+    {name = "screenwrite contributors"}
 ]
 keywords = [
     "video",
@@ -56,19 +56,19 @@ ui = [
 ]
 
 [project.scripts]
-vid-orchestrator = "vid_orchestrator.cli:main"
+screenwrite = "screenwrite.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/Hkattelu/footage"
-Documentation = "https://github.com/Hkattelu/footage#readme"
-Repository = "https://github.com/Hkattelu/footage.git"
-"Bug Tracker" = "https://github.com/Hkattelu/footage/issues"
+Homepage = "https://github.com/Hkattelu/ScreenWrite"
+Documentation = "https://github.com/Hkattelu/ScreenWrite#readme"
+Repository = "https://github.com/Hkattelu/ScreenWrite.git"
+"Bug Tracker" = "https://github.com/Hkattelu/ScreenWrite/issues"
 
 [tool.setuptools]
-packages = ["vid_orchestrator"]
+packages = ["screenwrite"]
 
 [tool.setuptools.package-data]
-vid_orchestrator = ["py.typed"]
+screenwrite = ["py.typed"]
 
 [tool.black]
 line-length = 100
@@ -100,7 +100,7 @@ python_functions = ["test_*"]
 addopts = "--strict-markers --tb=short"
 
 [tool.coverage.run]
-source = ["vid_orchestrator"]
+source = ["screenwrite"]
 branch = true
 
 [tool.coverage.report]
@@ -115,3 +115,5 @@ exclude_lines = [
     "@(abc\\.)?abstractmethod",
 ]
 precision = 2
+
+

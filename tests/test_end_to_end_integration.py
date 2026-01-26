@@ -1,7 +1,7 @@
-"""
-End-to-end integration test for vid-orchestrator.
+﻿"""
+End-to-end integration test for screenwrite.
 
-This test validates the complete workflow: parse → fetch → generate → validate
+This test validates the complete workflow: parse â†’ fetch â†’ generate â†’ validate
 with mocked external APIs to ensure reliable testing.
 
 Requirements tested:
@@ -19,16 +19,16 @@ from pathlib import Path
 import xml.etree.ElementTree as ET
 
 # Import the components to test
-from vid_orchestrator.orchestrator import VideoOrchestrator
-from vid_orchestrator.core.beat import Beat
-from vid_orchestrator.parsing.script_parser import ScriptParser
-from vid_orchestrator.generators.xml_generator import XMLGenerator
-from vid_orchestrator.cli import main, create_parser
+from screenwrite.orchestrator import VideoOrchestrator
+from screenwrite.core.beat import Beat
+from screenwrite.parsing.script_parser import ScriptParser
+from screenwrite.generators.xml_generator import XMLGenerator
+from screenwrite.cli import main, create_parser
 
 
 class TestEndToEndIntegration(unittest.TestCase):
     """
-    End-to-end integration test for the complete vid-orchestrator workflow.
+    End-to-end integration test for the complete screenwrite workflow.
     
     Tests the full pipeline from markdown script to FCPXML output with mocked
     external dependencies to ensure reliable and fast testing.
@@ -37,7 +37,7 @@ class TestEndToEndIntegration(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures and temporary directories."""
         # Create temporary directory for test outputs
-        self.temp_dir = tempfile.mkdtemp(prefix="vid_orchestrator_test_")
+        self.temp_dir = tempfile.mkdtemp(prefix="screenwrite_test_")
         self.temp_path = Path(self.temp_dir)
         
         # Get path to sample script
@@ -72,7 +72,7 @@ class TestEndToEndIntegration(unittest.TestCase):
     
     def test_complete_workflow_with_mocked_fetchers(self):
         """
-        Test the complete workflow: parse → fetch → generate → validate.
+        Test the complete workflow: parse â†’ fetch â†’ generate â†’ validate.
         
         This test validates:
         - Script parsing produces valid beats (Requirement 1.1)
@@ -81,7 +81,7 @@ class TestEndToEndIntegration(unittest.TestCase):
         - All components integrate properly
         """
         # Mock the asset orchestrator at the module level where it's imported
-        with patch('vid_orchestrator.orchestrator.AssetOrchestrator') as mock_orchestrator_class:
+        with patch('screenwrite.orchestrator.AssetOrchestrator') as mock_orchestrator_class:
             # Configure mock asset orchestrator
             mock_orchestrator = Mock()
             mock_orchestrator_class.return_value = mock_orchestrator
@@ -159,7 +159,7 @@ class TestEndToEndIntegration(unittest.TestCase):
         - Resource references are valid (Requirement 3.4)
         """
         # Mock asset fetching for this test
-        with patch('vid_orchestrator.orchestrator.AssetOrchestrator') as mock_orchestrator_class:
+        with patch('screenwrite.orchestrator.AssetOrchestrator') as mock_orchestrator_class:
             mock_orchestrator = Mock()
             mock_orchestrator_class.return_value = mock_orchestrator
             mock_orchestrator.get_available_fetchers.return_value = ['youtube', 'pexels']
@@ -320,7 +320,7 @@ class TestEndToEndIntegration(unittest.TestCase):
         """
         # Mock command line arguments
         test_args = [
-            'vid-orchestrator',
+            'screenwrite',
             str(self.script_path),
             '--output', str(self.output_fcpxml),
             '--no-fetch',  # Skip fetching to avoid external dependencies
@@ -328,7 +328,7 @@ class TestEndToEndIntegration(unittest.TestCase):
         ]
         
         # Mock asset orchestrator to avoid external calls
-        with patch('vid_orchestrator.orchestrator.AssetOrchestrator') as mock_orchestrator_class:
+        with patch('screenwrite.orchestrator.AssetOrchestrator') as mock_orchestrator_class:
             mock_orchestrator = Mock()
             mock_orchestrator_class.return_value = mock_orchestrator
             mock_orchestrator.get_available_fetchers.return_value = []
@@ -382,7 +382,7 @@ class TestEndToEndIntegration(unittest.TestCase):
             )
         
         # Test with asset fetching failures
-        with patch('vid_orchestrator.orchestrator.AssetOrchestrator') as mock_orchestrator_class:
+        with patch('screenwrite.orchestrator.AssetOrchestrator') as mock_orchestrator_class:
             mock_orchestrator = Mock()
             mock_orchestrator_class.return_value = mock_orchestrator
             mock_orchestrator.get_available_fetchers.return_value = ['youtube']

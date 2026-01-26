@@ -1,4 +1,4 @@
-"""
+﻿"""
 Unit tests for ScriptParser module.
 
 Tests the markdown parsing, beat generation, and query generation functionality.
@@ -9,9 +9,9 @@ import shutil
 import tempfile
 from pathlib import Path
 
-from vid_orchestrator.parsing.script_parser import ScriptParser
-from vid_orchestrator.core.beat import Beat
-from vid_orchestrator.utils.error_handling import InputValidationError
+from screenwrite.parsing.script_parser import ScriptParser
+from screenwrite.core.beat import Beat
+from screenwrite.utils.error_handling import InputValidationError
 
 
 class TestScriptParser(unittest.TestCase):
@@ -155,7 +155,7 @@ This is body text with some content.
     
     def test_parse_with_different_encodings(self):
         """Test parsing files with different encodings."""
-        content = "# Tutorial\n\nThis is a test with some special characters: é, ñ, ü."
+        content = "# Tutorial\n\nThis is a test with some special characters: Ã©, Ã±, Ã¼."
         
         # Test UTF-8
         script_path = self.temp_path / "test_utf8.md"
@@ -296,3 +296,4 @@ class TestScriptParserHelperMethods(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+

@@ -1,61 +1,61 @@
-# Web App Architecture
+﻿# Web App Architecture
 
-Detailed architecture documentation for the footage web app.
+Detailed architecture documentation for the ScreenWrite web app.
 
 ## System Overview
 
-The web app is a modern full-stack application that wraps the existing `vid_orchestrator` CLI tool in an intuitive web interface.
+The web app is a modern full-stack application that wraps the existing `screenwrite` CLI tool in an intuitive web interface.
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    User's Browser                            │
-│                 (http://localhost:3000)                      │
-└──────────────────┬──────────────────────────────────────────┘
-                   │ HTTP + JSON
-                   ▼
-┌─────────────────────────────────────────────────────────────┐
-│              Frontend (React + Vite)                         │
-│  ┌────────────────────────────────────────────────────────┐ │
-│  │ Pages: Home, Workflow                                  │ │
-│  │ Components: Upload, BeatList, ConfigPanel             │ │
-│  │ Services: API client with axios                        │ │
-│  │ Styling: Tailwind CSS                                 │ │
-│  └────────────────────────────────────────────────────────┘ │
-└──────────────────┬──────────────────────────────────────────┘
-                   │ REST API calls
-                   │ /api/upload, /api/session/*, /api/export
-                   ▼
-┌─────────────────────────────────────────────────────────────┐
-│              Backend (Flask + Python)                        │
-│  ┌────────────────────────────────────────────────────────┐ │
-│  │ Routes:                                                │ │
-│  │  - upload.py: Parse scripts into beats               │ │
-│  │  - api.py: Session management                         │ │
-│  │  - export.py: FCPXML generation                       │ │
-│  │                                                        │ │
-│  │ Services:                                             │ │
-│  │  - Session state (JSON files)                         │ │
-│  │  - Configuration management                           │ │
-│  └────────────────────────────────────────────────────────┘ │
-└──────────────────┬──────────────────────────────────────────┘
-                   │ Python imports
-                   ▼
-┌─────────────────────────────────────────────────────────────┐
-│         vid_orchestrator (Existing CLI)                      │
-│  ┌────────────────────────────────────────────────────────┐ │
-│  │ - ScriptParser: markdown → beats                      │ │
-│  │ - XMLGenerator: beats → FCPXML                        │ │
-│  │ - Beat dataclass: core data structure                 │ │
-│  └────────────────────────────────────────────────────────┘ │
-└──────────────────┬──────────────────────────────────────────┘
-                   │
-                   ▼
-         ┌─────────────────┐
-         │  File System    │
-         │  sessions/      │
-         │  uploads/       │
-         │  output/        │
-         └─────────────────┘
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚                    User's Browser                            â”‚
+â”‚                 (http://localhost:3000)                      â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+                   â”‚ HTTP + JSON
+                   â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚              Frontend (React + Vite)                         â”‚
+â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â” â”‚
+â”‚  â”‚ Pages: Home, Workflow                                  â”‚ â”‚
+â”‚  â”‚ Components: Upload, BeatList, ConfigPanel             â”‚ â”‚
+â”‚  â”‚ Services: API client with axios                        â”‚ â”‚
+â”‚  â”‚ Styling: Tailwind CSS                                 â”‚ â”‚
+â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜ â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+                   â”‚ REST API calls
+                   â”‚ /api/upload, /api/session/*, /api/export
+                   â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚              Backend (Flask + Python)                        â”‚
+â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â” â”‚
+â”‚  â”‚ Routes:                                                â”‚ â”‚
+â”‚  â”‚  - upload.py: Parse scripts into beats               â”‚ â”‚
+â”‚  â”‚  - api.py: Session management                         â”‚ â”‚
+â”‚  â”‚  - export.py: FCPXML generation                       â”‚ â”‚
+â”‚  â”‚                                                        â”‚ â”‚
+â”‚  â”‚ Services:                                             â”‚ â”‚
+â”‚  â”‚  - Session state (JSON files)                         â”‚ â”‚
+â”‚  â”‚  - Configuration management                           â”‚ â”‚
+â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜ â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+                   â”‚ Python imports
+                   â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚         screenwrite (Existing CLI)                      â”‚
+â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â” â”‚
+â”‚  â”‚ - ScriptParser: markdown â†’ beats                      â”‚ â”‚
+â”‚  â”‚ - XMLGenerator: beats â†’ FCPXML                        â”‚ â”‚
+â”‚  â”‚ - Beat dataclass: core data structure                 â”‚ â”‚
+â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜ â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+                   â”‚
+                   â–¼
+         â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+         â”‚  File System    â”‚
+         â”‚  sessions/      â”‚
+         â”‚  uploads/       â”‚
+         â”‚  output/        â”‚
+         â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
 ## Component Hierarchy
@@ -64,93 +64,93 @@ The web app is a modern full-stack application that wraps the existing `vid_orch
 
 ```
 App.tsx
-├── Router (React Router)
-│
-├── Home page
-│   ├── Hero section
-│   ├── Features grid
-│   ├── Workflow steps
-│   └── Script format guide
-│
-└── Workflow page
-    ├── Step indicator (1. Upload, 2. Review, 3. Configure, 4. Export)
-    │
-    ├── Step 1: Upload
-    │   └── ScriptUpload component
-    │       ├── Drag-drop zone
-    │       ├── File input
-    │       └── Error display
-    │
-    ├── Step 2: Review
-    │   └── BeatList component
-    │       ├── Summary stats
-    │       ├── Beat display
-    │       └── Edit mode (inline)
-    │
-    ├── Step 3: Configure
-    │   └── ConfigPanel component
-    │       ├── YouTube toggle
-    │       ├── Pexels configuration
-    │       └── Output directory
-    │
-    └── Step 4: Export
-        ├── Export confirmation
-        ├── File download
-        └── Success message
+â”œâ”€â”€ Router (React Router)
+â”‚
+â”œâ”€â”€ Home page
+â”‚   â”œâ”€â”€ Hero section
+â”‚   â”œâ”€â”€ Features grid
+â”‚   â”œâ”€â”€ Workflow steps
+â”‚   â””â”€â”€ Script format guide
+â”‚
+â””â”€â”€ Workflow page
+    â”œâ”€â”€ Step indicator (1. Upload, 2. Review, 3. Configure, 4. Export)
+    â”‚
+    â”œâ”€â”€ Step 1: Upload
+    â”‚   â””â”€â”€ ScriptUpload component
+    â”‚       â”œâ”€â”€ Drag-drop zone
+    â”‚       â”œâ”€â”€ File input
+    â”‚       â””â”€â”€ Error display
+    â”‚
+    â”œâ”€â”€ Step 2: Review
+    â”‚   â””â”€â”€ BeatList component
+    â”‚       â”œâ”€â”€ Summary stats
+    â”‚       â”œâ”€â”€ Beat display
+    â”‚       â””â”€â”€ Edit mode (inline)
+    â”‚
+    â”œâ”€â”€ Step 3: Configure
+    â”‚   â””â”€â”€ ConfigPanel component
+    â”‚       â”œâ”€â”€ YouTube toggle
+    â”‚       â”œâ”€â”€ Pexels configuration
+    â”‚       â””â”€â”€ Output directory
+    â”‚
+    â””â”€â”€ Step 4: Export
+        â”œâ”€â”€ Export confirmation
+        â”œâ”€â”€ File download
+        â””â”€â”€ Success message
 ```
 
 ## Data Flow
 
-### Upload → Parse Flow
+### Upload â†’ Parse Flow
 
 ```
 User clicks "Choose File"
-    │
-    ▼
+    â”‚
+    â–¼
 ScriptUpload component
-    │
-    ├─ Validate file type (.md or .txt)
-    ├─ Show loading state
-    │
-    ▼
+    â”‚
+    â”œâ”€ Validate file type (.md or .txt)
+    â”œâ”€ Show loading state
+    â”‚
+    â–¼
 uploadScript() API call
-    │
+    â”‚
     POST /api/upload
-    │
-    ▼
+    â”‚
+    â–¼
 Backend: upload.py
-    │
-    ├─ Save file to uploads/ folder
-    ├─ Create session directory
-    ├─ Import ScriptParser
-    │
-    ▼
+    â”‚
+    â”œâ”€ Save file to uploads/ folder
+    â”œâ”€ Create session directory
+    â”œâ”€ Import ScriptParser
+    â”‚
+    â–¼
 ScriptParser.parse_file()
-    │
-    ├─ Read markdown
-    ├─ Extract sections (by ##)
-    ├─ Calculate duration per section
-    ├─ Generate stock keywords
-    ├─ Generate YouTube search phrases
-    │
-    ▼
+    â”‚
+    â”œâ”€ Read markdown
+    â”œâ”€ Extract sections (by ##)
+    â”œâ”€ Calculate duration per section
+    â”œâ”€ Generate stock keywords
+    â”œâ”€ Generate YouTube search phrases
+    â”‚
+    â–¼
 Return Beat[] objects
-    │
-    ▼
+    â”‚
+    â–¼
 Backend constructs JSON response
-    │
+    â”‚
     {
       sessionId: "uuid-here",
       beats: [{id, text, duration, stock_keyword, youtube_phrase}, ...],
       summary: {totalBeats, estimatedDuration, warnings}
     }
-    │
-    ▼
+    â”‚
+    â–¼
 Frontend receives response
-    │
-    ├─ Extract sessionId (save for later)
-    ├─ Store beats in component state
-    └─ Navigate to review step
+    â”‚
+    â”œâ”€ Extract sessionId (save for later)
+    â”œâ”€ Store beats in component state
+    â””â”€ Navigate to review step
 ```
 
 ### Session State Management
@@ -159,11 +159,11 @@ Frontend receives response
 Backend maintains session JSON structure:
 
 sessions/
-├── {sessionId}/
-│   ├── state.json  (Session state file)
-│   ├── {filename}  (Uploaded script)
-│   ├── timeline.fcpxml  (Generated output)
-│   └── ...other files
+â”œâ”€â”€ {sessionId}/
+â”‚   â”œâ”€â”€ state.json  (Session state file)
+â”‚   â”œâ”€â”€ {filename}  (Uploaded script)
+â”‚   â”œâ”€â”€ timeline.fcpxml  (Generated output)
+â”‚   â””â”€â”€ ...other files
 
 state.json structure:
 {
@@ -186,34 +186,34 @@ state.json structure:
 
 ```
 User clicks "Generate Timeline"
-    │
-    ▼
+    â”‚
+    â–¼
 Workflow component calls exportFcpxml()
-    │
+    â”‚
     POST /api/session/{id}/export
-    │
-    ▼
+    â”‚
+    â–¼
 Backend: export.py
-    │
-    ├─ Load session state
-    ├─ Reconstruct Beat objects from state
-    ├─ Retrieve assets (if available)
-    │
-    ▼
+    â”‚
+    â”œâ”€ Load session state
+    â”œâ”€ Reconstruct Beat objects from state
+    â”œâ”€ Retrieve assets (if available)
+    â”‚
+    â–¼
 XMLGenerator.generate(beats, assets, output_path)
-    │
-    ├─ Create FCPXML document structure
-    ├─ Set format (1920x1080, 30fps)
-    ├─ Create media resources
-    ├─ Build timeline spine with gaps
-    ├─ Add B-roll clips to connected lane
-    │
-    ▼
+    â”‚
+    â”œâ”€ Create FCPXML document structure
+    â”œâ”€ Set format (1920x1080, 30fps)
+    â”œâ”€ Create media resources
+    â”œâ”€ Build timeline spine with gaps
+    â”œâ”€ Add B-roll clips to connected lane
+    â”‚
+    â–¼
 Write timeline.fcpxml to disk
-    │
-    ▼
+    â”‚
+    â–¼
 Return export info to frontend
-    │
+    â”‚
     {
       fcpxmlPath: "...",
       downloadUrl: "/api/session/{id}/download/timeline.fcpxml",
@@ -221,10 +221,10 @@ Return export info to frontend
       beatCount: 3,
       estimatedDuration: 42.5
     }
-    │
-    ▼
+    â”‚
+    â–¼
 Frontend displays download link
-    │
+    â”‚
     User clicks to download FCPXML
 ```
 
@@ -398,73 +398,73 @@ interface Asset {
 
 ```
 webapp/backend/
-├── app.py                  # Main Flask app (70 lines)
-│                           # - Flask initialization
-│                           # - CORS setup
-│                           # - Error handlers
-│                           # - Health check endpoint
-│
-├── routes/
-│   ├── __init__.py
-│   ├── upload.py           # Upload endpoint (120 lines)
-│   │                       # - File validation
-│   │                       # - ScriptParser integration
-│   │                       # - Session creation
-│   │
-│   ├── api.py              # Session routes (150 lines)
-│   │                       # - Get/update session
-│   │                       # - Config management
-│   │                       # - Status queries
-│   │
-│   └── export.py           # Export routes (130 lines)
-│                           # - FCPXML generation
-│                           # - File download
-│
-├── requirements.txt        # Python dependencies
-└── .env.example            # Environment template
+â”œâ”€â”€ app.py                  # Main Flask app (70 lines)
+â”‚                           # - Flask initialization
+â”‚                           # - CORS setup
+â”‚                           # - Error handlers
+â”‚                           # - Health check endpoint
+â”‚
+â”œâ”€â”€ routes/
+â”‚   â”œâ”€â”€ __init__.py
+â”‚   â”œâ”€â”€ upload.py           # Upload endpoint (120 lines)
+â”‚   â”‚                       # - File validation
+â”‚   â”‚                       # - ScriptParser integration
+â”‚   â”‚                       # - Session creation
+â”‚   â”‚
+â”‚   â”œâ”€â”€ api.py              # Session routes (150 lines)
+â”‚   â”‚                       # - Get/update session
+â”‚   â”‚                       # - Config management
+â”‚   â”‚                       # - Status queries
+â”‚   â”‚
+â”‚   â””â”€â”€ export.py           # Export routes (130 lines)
+â”‚                           # - FCPXML generation
+â”‚                           # - File download
+â”‚
+â”œâ”€â”€ requirements.txt        # Python dependencies
+â””â”€â”€ .env.example            # Environment template
 ```
 
 ### Frontend (TypeScript/React)
 
 ```
 webapp/frontend/src/
-├── App.tsx                 # Main app component (20 lines)
-├── main.tsx                # React DOM render entry
-│
-├── pages/
-│   ├── Home.tsx            # Home page (130 lines)
-│   │                       # - Welcome screen
-│   │                       # - Features overview
-│   │                       # - Workflow steps
-│   │
-│   └── Workflow.tsx        # Multi-step wizard (200 lines)
-│                           # - Step management
-│                           # - Upload → Review → Configure → Export
-│
-├── components/
-│   ├── ScriptUpload.tsx    # Upload component (100 lines)
-│   │                       # - Drag-drop zone
-│   │                       # - File validation
-│   │
-│   ├── BeatList.tsx        # Beat display (140 lines)
-│   │                       # - Summary stats
-│   │                       # - Edit mode
-│   │
-│   └── ConfigPanel.tsx     # Configuration (120 lines)
-│                           # - YouTube/Pexels toggles
-│                           # - API key input
-│
-├── services/
-│   └── api.ts              # API client (100 lines)
-│                           # - Type-safe requests
-│                           # - Error handling
-│
-├── types/
-│   └── models.ts           # TypeScript interfaces (80 lines)
-│                           # - Beat, Config, Asset, etc.
-│
-└── styles/
-    └── index.css           # Tailwind + custom styles (80 lines)
+â”œâ”€â”€ App.tsx                 # Main app component (20 lines)
+â”œâ”€â”€ main.tsx                # React DOM render entry
+â”‚
+â”œâ”€â”€ pages/
+â”‚   â”œâ”€â”€ Home.tsx            # Home page (130 lines)
+â”‚   â”‚                       # - Welcome screen
+â”‚   â”‚                       # - Features overview
+â”‚   â”‚                       # - Workflow steps
+â”‚   â”‚
+â”‚   â””â”€â”€ Workflow.tsx        # Multi-step wizard (200 lines)
+â”‚                           # - Step management
+â”‚                           # - Upload â†’ Review â†’ Configure â†’ Export
+â”‚
+â”œâ”€â”€ components/
+â”‚   â”œâ”€â”€ ScriptUpload.tsx    # Upload component (100 lines)
+â”‚   â”‚                       # - Drag-drop zone
+â”‚   â”‚                       # - File validation
+â”‚   â”‚
+â”‚   â”œâ”€â”€ BeatList.tsx        # Beat display (140 lines)
+â”‚   â”‚                       # - Summary stats
+â”‚   â”‚                       # - Edit mode
+â”‚   â”‚
+â”‚   â””â”€â”€ ConfigPanel.tsx     # Configuration (120 lines)
+â”‚                           # - YouTube/Pexels toggles
+â”‚                           # - API key input
+â”‚
+â”œâ”€â”€ services/
+â”‚   â””â”€â”€ api.ts              # API client (100 lines)
+â”‚                           # - Type-safe requests
+â”‚                           # - Error handling
+â”‚
+â”œâ”€â”€ types/
+â”‚   â””â”€â”€ models.ts           # TypeScript interfaces (80 lines)
+â”‚                           # - Beat, Config, Asset, etc.
+â”‚
+â””â”€â”€ styles/
+    â””â”€â”€ index.css           # Tailwind + custom styles (80 lines)
 ```
 
 ## Execution Flow
@@ -473,41 +473,41 @@ webapp/frontend/src/
 
 ```
 1. User selects file in browser
-   └─> ScriptUpload component triggers handleFile()
+   â””â”€> ScriptUpload component triggers handleFile()
 
 2. Frontend validates file type
-   └─> .md or .txt only
+   â””â”€> .md or .txt only
 
 3. Frontend calls uploadScript(file)
-   └─> Sends POST /api/upload with multipart form data
+   â””â”€> Sends POST /api/upload with multipart form data
 
 4. Browser sends HTTP request
-   └─> http://localhost:5000/api/upload
+   â””â”€> http://localhost:5000/api/upload
 
 5. Backend Flask receives request
-   └─> Routes to /api/upload handler
+   â””â”€> Routes to /api/upload handler
 
 6. Route handler (upload.py)
-   ├─> Validates file
-   ├─> Creates session directory
-   ├─> Saves file to disk
-   ├─> Imports ScriptParser
-   └─> Calls parser.parse_file()
+   â”œâ”€> Validates file
+   â”œâ”€> Creates session directory
+   â”œâ”€> Saves file to disk
+   â”œâ”€> Imports ScriptParser
+   â””â”€> Calls parser.parse_file()
 
 7. ScriptParser processes markdown
-   ├─> Reads file content
-   ├─> Extracts sections (##)
-   ├─> Calculates duration
-   ├─> Generates keywords
-   └─> Returns Beat[] objects
+   â”œâ”€> Reads file content
+   â”œâ”€> Extracts sections (##)
+   â”œâ”€> Calculates duration
+   â”œâ”€> Generates keywords
+   â””â”€> Returns Beat[] objects
 
 8. Backend converts to JSON
-   └─> Returns {sessionId, beats, summary}
+   â””â”€> Returns {sessionId, beats, summary}
 
 9. Frontend receives response
-   ├─> Stores sessionId (state)
-   ├─> Stores beats (state)
-   └─> Navigates to review step
+   â”œâ”€> Stores sessionId (state)
+   â”œâ”€> Stores beats (state)
+   â””â”€> Navigates to review step
 
 10. User sees parsed beats in BeatList component
 ```
@@ -575,21 +575,21 @@ try {
 ## Security Considerations
 
 ### File Upload
-- ✅ File type validation (.md, .txt only)
-- ✅ File size limit (16MB)
-- ✅ Filename sanitization
-- ✅ Files saved to isolated session directory
+- âœ… File type validation (.md, .txt only)
+- âœ… File size limit (16MB)
+- âœ… Filename sanitization
+- âœ… Files saved to isolated session directory
 
 ### API Access
-- ✅ CORS configured (frontend can access backend)
-- ✅ Path traversal protection (download endpoint)
-- ✅ Session ID validation
-- ✅ Input validation on all endpoints
+- âœ… CORS configured (frontend can access backend)
+- âœ… Path traversal protection (download endpoint)
+- âœ… Session ID validation
+- âœ… Input validation on all endpoints
 
 ### Data Handling
-- ✅ No sensitive data in logs
-- ✅ Session cleanup (delete endpoint)
-- ✅ File permissions (read-write on session files)
+- âœ… No sensitive data in logs
+- âœ… Session cleanup (delete endpoint)
+- âœ… File permissions (read-write on session files)
 
 ## Performance Considerations
 
@@ -629,15 +629,15 @@ try {
 ### Development
 ```
 localhost:5000 (Flask)
-    ↑ API calls
+    â†‘ API calls
 localhost:3000 (Vite)
 ```
 
 ### Production
 ```
 nginx (reverse proxy)
-├─ /api → Gunicorn (Flask)
-└─ / → Nginx static (React dist/)
+â”œâ”€ /api â†’ Gunicorn (Flask)
+â””â”€ / â†’ Nginx static (React dist/)
 ```
 
 ## Monitoring & Debugging
@@ -656,12 +656,14 @@ nginx (reverse proxy)
 ## Summary
 
 The web app is a modular, maintainable system that:
-- ✅ Wraps existing CLI functionality
-- ✅ Provides intuitive UI
-- ✅ Maintains clean architecture
-- ✅ Supports easy extensions
-- ✅ Includes proper error handling
-- ✅ Uses modern tech stack
-- ✅ Is production-ready
+- âœ… Wraps existing CLI functionality
+- âœ… Provides intuitive UI
+- âœ… Maintains clean architecture
+- âœ… Supports easy extensions
+- âœ… Includes proper error handling
+- âœ… Uses modern tech stack
+- âœ… Is production-ready
 
 All code is documented, typed, and follows best practices.
+
+

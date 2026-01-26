@@ -1,12 +1,12 @@
-# Markdown Format Enhancement - Complete Index
+﻿# Markdown Format Enhancement - Complete Index
 
-**Status**: ✅ Complete  
+**Status**: âœ… Complete  
 **Date**: January 25, 2026  
-**Backwards Compatible**: ✅ Yes
+**Backwards Compatible**: âœ… Yes
 
 ## What Changed
 
-The markdown syntax used by vid-orchestrator has been enhanced to support:
+The markdown syntax used by screenwrite has been enhanced to support:
 
 1. **Metadata headers** - Title, Hook, Channel, Duration, Tags
 2. **B-roll instructions** - Explicit `[action: content]` syntax
@@ -16,7 +16,7 @@ The markdown syntax used by vid-orchestrator has been enhanced to support:
 ## Start Here
 
 ### For Quick Start (5 minutes)
-→ Read: **`MARKDOWN_FORMAT_ENHANCEMENT_GUIDE.md`** (this folder)
+â†’ Read: **`MARKDOWN_FORMAT_ENHANCEMENT_GUIDE.md`** (this folder)
 
 Covers:
 - TL;DR overview
@@ -25,7 +25,7 @@ Covers:
 - Word count tips
 
 ### For Complete Reference (30 minutes)
-→ Read: **`docs/MARKDOWN_SCRIPT_FORMAT.md`**
+â†’ Read: **`docs/MARKDOWN_SCRIPT_FORMAT.md`**
 
 Complete specification including:
 - Full syntax rules
@@ -34,7 +34,7 @@ Complete specification including:
 - Validation rules
 
 ### For Migration (15 minutes)
-→ Read: **`docs/UPGRADE_TO_ENHANCED_FORMAT.md`**
+â†’ Read: **`docs/UPGRADE_TO_ENHANCED_FORMAT.md`**
 
 Shows how to upgrade existing scripts:
 - Step-by-step process
@@ -43,7 +43,7 @@ Shows how to upgrade existing scripts:
 - Common patterns
 
 ### For Quick Lookup (1 minute)
-→ See: **`docs/MARKDOWN_CHEAT_SHEET.md`**
+â†’ See: **`docs/MARKDOWN_CHEAT_SHEET.md`**
 
 Handy reference card:
 - Syntax quick reference
@@ -76,7 +76,7 @@ Handy reference card:
 ### Code Changes
 | File | Changes |
 |------|---------|
-| `vid_orchestrator/parsing/script_parser.py` | Enhanced parser with metadata and B-roll support |
+| `screenwrite/parsing/script_parser.py` | Enhanced parser with metadata and B-roll support |
 
 ## Quick Reference
 
@@ -96,7 +96,7 @@ Tags: tag1, tag2, tag3
 [Annotation: on-screen text]
 [Screenshot: UI interface]
 [B-roll: video footage]
-[Footage: specific clip]
+[ScreenWrite: specific clip]
 [Interview: interview clip]
 [Visual: diagram/illustration]
 ```
@@ -132,7 +132,7 @@ Your content...
 ```
 
 ### Full Example
-→ See: **`examples/video_walkthroughs_enhanced.md`**
+â†’ See: **`examples/video_walkthroughs_enhanced.md`**
 
 Your game walkthrough script converted to enhanced format (1200+ lines showing all features in use).
 
@@ -147,7 +147,7 @@ Your game walkthrough script converted to enhanced format (1200+ lines showing a
 
 ## Backwards Compatibility
 
-✅ **Your old scripts still work unchanged**
+âœ… **Your old scripts still work unchanged**
 
 - No metadata? Fine, works anyway
 - No instructions? Fine, auto-generates as before
@@ -161,21 +161,21 @@ Your game walkthrough script converted to enhanced format (1200+ lines showing a
 Title: [Tech] Tutorial
 Hook: Learn [topic] in X minutes
 ```
-→ See migration guide for full example
+â†’ See migration guide for full example
 
 ### Product Review
 ```markdown
 Title: [Product] Review
 Hook: Is it worth it?
 ```
-→ See cheat sheet for pattern
+â†’ See cheat sheet for pattern
 
 ### Entertainment/Educational
 ```markdown
 Title: [Topic] Explained
 Hook: [Compelling hook]
 ```
-→ See full example for complete video
+â†’ See full example for complete video
 
 ### Complex Documentary
 ```markdown
@@ -192,28 +192,28 @@ Tags: [relevant tags]
 ## Call to Action
 ## Sources
 ```
-→ Study examples/video_walkthroughs_enhanced.md
+â†’ Study examples/video_walkthroughs_enhanced.md
 
 ## Implementation Status
 
-✅ **Parser Updated**
+âœ… **Parser Updated**
 - Metadata extraction working
 - B-roll instruction detection working
 - Backwards compatible (no breaking changes)
 - Code compiles successfully
 
-✅ **Documentation Complete**
+âœ… **Documentation Complete**
 - Quick start guide (this folder)
 - Complete specification (600+ lines)
 - Migration guide with examples
 - Cheat sheet for reference
 - Example script (full feature demo)
 
-✅ **Ready to Use**
+âœ… **Ready to Use**
 - No new dependencies required
 - Can use immediately
 - Can upgrade scripts gradually
-- Test with: `python -m vid_orchestrator script.md --output out.fcpxml --no-fetch --verbose`
+- Test with: `python -m screenwrite script.md --output out.fcpxml --no-fetch --verbose`
 
 ## Next Steps
 
@@ -241,45 +241,45 @@ Tags: [relevant tags]
 
 ```
 footage/
-├── MARKDOWN_FORMAT_ENHANCEMENT_GUIDE.md    ← Start here
-├── MARKDOWN_ENHANCEMENT_INDEX.md           ← This index
-├── MARKDOWN_ENHANCEMENTS.md                ← Implementation summary
-│
-├── docs/
-│   ├── MARKDOWN_SCRIPT_FORMAT.md           ← Complete spec
-│   ├── UPGRADE_TO_ENHANCED_FORMAT.md       ← Migration guide
-│   ├── MARKDOWN_CHEAT_SHEET.md             ← Quick reference
-│   ├── ENHANCEMENTS_SUMMARY.md             ← Feature overview
-│   └── MARKDOWN_SCRIPT_GUIDE.md            ← Original guide
-│
-├── examples/
-│   └── video_walkthroughs_enhanced.md      ← Full working example
-│
-└── vid_orchestrator/parsing/
-    └── script_parser.py                    ← Updated parser code
+â”œâ”€â”€ MARKDOWN_FORMAT_ENHANCEMENT_GUIDE.md    â† Start here
+â”œâ”€â”€ MARKDOWN_ENHANCEMENT_INDEX.md           â† This index
+â”œâ”€â”€ MARKDOWN_ENHANCEMENTS.md                â† Implementation summary
+â”‚
+â”œâ”€â”€ docs/
+â”‚   â”œâ”€â”€ MARKDOWN_SCRIPT_FORMAT.md           â† Complete spec
+â”‚   â”œâ”€â”€ UPGRADE_TO_ENHANCED_FORMAT.md       â† Migration guide
+â”‚   â”œâ”€â”€ MARKDOWN_CHEAT_SHEET.md             â† Quick reference
+â”‚   â”œâ”€â”€ ENHANCEMENTS_SUMMARY.md             â† Feature overview
+â”‚   â””â”€â”€ MARKDOWN_SCRIPT_GUIDE.md            â† Original guide
+â”‚
+â”œâ”€â”€ examples/
+â”‚   â””â”€â”€ video_walkthroughs_enhanced.md      â† Full working example
+â”‚
+â””â”€â”€ screenwrite/parsing/
+    â””â”€â”€ script_parser.py                    â† Updated parser code
 ```
 
 ## Support & Questions
 
 ### Quick Lookup
-→ `docs/MARKDOWN_CHEAT_SHEET.md`
+â†’ `docs/MARKDOWN_CHEAT_SHEET.md`
 
 ### Specific Question
-→ `docs/MARKDOWN_SCRIPT_FORMAT.md` - search for your topic
+â†’ `docs/MARKDOWN_SCRIPT_FORMAT.md` - search for your topic
 
 ### Detailed Explanation
-→ `docs/UPGRADE_TO_ENHANCED_FORMAT.md` - comprehensive guide
+â†’ `docs/UPGRADE_TO_ENHANCED_FORMAT.md` - comprehensive guide
 
 ### Example of Everything
-→ `examples/video_walkthroughs_enhanced.md` - see all features in use
+â†’ `examples/video_walkthroughs_enhanced.md` - see all features in use
 
 ## Summary
 
 | Aspect | Details |
 |--------|---------|
-| **Status** | ✅ Ready to use |
-| **Breaking Changes** | ✅ None |
-| **Backwards Compatible** | ✅ 100% |
+| **Status** | âœ… Ready to use |
+| **Breaking Changes** | âœ… None |
+| **Backwards Compatible** | âœ… 100% |
 | **Learning Curve** | Quick (5 min to start) |
 | **Migration Path** | Gradual (optional) |
 | **Documentation** | Complete (5+ docs) |
@@ -291,3 +291,5 @@ footage/
 **Go deep with**: `docs/MARKDOWN_SCRIPT_FORMAT.md`  
 **Quick lookup**: `docs/MARKDOWN_CHEAT_SHEET.md`  
 **See it in action**: `examples/video_walkthroughs_enhanced.md`
+
+

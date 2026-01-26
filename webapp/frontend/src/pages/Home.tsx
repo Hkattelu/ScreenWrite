@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Home page
  *
  * Upload script directly with quick syntax reference
@@ -22,7 +22,7 @@ export function Home() {
         {/* Minimal Header */}
         <div className="text-center space-y-2">
           <h1 className="text-6xl font-extrabold tracking-tighter text-black">
-            Footage
+            ScreenWrite
           </h1>
           <p className="text-lg text-gray-400 font-medium tracking-wide">
             Script to Timeline
@@ -45,4 +45,5 @@ export function Home() {
     </div>
   )
 }
+
 

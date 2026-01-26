@@ -1,18 +1,18 @@
-# 🎬 Footage Web App - START HERE
+﻿# ðŸŽ¬ ScreenWrite Web App - START HERE
 
-Your complete web interface for the footage CLI tool has been built and is ready to use.
+Your complete web interface for the ScreenWrite CLI tool has been built and is ready to use.
 
 ## What Was Created
 
 A **production-ready web application** that provides a modern UI for converting markdown video scripts into DaVinci Resolve-compatible FCPXML timelines.
 
 ### Quick Facts
-- 📁 **Location**: `footage/webapp/`
-- 🐍 **Backend**: Flask (Python) with REST API
-- ⚛️ **Frontend**: React + Vite (TypeScript)
-- 🎨 **Styling**: Tailwind CSS
-- ⚡ **Status**: Fully functional, ready to use
-- 📊 **Code**: ~1,200 lines of production-ready code
+- ðŸ“ **Location**: `footage/webapp/`
+- ðŸ **Backend**: Flask (Python) with REST API
+- âš›ï¸ **Frontend**: React + Vite (TypeScript)
+- ðŸŽ¨ **Styling**: Tailwind CSS
+- âš¡ **Status**: Fully functional, ready to use
+- ðŸ“Š **Code**: ~1,200 lines of production-ready code
 
 ## Getting Started (5 Minutes)
 
@@ -49,76 +49,76 @@ npm run dev
 
 You should see:
 ```
-  ➜  Local:   http://localhost:3000/
+  âžœ  Local:   http://localhost:3000/
 ```
 
 ### Step 3: Use the App
 1. Open http://localhost:3000 in your browser
 2. Click "Get Started"
 3. Upload a markdown script
-4. Complete the workflow (Review → Configure → Export)
+4. Complete the workflow (Review â†’ Configure â†’ Export)
 5. Download your FCPXML file
 
-Done! 🎉
+Done! ðŸŽ‰
 
 ## Documentation
 
 Read these in order:
 
-1. **[SETUP.md](./webapp/SETUP.md)** ← Detailed setup instructions
-2. **[RUN.md](./webapp/RUN.md)** ← How to run the app
-3. **[README.md](./webapp/README.md)** ← Full documentation
-4. **[ARCHITECTURE.md](./webapp/ARCHITECTURE.md)** ← Technical deep dive
-5. **[WEBAPP_CHECKLIST.md](./WEBAPP_CHECKLIST.md)** ← What was implemented
-6. **[WEBAPP_SUMMARY.md](./WEBAPP_SUMMARY.md)** ← Overview of all components
+1. **[SETUP.md](./webapp/SETUP.md)** â† Detailed setup instructions
+2. **[RUN.md](./webapp/RUN.md)** â† How to run the app
+3. **[README.md](./webapp/README.md)** â† Full documentation
+4. **[ARCHITECTURE.md](./webapp/ARCHITECTURE.md)** â† Technical deep dive
+5. **[WEBAPP_CHECKLIST.md](./WEBAPP_CHECKLIST.md)** â† What was implemented
+6. **[WEBAPP_SUMMARY.md](./WEBAPP_SUMMARY.md)** â† Overview of all components
 
 ## File Structure
 
 ```
 footage/
-└── webapp/                          # Web app root
-    ├── backend/                     # Flask REST API
-    │   ├── routes/
-    │   │   ├── upload.py           # File upload & parsing
-    │   │   ├── api.py              # Session management
-    │   │   └── export.py           # FCPXML generation
-    │   ├── app.py                  # Flask app
-    │   └── requirements.txt         # Dependencies
-    │
-    ├── frontend/                    # React + Vite UI
-    │   ├── src/
-    │   │   ├── components/         # Upload, BeatList, ConfigPanel
-    │   │   ├── pages/              # Home, Workflow
-    │   │   ├── services/           # API client
-    │   │   ├── types/              # TypeScript interfaces
-    │   │   └── styles/             # Tailwind CSS
-    │   ├── package.json            # Dependencies
-    │   └── vite.config.ts          # Build config
-    │
-    ├── README.md                    # Full documentation
-    ├── SETUP.md                     # Setup guide
-    ├── RUN.md                       # How to run
-    └── ARCHITECTURE.md              # Technical design
+â””â”€â”€ webapp/                          # Web app root
+    â”œâ”€â”€ backend/                     # Flask REST API
+    â”‚   â”œâ”€â”€ routes/
+    â”‚   â”‚   â”œâ”€â”€ upload.py           # File upload & parsing
+    â”‚   â”‚   â”œâ”€â”€ api.py              # Session management
+    â”‚   â”‚   â””â”€â”€ export.py           # FCPXML generation
+    â”‚   â”œâ”€â”€ app.py                  # Flask app
+    â”‚   â””â”€â”€ requirements.txt         # Dependencies
+    â”‚
+    â”œâ”€â”€ frontend/                    # React + Vite UI
+    â”‚   â”œâ”€â”€ src/
+    â”‚   â”‚   â”œâ”€â”€ components/         # Upload, BeatList, ConfigPanel
+    â”‚   â”‚   â”œâ”€â”€ pages/              # Home, Workflow
+    â”‚   â”‚   â”œâ”€â”€ services/           # API client
+    â”‚   â”‚   â”œâ”€â”€ types/              # TypeScript interfaces
+    â”‚   â”‚   â””â”€â”€ styles/             # Tailwind CSS
+    â”‚   â”œâ”€â”€ package.json            # Dependencies
+    â”‚   â””â”€â”€ vite.config.ts          # Build config
+    â”‚
+    â”œâ”€â”€ README.md                    # Full documentation
+    â”œâ”€â”€ SETUP.md                     # Setup guide
+    â”œâ”€â”€ RUN.md                       # How to run
+    â””â”€â”€ ARCHITECTURE.md              # Technical design
 ```
 
 ## Key Features
 
-✅ **Upload & Parse**
+âœ… **Upload & Parse**
 - Drag-and-drop file upload
 - Automatic markdown parsing
 - Duration calculation
 
-✅ **Review & Edit**
+âœ… **Review & Edit**
 - Visual beat display
 - Edit beat text, keywords, search phrases
 - Real-time validation
 
-✅ **Configure**
+âœ… **Configure**
 - YouTube fetching toggle
 - Pexels fallback toggle
 - API key configuration
 
-✅ **Export**
+âœ… **Export**
 - FCPXML generation
 - Direct download
 - DaVinci Resolve compatible
@@ -151,15 +151,15 @@ footage/
 
 ```
 1. Upload Script
-   ↓
+   â†“
 2. Parse into Beats (auto-calculated duration)
-   ↓
+   â†“
 3. Review & Edit Beats
-   ↓
+   â†“
 4. Configure YouTube/Pexels Sources
-   ↓
+   â†“
 5. Generate FCPXML Timeline
-   ↓
+   â†“
 6. Download for DaVinci Resolve
 ```
 
@@ -243,11 +243,11 @@ npm install package-name
 
 ## Next Steps
 
-1. ✅ Run the setup (follow SETUP.md)
-2. ✅ Test with sample script
-3. ✅ Try complete workflow
-4. ✅ Explore the code
-5. ✅ Customize as needed
+1. âœ… Run the setup (follow SETUP.md)
+2. âœ… Test with sample script
+3. âœ… Try complete workflow
+4. âœ… Explore the code
+5. âœ… Customize as needed
 
 ## Extending the App
 
@@ -264,38 +264,38 @@ See [ARCHITECTURE.md](./webapp/ARCHITECTURE.md#future-extensibility) for details
 ## Architecture Overview
 
 ```
-┌─────────────────────────────────────────┐
-│  Browser (React UI)                     │
-│  http://localhost:3000                  │
-└──────────────┬──────────────────────────┘
-               │ HTTP API
-               ▼
-┌─────────────────────────────────────────┐
-│  Flask Backend                          │
-│  http://localhost:5000                  │
-│  ├─ Upload route                        │
-│  ├─ Session management                  │
-│  └─ FCPXML export                       │
-└──────────────┬──────────────────────────┘
-               │ Python imports
-               ▼
-┌─────────────────────────────────────────┐
-│  Existing vid_orchestrator              │
-│  ├─ ScriptParser                        │
-│  ├─ XMLGenerator                        │
-│  └─ Beat dataclass                      │
-└─────────────────────────────────────────┘
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚  Browser (React UI)                     â”‚
+â”‚  http://localhost:3000                  â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+               â”‚ HTTP API
+               â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚  Flask Backend                          â”‚
+â”‚  http://localhost:5000                  â”‚
+â”‚  â”œâ”€ Upload route                        â”‚
+â”‚  â”œâ”€ Session management                  â”‚
+â”‚  â””â”€ FCPXML export                       â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+               â”‚ Python imports
+               â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚  Existing screenwrite              â”‚
+â”‚  â”œâ”€ ScriptParser                        â”‚
+â”‚  â”œâ”€ XMLGenerator                        â”‚
+â”‚  â””â”€ Beat dataclass                      â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
 ## Code Quality
 
-- ✅ TypeScript for type safety
-- ✅ Comprehensive error handling
-- ✅ Input validation
-- ✅ Security (file validation, path checks)
-- ✅ Clear component architecture
-- ✅ Well-documented code
-- ✅ Production-ready
+- âœ… TypeScript for type safety
+- âœ… Comprehensive error handling
+- âœ… Input validation
+- âœ… Security (file validation, path checks)
+- âœ… Clear component architecture
+- âœ… Well-documented code
+- âœ… Production-ready
 
 ## Support
 
@@ -313,24 +313,24 @@ See [ARCHITECTURE.md](./webapp/ARCHITECTURE.md#future-extensibility) for details
 
 ## Status
 
-🟢 **PRODUCTION READY**
+ðŸŸ¢ **PRODUCTION READY**
 
 All core features implemented and tested. Ready for:
-- ✅ Immediate use
-- ✅ Testing with real scripts
-- ✅ Feature extensions
-- ✅ Production deployment
-- ✅ Team collaboration
+- âœ… Immediate use
+- âœ… Testing with real scripts
+- âœ… Feature extensions
+- âœ… Production deployment
+- âœ… Team collaboration
 
 ## Summary
 
 You now have:
-- ✅ Complete web interface for your CLI tool
-- ✅ Modern, responsive UI
-- ✅ Type-safe code (TypeScript)
-- ✅ Production-ready backend
-- ✅ Clear documentation
-- ✅ Easy to extend and maintain
+- âœ… Complete web interface for your CLI tool
+- âœ… Modern, responsive UI
+- âœ… Type-safe code (TypeScript)
+- âœ… Production-ready backend
+- âœ… Clear documentation
+- âœ… Easy to extend and maintain
 
 **Total effort**: ~1,200 lines of code, fully documented and ready to use.
 
@@ -338,10 +338,13 @@ You now have:
 
 ## Next Action
 
-👉 **Read [SETUP.md](./webapp/SETUP.md)** to begin setup
+ðŸ‘‰ **Read [SETUP.md](./webapp/SETUP.md)** to begin setup
 
 Then follow the step-by-step instructions.
 
 You'll be uploading scripts and generating timelines within 5 minutes.
 
-Good luck! 🚀
+Good luck! ðŸš€
+
+
+

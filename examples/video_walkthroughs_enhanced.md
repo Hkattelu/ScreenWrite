@@ -1,5 +1,5 @@
-Title: The Lost Art of Text-Based Game Walkthroughs
-Hook: Welcome viewers. Today I'll be taking you through the history of an underappreciated art—the walkthrough.
+﻿Title: The Lost Art of Text-Based Game Walkthroughs
+Hook: Welcome viewers. Today I'll be taking you through the history of an underappreciated artâ€”the walkthrough.
 Channel: Gaming History
 Duration: 15:00
 Tags: gaming, walkthroughs, nostalgia, history, retro
@@ -16,7 +16,7 @@ I want to discuss the past and present of video game walkthroughs. I want to app
 - Why Old-School Walkthroughs Were Better
 - The Forgotten Era of Text-Based Walkthroughs
 - Gamers Used to Call a Hotline for Help?!
-- IGN Walkthroughs Are the Worst—Here's Why
+- IGN Walkthroughs Are the Worstâ€”Here's Why
 - Game Walkthroughs Used to Be AMAZING. What Happened?
 - Are Modern Game Walkthroughs Worse? Let's Talk About It
 - GameFAQs, Guidebooks, and Hotlines: A Walkthrough of Walkthroughs
@@ -42,7 +42,7 @@ Gamers have found walkthroughs helpful since the dawn of time. If you've used wa
 The earliest instances of walkthroughs I could find were two books from 1981: "Mastering Pac-Man" and "How to Master the Video Games."
 
 [Annotation: "1981 - First video game guidebook"]
-From my research, "Mastering Pac-Man" was the first book—and also the first video-game-specific book.
+From my research, "Mastering Pac-Man" was the first bookâ€”and also the first video-game-specific book.
 
 [Display: pages from Mastering Pac-Man showing diagrams and tables]
 It was a relatively text-heavy book, but it had a handful of visuals. Ken Uston, the author, also included visuals of the specific patterns he would use to get high scores. He included tables and diagrams of the enemies and items. And he even had chapters on follow-up games like Ms. Pac-Man.
@@ -109,7 +109,7 @@ You'd usually see some information sections and sections about specific collecti
 [Show: version history and update notes]
 Because they were on the internet, the authors would also update them every once in a while and include notes on what they changed.
 
-[Footage: screen recording of using Ctrl+F to search the guide]
+[ScreenWrite: screen recording of using Ctrl+F to search the guide]
 What was really useful about the guides is that you could use Ctrl+F in your browser to find any specific text you needed and get right to the heart of the issue you were having. I also found that these guides tended to be really concise and detailed, which was useful. There wasn't any fluff.
 
 [Screenshot: Jak & Daxter collectible section with text descriptions]
@@ -125,7 +125,7 @@ It's important to note that text-based walkthroughs were the only truly unmoneti
 Forums were also popular at this time, and most games often had multiple different people writing guides for them. It felt like knowledge and discovery of the game was shared amongst the player base.
 
 [Display: official game guidebook for Final Fantasy 12]
-Speaking of monetization, the other type of guide that got popular in this era were official game-specific guidebooks. These were different from the books of the past in that they were supported by game developers. This meant they had way more detail that individual gamers wouldn't know about—like specific stat numbers on abilities or extremely obscure game mechanics.
+Speaking of monetization, the other type of guide that got popular in this era were official game-specific guidebooks. These were different from the books of the past in that they were supported by game developers. This meant they had way more detail that individual gamers wouldn't know aboutâ€”like specific stat numbers on abilities or extremely obscure game mechanics.
 
 [Show: pages from guidebook with maps and artwork]
 They also included way more visuals, art, and personality than the books from the 80s. I still remember reading the Final Fantasy 12 guidebook as a kid. It was genuinely super fun to look through the maps and learn about the world with a physical book.
@@ -133,7 +133,7 @@ They also included way more visuals, art, and personality than the books from th
 [Annotation: "Official guides were expensive but high quality"]
 The main problem with these is just that they were kind of expensive, and because you had to get one for every game, the price would seriously start to rack up.
 
-### Section 3: Modern Guides—IGN, Wikis, and Videos
+### Section 3: Modern Guidesâ€”IGN, Wikis, and Videos
 
 [Annotation: "2010s-2020s - The age of infinite content"]
 Fast-forward to today. Gamers rely mostly on three new types of guides which didn't really exist before.
@@ -142,7 +142,7 @@ Fast-forward to today. Gamers rely mostly on three new types of guides which did
 The first one that's the most Google-search-optimized is the IGN-style guide. IGN hosts walkthrough pages for a lot of games. They're kind of similar to the text-based walkthrough pages, but they'll usually include visuals as well.
 
 [B-roll: clicking through multiple IGN guide pages]
-While the individual pages are usually good quality, a huge pain I have with these guides is just how much they make you click around to different pages to navigate. Now I get why they do this—it's to monetize the site by trying to get you to see more ads on page loads.
+While the individual pages are usually good quality, a huge pain I have with these guides is just how much they make you click around to different pages to navigate. Now I get why they do thisâ€”it's to monetize the site by trying to get you to see more ads on page loads.
 
 [Annotation: "Quality compromised by monetization model"]
 I know IGN has to pay the bills, but it sucks that the quality of these guides is seriously compromised by how hard they are to navigate.
@@ -157,7 +157,7 @@ The quality of YouTube walkthroughs varies WILDLY. There are creators who do an 
 The reason these guides really blew up is that it is simply way easier to just record yourself playing a game and walking through it than it is to manually write up a detailed, high-quality guide. You can also monetize on YouTube, which is a big appeal.
 
 [Annotation: "YouTube lowered the barrier to entry significantly"]
-You don't even have to be very good at editing videos to make a good guide—you just have to be concise and clear with your speech and visuals.
+You don't even have to be very good at editing videos to make a good guideâ€”you just have to be concise and clear with your speech and visuals.
 
 [Show: wiki walkthrough for Elden Ring]
 The last thing I want to mention is walkthroughs on Wikis today. The best example I can think of is the Fextralife Wiki walkthrough for Elden Ring. These wiki pages are sort of like IGN walkthroughs, but they're more well-organized and community-driven.
@@ -174,7 +174,7 @@ If I'm being honest, I can't really think of a downside to them. That being said
 Now that we've gone through all the walkthrough formats, I wanted to bring it back to text-based walkthroughs. Today, they feel like such a lost art.
 
 [Show: peaceful scene of reading text document]
-In an age of forced ad breaks and pointless slop to fill time, they feel like a breath of fresh air. No ads, no monetization—just concise information communicated in an efficient format that's super easy to search.
+In an age of forced ad breaks and pointless slop to fill time, they feel like a breath of fresh air. No ads, no monetizationâ€”just concise information communicated in an efficient format that's super easy to search.
 
 [B-roll: downloading and opening text file]
 You can download it and take it wherever you want, and it'll barely take up any memory.
@@ -193,7 +193,7 @@ At the end of the day, text walkthroughs might never be the dominant format agai
 
 ## Call to Action
 
-But I want to hear from you—what's your favorite kind of video game walkthrough? Do you miss the days of text-based guides, or do you prefer the visuals of modern video guides? Let's talk about it in the comments!
+But I want to hear from youâ€”what's your favorite kind of video game walkthrough? Do you miss the days of text-based guides, or do you prefer the visuals of modern video guides? Let's talk about it in the comments!
 
 [Annotation: "Like, subscribe, and share if you enjoyed this video"]
 If you liked this video, don't forget to hit that like button and subscribe! And if you really want to support the channel, consider sharing this video with a friend who remembers the days of GameFAQs walkthroughs. Thanks for watching!
@@ -208,3 +208,4 @@ If you liked this video, don't forget to hit that like button and subscribe! And
 - [Final Fantasy Tactics A2 Guide](https://gamefaqs.gamespot.com/ds/937330-final-fantasy-tactics-a2-grimoire-of-the-rift/faqs/53370)
 - [Final Fantasy X Guide](https://www.cheatcodes.com/guide/final-fantasy-x-walkthrough-final-fantasy-x-ps2-45922/)
 - [Elden Ring Wiki Walkthrough](https://eldenring.wiki.fextralife.com/Walkthrough)
+

@@ -1,8 +1,8 @@
-# Requirements Document: vid-orchestrator
+﻿# Requirements Document: screenwrite
 
 ## Introduction
 
-vid-orchestrator is a CLI tool that automates the creation of video timelines for DaVinci Resolve. It takes a markdown video script as input, parses it into logical "beats" (5-10 second segments), generates contextual search queries for B-roll footage, automatically fetches video assets from YouTube and Pexels, and generates a Final Cut Pro XML (FCPXML) timeline that can be imported directly into DaVinci Resolve. The system orchestrates multiple components—script parsing, asset fetching, and XML generation—to produce a production-ready timeline with voiceover placeholders and synchronized B-roll clips.
+screenwrite is a CLI tool that automates the creation of video timelines for DaVinci Resolve. It takes a markdown video script as input, parses it into logical "beats" (5-10 second segments), generates contextual search queries for B-roll footage, automatically fetches video assets from YouTube and Pexels, and generates a Final Cut Pro XML (FCPXML) timeline that can be imported directly into DaVinci Resolve. The system orchestrates multiple componentsâ€”script parsing, asset fetching, and XML generationâ€”to produce a production-ready timeline with voiceover placeholders and synchronized B-roll clips.
 
 ## Glossary
 
@@ -108,4 +108,5 @@ vid-orchestrator is a CLI tool that automates the creation of video timelines fo
 3. WHEN ffmpeg is not installed THEN the system SHALL handle the error gracefully and skip video trimming
 4. WHEN a markdown file is invalid or malformed THEN the system SHALL provide a clear error message indicating the issue
 5. WHEN an output directory does not exist THEN the system SHALL create it or provide a clear error message
+
 

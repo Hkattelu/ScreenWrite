@@ -1,4 +1,4 @@
-"""
+﻿"""
 Export route handler.
 
 Handles FCPXML generation and file download.
@@ -10,12 +10,12 @@ import logging
 from flask import Blueprint, request, jsonify, current_app, send_file, send_from_directory
 from datetime import datetime
 
-# Import from parent vid_orchestrator module
+# Import from parent screenwrite module
 import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../')))
 
-from vid_orchestrator.generators.xml_generator import XMLGenerator
-from vid_orchestrator.core.beat import Beat
+from screenwrite.generators.xml_generator import XMLGenerator
+from screenwrite.core.beat import Beat
 
 export_bp = Blueprint('export', __name__)
 logger = logging.getLogger(__name__)
@@ -158,3 +158,4 @@ def download_file(session_id, filename):
     except Exception as e:
         logger.error(f'Download error: {str(e)}')
         return {'error': 'Download failed'}, 500
+

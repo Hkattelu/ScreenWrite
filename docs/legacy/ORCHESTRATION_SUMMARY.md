@@ -1,11 +1,11 @@
-# Multi-Agent Orchestration: vid-orchestrator Development
+﻿# Multi-Agent Orchestration: screenwrite Development
 
-## 🎯 Mission
-Build a production-ready CLI tool (`vid-orchestrator`) that converts markdown video scripts into DaVinci Resolve-compatible FCPXML timelines with auto-fetched B-roll, using a coordinated multi-agent team.
+## ðŸŽ¯ Mission
+Build a production-ready CLI tool (`screenwrite`) that converts markdown video scripts into DaVinci Resolve-compatible FCPXML timelines with auto-fetched B-roll, using a coordinated multi-agent team.
 
 ---
 
-## 👥 Team Structure
+## ðŸ‘¥ Team Structure
 
 ### Leadership
 | Role | Responsibilities | Key Decisions |
@@ -31,7 +31,7 @@ Build a production-ready CLI tool (`vid-orchestrator`) that converts markdown vi
 
 ---
 
-## 📋 Detailed Responsibilities
+## ðŸ“‹ Detailed Responsibilities
 
 ### CPO - Chief Product Officer
 **Phase 1: Planning**
@@ -57,11 +57,11 @@ Build a production-ready CLI tool (`vid-orchestrator`) that converts markdown vi
 - [ ] Plan monitoring/logging approach
 
 **Decisions Made**:
-✅ **Language**: Python 3.12 (mature, rich ecosystem)  
-✅ **XML Library**: xml.etree.ElementTree (stdlib, simple)  
-✅ **YouTube**: yt-dlp (free, reliable, no API key)  
-✅ **Stock Footage**: Pexels API (free tier available)  
-✅ **Timeline Format**: FCPXML 1.8 (Resolve native, FCP compatible)  
+âœ… **Language**: Python 3.12 (mature, rich ecosystem)  
+âœ… **XML Library**: xml.etree.ElementTree (stdlib, simple)  
+âœ… **YouTube**: yt-dlp (free, reliable, no API key)  
+âœ… **Stock ScreenWrite**: Pexels API (free tier available)  
+âœ… **Timeline Format**: FCPXML 1.8 (Resolve native, FCP compatible)  
 
 **Outputs**: TechStack.md, API_Design.md, ArchitectureDecisions.md
 
@@ -80,19 +80,19 @@ Build a production-ready CLI tool (`vid-orchestrator`) that converts markdown vi
 
 **Architecture Overview**:
 ```
-vid_orchestrator/
-├── core/
-│   ├── beat.py              (Beat dataclass)
-├── parsing/
-│   ├── script_parser.py     (Markdown → beats)
-├── fetchers/
-│   ├── youtube_client.py    (yt-dlp wrapper)
-│   ├── pexels_client.py     (API client)
-├── generators/
-│   ├── xml_generator.py     (FCPXML builder)
-├── orchestrator.py          (Main coordinator)
-├── cli.py                   (CLI interface)
-└── resolve_integration.py   (Resolve fusionscript wrapper)
+screenwrite/
+â”œâ”€â”€ core/
+â”‚   â”œâ”€â”€ beat.py              (Beat dataclass)
+â”œâ”€â”€ parsing/
+â”‚   â”œâ”€â”€ script_parser.py     (Markdown â†’ beats)
+â”œâ”€â”€ fetchers/
+â”‚   â”œâ”€â”€ youtube_client.py    (yt-dlp wrapper)
+â”‚   â”œâ”€â”€ pexels_client.py     (API client)
+â”œâ”€â”€ generators/
+â”‚   â”œâ”€â”€ xml_generator.py     (FCPXML builder)
+â”œâ”€â”€ orchestrator.py          (Main coordinator)
+â”œâ”€â”€ cli.py                   (CLI interface)
+â””â”€â”€ resolve_integration.py   (Resolve fusionscript wrapper)
 ```
 
 **Outputs**: ArchitectureDiagram.md, ModuleContracts.md, DataFlow.md
@@ -122,7 +122,7 @@ vid_orchestrator/
 - [ ] Example markdown script for testing
 
 **Success Criteria**:
-- Beat duration auto-calculates within ±2 seconds of target
+- Beat duration auto-calculates within Â±2 seconds of target
 - Parses sample markdown into 5-10 second beats
 - Generated queries are contextually relevant
 - 90%+ test coverage
@@ -298,12 +298,12 @@ Unit Tests:
   - cli.py: argument parsing
 
 Integration Tests:
-  - Parser → Fetchers: beat to asset flow
-  - Fetchers → XML Gen: assets to XML
-  - Orchestrator → CLI: end-to-end flow
+  - Parser â†’ Fetchers: beat to asset flow
+  - Fetchers â†’ XML Gen: assets to XML
+  - Orchestrator â†’ CLI: end-to-end flow
 
 E2E Tests:
-  - Sample markdown script → FCPXML → Resolve import
+  - Sample markdown script â†’ FCPXML â†’ Resolve import
   - Large script (30+ beats)
   - Script with special characters
   - Script with no API keys available
@@ -330,7 +330,7 @@ E2E Tests:
 
 **Documentation to Create**:
 - [ ] **README.md**
-  - What is vid-orchestrator
+  - What is screenwrite
   - Installation instructions
   - Quick start example
   - Features overview
@@ -374,7 +374,7 @@ E2E Tests:
 
 ---
 
-## 📅 Timeline & Milestones
+## ðŸ“… Timeline & Milestones
 
 ### Week 1: Planning & Design
 | Day | Phase | Owners | Deliverables |
@@ -402,15 +402,15 @@ E2E Tests:
 ### Week 4: Release Prep
 | Day | Task | Status |
 |-----|------|--------|
-| 1-2 | Final QA | All tests passing, coverage ≥85% |
+| 1-2 | Final QA | All tests passing, coverage â‰¥85% |
 | 2-3 | Documentation review | Docs complete and accurate |
 | 3-5 | Release packaging | Ready for production |
 
 ---
 
-## 🎯 Success Criteria (Acceptance)
+## ðŸŽ¯ Success Criteria (Acceptance)
 
-✅ **Functional Requirements**
+âœ… **Functional Requirements**
 - [ ] Parses markdown scripts into beats
 - [ ] Auto-calculates beat duration
 - [ ] Generates contextual search queries
@@ -421,21 +421,21 @@ E2E Tests:
 - [ ] CLI interface works as documented
 - [ ] Optional Resolve integration works
 
-✅ **Quality Requirements**
+âœ… **Quality Requirements**
 - [ ] 80%+ test coverage
 - [ ] 0 critical bugs
 - [ ] Code reviewed and approved
 - [ ] All edge cases handled
 - [ ] Network errors handled gracefully
 
-✅ **Documentation Requirements**
+âœ… **Documentation Requirements**
 - [ ] README with quick start
 - [ ] Complete API documentation
 - [ ] Usage guide with examples
 - [ ] Architecture documentation
 - [ ] Troubleshooting guide
 
-✅ **Process Requirements**
+âœ… **Process Requirements**
 - [ ] Daily standups completed
 - [ ] Weekly milestone reviews
 - [ ] All decisions documented
@@ -443,20 +443,20 @@ E2E Tests:
 
 ---
 
-## 🚧 Workflow Commands
+## ðŸš§ Workflow Commands
 
 ### Daily Standup Template
 ```
 [Agent Name]
 TODAY COMPLETED:
-- ✅ Task 1
-- ✅ Task 2
+- âœ… Task 1
+- âœ… Task 2
 
 TODAY IN_PROGRESS:
-- 🔄 Task 3 (70% done)
+- ðŸ”„ Task 3 (70% done)
 
 BLOCKERS:
-- 🚫 Blocked on X from [Agent]
+- ðŸš« Blocked on X from [Agent]
 
 NEXT 24H:
 - Task 4
@@ -465,7 +465,7 @@ NEXT 24H:
 
 ### Code Review Process
 ```
-[Code Reviewer] → [Target Agent]
+[Code Reviewer] â†’ [Target Agent]
 MODULE: [name]
 ISSUES FOUND:
 1. [Issue] - Severity: [Critical|High|Medium|Low]
@@ -477,7 +477,7 @@ APPROVAL: [Approved|Changes Required]
 ### Status Check Format
 ```json
 {
-  "project": "vid-orchestrator",
+  "project": "screenwrite",
   "phase": "Development",
   "completion": "45%",
   "blockers": [],
@@ -487,7 +487,7 @@ APPROVAL: [Approved|Changes Required]
 
 ---
 
-## 📞 Communication Channels
+## ðŸ“ž Communication Channels
 
 - **Async**: GitHub Issues (blockers, decisions)
 - **Sync**: Daily 15-min standup
@@ -497,7 +497,7 @@ APPROVAL: [Approved|Changes Required]
 
 ---
 
-## 🎓 Knowledge Transfer
+## ðŸŽ“ Knowledge Transfer
 
 ### Handoff Documents
 1. **Architecture.md** - System overview for all
@@ -513,7 +513,7 @@ APPROVAL: [Approved|Changes Required]
 
 ---
 
-## 🚀 Launch Checklist
+## ðŸš€ Launch Checklist
 
 Before release:
 - [ ] All tests passing (80%+ coverage)
@@ -531,3 +531,5 @@ Before release:
 **Status**: Ready for team assignment  
 **Next Action**: Assign human agents to each role and begin Phase 1  
 **Estimated Completion**: 4 weeks from kickoff
+
+

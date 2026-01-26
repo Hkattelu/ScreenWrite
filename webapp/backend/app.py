@@ -1,5 +1,5 @@
-"""
-Flask backend for vid-orchestrator web app.
+﻿"""
+Flask backend for screenwrite web app.
 
 Main entry point for the web API server. Handles file uploads, asset
 fetching, and FCPXML generation with real-time progress tracking.
@@ -70,3 +70,4 @@ if __name__ == '__main__':
         port=int(os.getenv('FLASK_PORT', 5000)),
         debug=debug
     )
+

@@ -1,12 +1,12 @@
-# Markdown Script Guide for vid-orchestrator
+﻿# Markdown Script Guide for screenwrite
 
-This guide explains how to write markdown scripts that work optimally with vid-orchestrator for automatic B-roll generation and FCPXML timeline creation.
+This guide explains how to write markdown scripts that work optimally with screenwrite for automatic B-roll generation and FCPXML timeline creation.
 
-**⚠️ Enhanced Format Available**: This project now supports a more robust markdown flavor with B-roll instructions, metadata, and better structure. See [MARKDOWN_SCRIPT_FORMAT.md](MARKDOWN_SCRIPT_FORMAT.md) for the latest specification.
+**âš ï¸ Enhanced Format Available**: This project now supports a more robust markdown flavor with B-roll instructions, metadata, and better structure. See [MARKDOWN_SCRIPT_FORMAT.md](MARKDOWN_SCRIPT_FORMAT.md) for the latest specification.
 
 ## Overview
 
-vid-orchestrator parses markdown files to create video timelines with automatic B-roll footage. The system analyzes your script content to:
+screenwrite parses markdown files to create video timelines with automatic B-roll footage. The system analyzes your script content to:
 
 1. **Break text into beats** - 5-10 second segments based on word count
 2. **Generate search queries** - Create stock footage and YouTube search terms
@@ -55,8 +55,8 @@ First, you need to install Python on your computer. Visit the official Python we
 ```
 
 This becomes **2 beats**:
-- Beat 1: "First, you need to install Python on your computer." (10 words ≈ 4 seconds)
-- Beat 2: "Visit the official Python website and download the latest version for your operating system." (15 words ≈ 6 seconds)
+- Beat 1: "First, you need to install Python on your computer." (10 words â‰ˆ 4 seconds)
+- Beat 2: "Visit the official Python website and download the latest version for your operating system." (15 words â‰ˆ 6 seconds)
 
 ## Optimizing for B-Roll Generation
 
@@ -128,26 +128,26 @@ Headers like "Web Development Tutorial" and "Setting Up Your Environment" provid
 
 1. **Be specific about tools and technologies**
    ```markdown
-   ✅ "Open Visual Studio Code and create a new Python file"
-   ❌ "Open your editor and create a new file"
+   âœ… "Open Visual Studio Code and create a new Python file"
+   âŒ "Open your editor and create a new file"
    ```
 
 2. **Mention visual elements**
    ```markdown
-   ✅ "Click the green 'Run' button in the toolbar"
-   ❌ "Execute the program"
+   âœ… "Click the green 'Run' button in the toolbar"
+   âŒ "Execute the program"
    ```
 
 3. **Include step-by-step actions**
    ```markdown
-   ✅ "Right-click on the desktop and select 'New Folder'"
-   ❌ "Create a new folder"
+   âœ… "Right-click on the desktop and select 'New Folder'"
+   âŒ "Create a new folder"
    ```
 
 4. **Reference UI elements**
    ```markdown
-   ✅ "In the sidebar, expand the 'Files' panel"
-   ❌ "Look at the file structure"
+   âœ… "In the sidebar, expand the 'Files' panel"
+   âŒ "Look at the file structure"
    ```
 
 ## File Organization
@@ -156,14 +156,14 @@ Headers like "Web Development Tutorial" and "Setting Up Your Environment" provid
 
 ```
 project/
-├── scripts/
-│   ├── tutorial-intro.md
-│   ├── setup-guide.md
-│   └── advanced-topics.md
-├── output/
-│   ├── tutorial-intro.fcpxml
-│   └── assets/
-└── README.md
+â”œâ”€â”€ scripts/
+â”‚   â”œâ”€â”€ tutorial-intro.md
+â”‚   â”œâ”€â”€ setup-guide.md
+â”‚   â””â”€â”€ advanced-topics.md
+â”œâ”€â”€ output/
+â”‚   â”œâ”€â”€ tutorial-intro.fcpxml
+â”‚   â””â”€â”€ assets/
+â””â”€â”€ README.md
 ```
 
 ### Naming Conventions
@@ -223,22 +223,22 @@ Summary and call-to-action.
 
 ### Do's
 
-- ✅ Write as you would speak in the video
-- ✅ Include specific software, website, and tool names
-- ✅ Mention visual elements (buttons, menus, windows)
-- ✅ Use action verbs (click, type, drag, select)
-- ✅ Reference colors, positions, and UI elements
-- ✅ Keep sections focused on single topics
-- ✅ Use consistent terminology throughout
+- âœ… Write as you would speak in the video
+- âœ… Include specific software, website, and tool names
+- âœ… Mention visual elements (buttons, menus, windows)
+- âœ… Use action verbs (click, type, drag, select)
+- âœ… Reference colors, positions, and UI elements
+- âœ… Keep sections focused on single topics
+- âœ… Use consistent terminology throughout
 
 ### Don'ts
 
-- ❌ Write overly long paragraphs (>50 words)
-- ❌ Use only abstract concepts without visual elements
-- ❌ Include complex formatting (tables, code blocks)
-- ❌ Write in passive voice exclusively
-- ❌ Use vague references ("this", "that", "it")
-- ❌ Include placeholder text like "[TODO]"
+- âŒ Write overly long paragraphs (>50 words)
+- âŒ Use only abstract concepts without visual elements
+- âŒ Include complex formatting (tables, code blocks)
+- âŒ Write in passive voice exclusively
+- âŒ Use vague references ("this", "that", "it")
+- âŒ Include placeholder text like "[TODO]"
 
 ## Troubleshooting
 
@@ -248,8 +248,8 @@ Summary and call-to-action.
 **Solution**: Write longer sentences or combine related ideas
 
 ```markdown
-❌ "Install Python. Open the terminal. Run the command."
-✅ "Install Python from the official website, then open your terminal and run the python --version command to verify the installation."
+âŒ "Install Python. Open the terminal. Run the command."
+âœ… "Install Python from the official website, then open your terminal and run the python --version command to verify the installation."
 ```
 
 ### If Beats Are Too Long
@@ -258,8 +258,8 @@ Summary and call-to-action.
 **Solution**: Break complex ideas into simpler sentences
 
 ```markdown
-❌ "Navigate to the Python website, download the installer for your operating system, run the installation wizard, accept the license agreement, choose your installation directory, and wait for the process to complete."
-✅ "Navigate to the Python website and download the installer for your operating system. Run the installation wizard and follow the prompts to complete the setup."
+âŒ "Navigate to the Python website, download the installer for your operating system, run the installation wizard, accept the license agreement, choose your installation directory, and wait for the process to complete."
+âœ… "Navigate to the Python website and download the installer for your operating system. Run the installation wizard and follow the prompts to complete the setup."
 ```
 
 ### If B-Roll Queries Are Generic
@@ -268,8 +268,8 @@ Summary and call-to-action.
 **Solution**: Include more specific visual keywords
 
 ```markdown
-❌ "We'll work on the project now."
-✅ "Open Visual Studio Code and create a new React project using the terminal."
+âŒ "We'll work on the project now."
+âœ… "Open Visual Studio Code and create a new React project using the terminal."
 ```
 
 ## Testing Your Scripts
@@ -284,7 +284,7 @@ Before running the full pipeline, you can test your script structure:
 Use the `--no-fetch` flag to test script parsing without downloading assets:
 
 ```bash
-python -m vid_orchestrator your-script.md --output test.fcpxml --no-fetch
+python -m screenwrite your-script.md --output test.fcpxml --no-fetch
 ```
 
 This will show you how your script gets broken into beats without fetching B-roll footage.

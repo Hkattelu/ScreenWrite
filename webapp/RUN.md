@@ -1,4 +1,4 @@
-# Running the Footage Web App
+﻿# Running the ScreenWrite Web App
 
 Quick reference for starting the web app for development and testing.
 
@@ -12,7 +12,7 @@ Complete the setup instructions in [SETUP.md](./SETUP.md) first. This only needs
 
 **Terminal 1 - Backend**:
 ```bash
-cd c:\Users\himan\code\footage\webapp\backend
+cd c:\Users\himan\\code\\ScreenWrite\webapp\backend
 
 # Activate virtual environment
 venv\Scripts\activate
@@ -29,7 +29,7 @@ Expected output:
 
 **Terminal 2 - Frontend** (open new terminal while keeping Terminal 1 running):
 ```bash
-cd c:\Users\himan\code\footage\webapp\frontend
+cd c:\Users\himan\\code\\ScreenWrite\webapp\frontend
 
 # Start Vite dev server
 npm run dev
@@ -39,20 +39,20 @@ Expected output:
 ```
   VITE v5.0.0  ready in 500 ms
 
-  ➜  Local:   http://localhost:3000/
-  ➜  press h to show help
+  âžœ  Local:   http://localhost:3000/
+  âžœ  press h to show help
 ```
 
 ### Option 2: Using One Terminal with Background Process
 
 ```bash
 # Start backend in background
-cd c:\Users\himan\code\footage\webapp\backend
+cd c:\Users\himan\\code\\ScreenWrite\webapp\backend
 venv\Scripts\activate
 python app.py &
 
 # Start frontend in foreground
-cd c:\Users\himan\code\footage\webapp\frontend
+cd c:\Users\himan\\code\\ScreenWrite\webapp\frontend
 npm run dev
 ```
 
@@ -72,7 +72,7 @@ Press `Ctrl+C` in each terminal to stop the servers:
 
 ### 1. Home Page
 - Visit http://localhost:3000
-- Should see "Footage" welcome screen
+- Should see "ScreenWrite" welcome screen
 - Click "Get Started" or "Start Building Your Timeline"
 
 ### 2. Upload Script
@@ -98,7 +98,7 @@ looking forward to success and growth.
 - Check durations, keywords, and search phrases
 
 ### 3. Complete Workflow
-- Upload → Review → Configure → Export
+- Upload â†’ Review â†’ Configure â†’ Export
 - Edit beats if desired
 - Configure YouTube/Pexels sources
 - Click "Generate Timeline"
@@ -249,11 +249,11 @@ gunicorn app:app --workers 4
 
 ## Next Steps
 
-1. ✅ Verify both servers start
-2. ✅ Test uploading a script
-3. ✅ Test complete workflow
-4. ✅ Examine code structure
-5. ✅ Start adding features or modifications
+1. âœ… Verify both servers start
+2. âœ… Test uploading a script
+3. âœ… Test complete workflow
+4. âœ… Examine code structure
+5. âœ… Start adding features or modifications
 
 ## Health Check
 
@@ -281,3 +281,5 @@ curl -F "file=@test_script.md" http://localhost:5000/api/upload
 - Check inline code comments
 
 Happy developing!
+
+

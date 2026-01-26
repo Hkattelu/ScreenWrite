@@ -1,4 +1,4 @@
-# Markdown Format Enhancements Summary
+﻿# Markdown Format Enhancements Summary
 
 ## Overview
 
@@ -34,7 +34,7 @@ Explicitly specify what footage/images to show using `[action: content]`:
 [Annotation: on-screen text]
 [Screenshot: UI interface]
 [B-roll: video footage]
-[Footage: specific recording]
+[ScreenWrite: specific recording]
 [Interview: interview clip]
 [Visual: general visual reference]
 ```
@@ -97,7 +97,7 @@ Include sources and external references:
 
 ### Enhanced Code
 
-- **`vid_orchestrator/parsing/script_parser.py`** - Updated to support:
+- **`screenwrite/parsing/script_parser.py`** - Updated to support:
   - Metadata extraction (`ScriptMetadata` class)
   - B-roll instruction parsing (`BRollInstruction` class)
   - Instruction detection and association
@@ -112,7 +112,7 @@ Include sources and external references:
 
 ## Backwards Compatibility
 
-✅ **Fully backwards compatible**
+âœ… **Fully backwards compatible**
 
 Old scripts continue to work:
 - Scripts without metadata parse fine
@@ -224,7 +224,7 @@ Use this file as a template for your own scripts:
 2. Replace title/hook/content
 3. Add your specific footage instructions
 4. Include your sources
-5. Parse with vid-orchestrator
+5. Parse with screenwrite
 
 ## Parser Implementation
 
@@ -278,10 +278,10 @@ To test the enhanced parser:
 
 ```bash
 # Parse enhanced format script
-python -m vid_orchestrator examples/video_walkthroughs_enhanced.md --output test.fcpxml --verbose
+python -m screenwrite examples/video_walkthroughs_enhanced.md --output test.fcpxml --verbose
 
 # Compare with non-enhanced version
-python -m vid_orchestrator old_script.md --output old.fcpxml --verbose
+python -m screenwrite old_script.md --output old.fcpxml --verbose
 ```
 
 Both should generate valid output (backwards compatibility).
@@ -291,7 +291,7 @@ Both should generate valid output (backwards compatibility).
 - **Format Spec**: `docs/MARKDOWN_SCRIPT_FORMAT.md`
 - **Migration Guide**: `docs/UPGRADE_TO_ENHANCED_FORMAT.md`
 - **Example Script**: `examples/video_walkthroughs_enhanced.md`
-- **Parser Code**: `vid_orchestrator/parsing/script_parser.py`
+- **Parser Code**: `screenwrite/parsing/script_parser.py`
 
 ## Questions & Feedback
 
@@ -302,3 +302,5 @@ The enhanced format is designed to be:
 - **Compatible** - Works with existing scripts
 
 See documentation files for detailed syntax, examples, and best practices.
+
+

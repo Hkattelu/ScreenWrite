@@ -1,38 +1,38 @@
-# Footage Web App
+﻿# ScreenWrite Web App
 
-A modern web interface for the **vid-orchestrator** CLI tool. Convert markdown video scripts into DaVinci Resolve-compatible timelines with automatic B-roll fetching, all through an intuitive web UI.
+A modern web interface for the **screenwrite** CLI tool. Convert markdown video scripts into DaVinci Resolve-compatible timelines with automatic B-roll fetching, all through an intuitive web UI.
 
 ## Features
 
-- **📝 Upload & Parse**: Upload markdown scripts and automatically parse into beat segments
-- **🎬 Visual Preview**: See parsed beats with durations, keywords, and search queries
-- **⚙️ Configure Fetching**: Choose YouTube and/or Pexels as asset sources
-- **📥 Auto B-roll**: Automatically fetch footage based on your script descriptions
-- **🎯 Smart Fallback**: Seamlessly switch between YouTube and Pexels when content unavailable
-- **⚡ Generate Timeline**: Create FCPXML files ready for DaVinci Resolve import
-- **📊 Real-time Progress**: Track asset downloading with live progress updates
+- **ðŸ“ Upload & Parse**: Upload markdown scripts and automatically parse into beat segments
+- **ðŸŽ¬ Visual Preview**: See parsed beats with durations, keywords, and search queries
+- **âš™ï¸ Configure Fetching**: Choose YouTube and/or Pexels as asset sources
+- **ðŸ“¥ Auto B-roll**: Automatically fetch footage based on your script descriptions
+- **ðŸŽ¯ Smart Fallback**: Seamlessly switch between YouTube and Pexels when content unavailable
+- **âš¡ Generate Timeline**: Create FCPXML files ready for DaVinci Resolve import
+- **ðŸ“Š Real-time Progress**: Track asset downloading with live progress updates
 
 ## Project Structure
 
 ```
 webapp/
-├── backend/                    # Flask REST API
-│   ├── routes/                # API endpoint handlers
-│   │   ├── upload.py          # File upload & parsing
-│   │   ├── api.py             # Session management
-│   │   └── export.py          # FCPXML generation
-│   ├── app.py                 # Flask application
-│   └── requirements.txt        # Python dependencies
-├── frontend/                   # React + Vite UI
-│   ├── src/
-│   │   ├── components/        # Reusable React components
-│   │   ├── pages/             # Page components
-│   │   ├── services/          # API client
-│   │   ├── types/             # TypeScript definitions
-│   │   └── styles/            # CSS & Tailwind
-│   ├── package.json
-│   └── vite.config.ts
-└── README.md                   # This file
+â”œâ”€â”€ backend/                    # Flask REST API
+â”‚   â”œâ”€â”€ routes/                # API endpoint handlers
+â”‚   â”‚   â”œâ”€â”€ upload.py          # File upload & parsing
+â”‚   â”‚   â”œâ”€â”€ api.py             # Session management
+â”‚   â”‚   â””â”€â”€ export.py          # FCPXML generation
+â”‚   â”œâ”€â”€ app.py                 # Flask application
+â”‚   â””â”€â”€ requirements.txt        # Python dependencies
+â”œâ”€â”€ frontend/                   # React + Vite UI
+â”‚   â”œâ”€â”€ src/
+â”‚   â”‚   â”œâ”€â”€ components/        # Reusable React components
+â”‚   â”‚   â”œâ”€â”€ pages/             # Page components
+â”‚   â”‚   â”œâ”€â”€ services/          # API client
+â”‚   â”‚   â”œâ”€â”€ types/             # TypeScript definitions
+â”‚   â”‚   â””â”€â”€ styles/            # CSS & Tailwind
+â”‚   â”œâ”€â”€ package.json
+â”‚   â””â”€â”€ vite.config.ts
+â””â”€â”€ README.md                   # This file
 ```
 
 ## Quick Start
@@ -301,3 +301,5 @@ Future enhancements planned:
 - [ ] Direct Resolve integration (optional)
 - [ ] Asset caching and reuse
 - [ ] Analytics and usage tracking
+
+

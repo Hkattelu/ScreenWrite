@@ -1,5 +1,5 @@
-[flake8]
-# Flake8 configuration for vid-orchestrator project
+﻿[flake8]
+# Flake8 configuration for screenwrite project
 
 # Maximum line length
 max-line-length = 100
@@ -61,3 +61,4 @@ count = True
 
 # Print total number of errors
 statistics = True
+

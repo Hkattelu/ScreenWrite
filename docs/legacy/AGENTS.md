@@ -1,10 +1,10 @@
-# AGENTS.md - Multi-Agent Development Guide
+﻿# AGENTS.md - Multi-Agent Development Guide
 
-This document defines the agent roles, responsibilities, communication protocols, and commands for the vid-orchestrator project.
+This document defines the agent roles, responsibilities, communication protocols, and commands for the screenwrite project.
 
 ## Overview
 
-The vid-orchestrator project uses a **multi-agent orchestration model** where specialized agents collaborate to build a Python CLI tool that converts markdown video scripts into DaVinci Resolve-compatible timelines with auto-fetched B-roll footage.
+The screenwrite project uses a **multi-agent orchestration model** where specialized agents collaborate to build a Python CLI tool that converts markdown video scripts into DaVinci Resolve-compatible timelines with auto-fetched B-roll footage.
 
 ---
 
@@ -43,12 +43,12 @@ The vid-orchestrator project uses a **multi-agent orchestration model** where sp
 **Command**: `[CTO]` or `@CTO`
 
 **Key Decisions**:
-- ✅ **Language**: Python 3.12 (mature, rich ecosystem)
-- ✅ **YouTube**: yt-dlp (free, reliable, no API key)
-- ✅ **Stock Footage**: Pexels API (free tier available)
-- ✅ **Timeline Format**: FCPXML 1.8 (Resolve native)
-- ✅ **XML Library**: xml.etree.ElementTree (stdlib)
-- ✅ **Video Processing**: ffmpeg (mandatory for trimming)
+- âœ… **Language**: Python 3.12 (mature, rich ecosystem)
+- âœ… **YouTube**: yt-dlp (free, reliable, no API key)
+- âœ… **Stock ScreenWrite**: Pexels API (free tier available)
+- âœ… **Timeline Format**: FCPXML 1.8 (Resolve native)
+- âœ… **XML Library**: xml.etree.ElementTree (stdlib)
+- âœ… **Video Processing**: ffmpeg (mandatory for trimming)
 
 **Outputs**:
 - `TECH_STACK.md` - Technology choices and rationale
@@ -72,24 +72,24 @@ The vid-orchestrator project uses a **multi-agent orchestration model** where sp
 
 **Module Structure**:
 ```
-vid_orchestrator/
-├── core/
-│   ├── beat.py                      # Beat dataclass
-├── parsing/
-│   ├── script_parser.py             # Markdown → beats
-├── fetchers/
-│   ├── base_fetcher.py              # Base class
-│   ├── youtube_client.py            # yt-dlp wrapper
-│   ├── pexels_client.py             # Pexels API client
-│   ├── asset_orchestrator.py        # Fetcher coordinator
-├── generators/
-│   ├── xml_generator.py             # FCPXML builder
-├── utils/
-│   ├── error_handling.py            # Error utilities
-├── orchestrator.py                  # Main coordinator
-├── cli.py                           # CLI interface
-├── resolve_integration.py           # Resolve integration
-└── __main__.py                      # Entry point
+screenwrite/
+â”œâ”€â”€ core/
+â”‚   â”œâ”€â”€ beat.py                      # Beat dataclass
+â”œâ”€â”€ parsing/
+â”‚   â”œâ”€â”€ script_parser.py             # Markdown â†’ beats
+â”œâ”€â”€ fetchers/
+â”‚   â”œâ”€â”€ base_fetcher.py              # Base class
+â”‚   â”œâ”€â”€ youtube_client.py            # yt-dlp wrapper
+â”‚   â”œâ”€â”€ pexels_client.py             # Pexels API client
+â”‚   â”œâ”€â”€ asset_orchestrator.py        # Fetcher coordinator
+â”œâ”€â”€ generators/
+â”‚   â”œâ”€â”€ xml_generator.py             # FCPXML builder
+â”œâ”€â”€ utils/
+â”‚   â”œâ”€â”€ error_handling.py            # Error utilities
+â”œâ”€â”€ orchestrator.py                  # Main coordinator
+â”œâ”€â”€ cli.py                           # CLI interface
+â”œâ”€â”€ resolve_integration.py           # Resolve integration
+â””â”€â”€ __main__.py                      # Entry point
 ```
 
 **Outputs**:
@@ -104,7 +104,7 @@ vid_orchestrator/
 
 **Responsibilities**:
 - Implement Beat dataclass with auto-duration calculation
-- Implement ScriptParser (markdown → beats)
+- Implement ScriptParser (markdown â†’ beats)
 - Extract headers for context
 - Chunk text into 5-10 second segments
 - Generate stock footage keywords
@@ -120,11 +120,11 @@ vid_orchestrator/
 - `tests/test_script_parser.py` - Parser tests
 
 **Success Criteria**:
-- ✓ Beat duration auto-calculates within ±2 seconds
-- ✓ Parses sample markdown into 5-10 second beats
-- ✓ Generated queries are contextually relevant
-- ✓ 90%+ test coverage
-- ✓ Handles edge cases (empty scripts, special chars)
+- âœ“ Beat duration auto-calculates within Â±2 seconds
+- âœ“ Parses sample markdown into 5-10 second beats
+- âœ“ Generated queries are contextually relevant
+- âœ“ 90%+ test coverage
+- âœ“ Handles edge cases (empty scripts, special chars)
 
 ---
 
@@ -135,7 +135,7 @@ vid_orchestrator/
 - Implement YouTubeClient (yt-dlp wrapper)
 - Implement PexelsClient (Pexels API client)
 - Handle video downloading and trimming (ffmpeg)
-- Implement fallback logic (YouTube → Pexels)
+- Implement fallback logic (YouTube â†’ Pexels)
 - Handle rate limiting and API errors
 - Implement retry logic and graceful degradation
 - Manage temporary files and caching
@@ -151,12 +151,12 @@ vid_orchestrator/
 - `tests/test_pexels_client.py` - Pexels tests (mocked)
 
 **Success Criteria**:
-- ✓ YouTube downloads work with yt-dlp
-- ✓ Pexels API integration functional
-- ✓ Fallback logic tested and working
-- ✓ Network errors handled gracefully
-- ✓ 80%+ test coverage (with mocks)
-- ✓ Timeout handling (60s default)
+- âœ“ YouTube downloads work with yt-dlp
+- âœ“ Pexels API integration functional
+- âœ“ Fallback logic tested and working
+- âœ“ Network errors handled gracefully
+- âœ“ 80%+ test coverage (with mocks)
+- âœ“ Timeout handling (60s default)
 
 **Dependencies**:
 - Requires `core/beat.py` from P1
@@ -186,12 +186,12 @@ vid_orchestrator/
 - `docs/FCPXML_STRUCTURE.md` - XML documentation
 
 **Success Criteria**:
-- ✓ Generated FCPXML imports into DaVinci Resolve
-- ✓ Gaps appear on spine, B-roll on Lane 1
-- ✓ All timestamps calculated correctly
-- ✓ Handles resources properly
-- ✓ 85%+ test coverage
-- ✓ Validates against FCPXML schema
+- âœ“ Generated FCPXML imports into DaVinci Resolve
+- âœ“ Gaps appear on spine, B-roll on Lane 1
+- âœ“ All timestamps calculated correctly
+- âœ“ Handles resources properly
+- âœ“ 85%+ test coverage
+- âœ“ Validates against FCPXML schema
 
 **Dependencies**:
 - Requires `core/beat.py` from P1
@@ -223,13 +223,13 @@ vid_orchestrator/
 - `tests/test_cli.py` - CLI tests
 
 **Success Criteria**:
-- ✓ CLI accepts all documented arguments
-- ✓ End-to-end workflow completes successfully
-- ✓ FCPXML generated and valid
-- ✓ Resolve integration optional but functional
-- ✓ Error handling for all edge cases
-- ✓ Verbose logging works
-- ✓ 80%+ test coverage
+- âœ“ CLI accepts all documented arguments
+- âœ“ End-to-end workflow completes successfully
+- âœ“ FCPXML generated and valid
+- âœ“ Resolve integration optional but functional
+- âœ“ Error handling for all edge cases
+- âœ“ Verbose logging works
+- âœ“ 80%+ test coverage
 
 **Dependencies**:
 - Requires all modules from P1, P2, P3
@@ -257,7 +257,7 @@ vid_orchestrator/
 - [ ] Error handling is comprehensive
 - [ ] Edge cases are handled
 - [ ] No security vulnerabilities
-- [ ] Test coverage ≥ target %
+- [ ] Test coverage â‰¥ target %
 - [ ] Code is maintainable
 - [ ] No dead code
 - [ ] Consistent with architecture
@@ -288,21 +288,21 @@ vid_orchestrator/
 **Test Suites**:
 ```
 tests/
-├── unit/
-│   ├── test_beat.py
-│   ├── test_script_parser.py
-│   ├── test_youtube_client.py
-│   ├── test_pexels_client.py
-│   ├── test_xml_generator.py
-│   └── test_cli.py
-├── integration/
-│   ├── test_parser_to_fetchers.py
-│   ├── test_fetchers_to_xml.py
-│   └── test_end_to_end.py
-└── fixtures/
-    ├── sample_script.md
-    ├── mocked_responses.json
-    └── expected_output.fcpxml
+â”œâ”€â”€ unit/
+â”‚   â”œâ”€â”€ test_beat.py
+â”‚   â”œâ”€â”€ test_script_parser.py
+â”‚   â”œâ”€â”€ test_youtube_client.py
+â”‚   â”œâ”€â”€ test_pexels_client.py
+â”‚   â”œâ”€â”€ test_xml_generator.py
+â”‚   â””â”€â”€ test_cli.py
+â”œâ”€â”€ integration/
+â”‚   â”œâ”€â”€ test_parser_to_fetchers.py
+â”‚   â”œâ”€â”€ test_fetchers_to_xml.py
+â”‚   â””â”€â”€ test_end_to_end.py
+â””â”€â”€ fixtures/
+    â”œâ”€â”€ sample_script.md
+    â”œâ”€â”€ mocked_responses.json
+    â””â”€â”€ expected_output.fcpxml
 ```
 
 **Coverage Targets**:
@@ -317,7 +317,7 @@ tests/
 **Commands**:
 ```bash
 # Run all tests
-python -m pytest tests/ -v --cov=vid_orchestrator --cov-report=html
+python -m pytest tests/ -v --cov=screenwrite --cov-report=html
 
 # Run specific test suite
 python -m pytest tests/unit/test_beat.py -v
@@ -379,14 +379,14 @@ Use this format for daily progress reports:
 [Agent Name]
 
 TODAY COMPLETED:
-- ✅ Task 1
-- ✅ Task 2
+- âœ… Task 1
+- âœ… Task 2
 
 TODAY IN_PROGRESS:
-- 🔄 Task 3 (70% done)
+- ðŸ”„ Task 3 (70% done)
 
 BLOCKERS:
-- 🚫 Waiting on [Agent] for [deliverable]
+- ðŸš« Waiting on [Agent] for [deliverable]
 
 NEXT 24H:
 - Task 4
@@ -398,15 +398,15 @@ NEXT 24H:
 Use this format for code reviews:
 
 ```
-[Code Reviewer] → [Target Programmer]
+[Code Reviewer] â†’ [Target Programmer]
 
 MODULE: [name]
 
 REVIEW FINDINGS:
-✓ Strengths:
+âœ“ Strengths:
 - [positive aspect]
 
-⚠️  Issues Found:
+âš ï¸  Issues Found:
 1. [Issue] - Severity: [Critical|High|Medium|Low]
    Location: [file:line]
    Suggestion: [fix recommendation]
@@ -425,11 +425,11 @@ ALTERNATIVES CONSIDERED: [Other options]
 ```
 
 **Escalation Path**:
-1. **Architecture**: → CTO
-2. **Technical Trade-off**: → Architect
-3. **Scope/Features**: → CPO
-4. **Quality/Testing**: → Code Reviewer + Test Engineer
-5. **Deadlock**: → CPO (executive decision)
+1. **Architecture**: â†’ CTO
+2. **Technical Trade-off**: â†’ Architect
+3. **Scope/Features**: â†’ CPO
+4. **Quality/Testing**: â†’ Code Reviewer + Test Engineer
+5. **Deadlock**: â†’ CPO (executive decision)
 
 ### Status Reporting
 
@@ -474,8 +474,8 @@ ALTERNATIVES CONSIDERED: [Other options]
 - P4: Orchestrator & CLI
 
 **Synchronization Points**:
-- P1 → P2, P3 (Beat dataclass)
-- P2, P3 → P4 (All modules)
+- P1 â†’ P2, P3 (Beat dataclass)
+- P2, P3 â†’ P4 (All modules)
 
 **Output**: All modules complete with unit tests
 
@@ -546,18 +546,18 @@ python run_tests.py
 
 **Run with coverage**:
 ```bash
-python -m pytest tests/ --cov=vid_orchestrator --cov-report=html
+python -m pytest tests/ --cov=screenwrite --cov-report=html
 ```
 
 **Run CLI**:
 ```bash
-python -m vid_orchestrator script.md --output timeline.fcpxml --verbose
+python -m screenwrite script.md --output timeline.fcpxml --verbose
 ```
 
 **Lint code**:
 ```bash
-python -m flake8 vid_orchestrator/
-python -m pylint vid_orchestrator/
+python -m flake8 screenwrite/
+python -m pylint screenwrite/
 ```
 
 **Run linting and tests**:
@@ -587,7 +587,7 @@ python validate_syntax.py
 
 ## Success Criteria
 
-✅ **Functional**
+âœ… **Functional**
 - [ ] Parses markdown scripts into 5-10 second beats
 - [ ] Auto-calculates beat duration
 - [ ] Generates stock keywords and YouTube phrases
@@ -596,14 +596,14 @@ python validate_syntax.py
 - [ ] Generates valid FCPXML 1.8
 - [ ] Imports successfully into DaVinci Resolve
 
-✅ **Quality**
+âœ… **Quality**
 - [ ] 80%+ test coverage
 - [ ] 0 critical bugs
 - [ ] Code reviewed and approved
 - [ ] All edge cases handled
 - [ ] Network errors graceful
 
-✅ **Documentation**
+âœ… **Documentation**
 - [ ] README with quick start
 - [ ] Complete API docs
 - [ ] Usage guide with examples
@@ -611,7 +611,7 @@ python validate_syntax.py
 - [ ] Troubleshooting guide
 - [ ] 3+ example scripts
 
-✅ **Process**
+âœ… **Process**
 - [ ] Daily standups completed
 - [ ] Weekly milestone reviews
 - [ ] Decisions documented
@@ -628,7 +628,7 @@ python validate_syntax.py
 - `AGENTS.md` - This file
 
 **Source Code**:
-- `vid_orchestrator/` - Main package
+- `screenwrite/` - Main package
 - `tests/` - Test suite
 - `docs/` - User documentation
 - `examples/` - Example scripts
@@ -675,3 +675,5 @@ python validate_syntax.py
 **Last Updated**: Jan 20, 2026  
 **Version**: 1.0  
 **Status**: Active
+
+

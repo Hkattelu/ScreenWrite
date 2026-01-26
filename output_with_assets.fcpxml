@@ -1,10 +1,10 @@
-<?xml version='1.0' encoding='utf-8'?>
+﻿<?xml version='1.0' encoding='utf-8'?>
 <fcpxml version="1.8">
   <resources>
     <format id="r1" name="FFVideoFormat1080p30" frameDuration="100/3000s" width="1920" height="1080" colorSpace="1-1-1 (Rec. 709)" />
     <media id="r2" name="youtube_downloaded_installer_make_sure_rjl2OGVJGB8.mp4" uid="media-r2">
       <asset id="asset-r2" name="youtube_downloaded_installer_make_sure_rjl2OGVJGB8.mp4" uid="asset-r2" start="0s" hasVideo="1" format="r1" hasAudio="1">
-        <media-rep kind="original-media" sig="sig-r2" src="file://C:\Users\himan\AppData\Local\Temp\vid_orchestrator_47cf0g3y\youtube_downloaded_installer_make_sure_rjl2OGVJGB8.mp4" />
+        <media-rep kind="original-media" sig="sig-r2" src="file://C:\Users\himan\AppData\Local\Temp\screenwrite_47cf0g3y\youtube_downloaded_installer_make_sure_rjl2OGVJGB8.mp4" />
       </asset>
     </media>
   </resources>
@@ -26,3 +26,4 @@
     </event>
   </library>
 </fcpxml>
+

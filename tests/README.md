@@ -1,6 +1,6 @@
-# End-to-End Integration Tests
+﻿# End-to-End Integration Tests
 
-This directory contains comprehensive end-to-end integration tests for the vid-orchestrator system.
+This directory contains comprehensive end-to-end integration tests for the screenwrite system.
 
 ## Overview
 
@@ -28,7 +28,7 @@ The tests validate the following requirements from the specification:
 ### Test Cases
 
 1. **Complete Workflow with Mocked Fetchers**
-   - Tests the full pipeline: parse → fetch → generate → validate
+   - Tests the full pipeline: parse â†’ fetch â†’ generate â†’ validate
    - Uses mocked external APIs for reliable testing
    - Validates beat generation, asset fetching, and FCPXML creation
    - Verifies all query fields are properly generated and non-empty

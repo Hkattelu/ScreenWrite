@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Syntax Guide page
  *
  * Complete markdown script syntax reference and best practices
@@ -81,10 +81,10 @@ Continue your narrative.`}
               <div>
                 <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3">Supported Actions</h3>
                  <ul className="text-sm text-gray-600 space-y-1">
-                   <li><span className="font-mono text-black font-medium">Image</span> — Static assets</li>
-                   <li><span className="font-mono text-black font-medium">B-roll</span> — Video footage</li>
-                   <li><span className="font-mono text-black font-medium">Annotation</span> — Text overlays</li>
-                   <li><span className="font-mono text-black font-medium">Citation</span> — Source credits</li>
+                   <li><span className="font-mono text-black font-medium">Image</span> â€” Static assets</li>
+                   <li><span className="font-mono text-black font-medium">B-roll</span> â€” Video footage</li>
+                   <li><span className="font-mono text-black font-medium">Annotation</span> â€” Text overlays</li>
+                   <li><span className="font-mono text-black font-medium">Citation</span> â€” Source credits</li>
                  </ul>
               </div>
             </div>
@@ -102,7 +102,7 @@ The earliest instances of walkthroughs came from physical books.`}
 
           {/* Section: Best Practices (Comparison) */}
           <section>
-            <h2 className="text-2xl font-bold text-gray-900 mb-8">Writing for Footage</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-8">Writing for ScreenWrite</h2>
             
             <div className="grid md:grid-cols-2 gap-12">
               <div>
@@ -144,4 +144,5 @@ The earliest instances of walkthroughs came from physical books.`}
     </div>
   )
 }
+
 

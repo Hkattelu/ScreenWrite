@@ -1,4 +1,4 @@
-# Enhanced Markdown Script Format for vid-orchestrator
+﻿# Enhanced Markdown Script Format for screenwrite
 
 This document specifies the robust markdown flavor for video scripts with B-roll generation support.
 
@@ -327,13 +327,13 @@ What's your favorite walkthrough format? Let me know in the comments!
 
 ### Do's
 
-✅ Use **specific subject names** in instructions
+âœ… Use **specific subject names** in instructions
 ```markdown
-✅ [Image: Nintendo Power magazine cover from 1990]
-❌ [Image: old magazine]
+âœ… [Image: Nintendo Power magazine cover from 1990]
+âŒ [Image: old magazine]
 ```
 
-✅ **Chain instructions** for logical sequences
+âœ… **Chain instructions** for logical sequences
 ```markdown
 [Image: person booting up computer]
 [Image: Windows 95 startup animation]
@@ -341,47 +341,47 @@ What's your favorite walkthrough format? Let me know in the comments!
 The dial-up era was slow but magical...
 ```
 
-✅ Use **action-oriented language** in body text
+âœ… Use **action-oriented language** in body text
 ```markdown
-✅ "Navigate to the GameFAQs website and search for your game"
-❌ "Look up information about your game"
+âœ… "Navigate to the GameFAQs website and search for your game"
+âŒ "Look up information about your game"
 ```
 
-✅ Place instructions **near related text**
+âœ… Place instructions **near related text**
 ```markdown
 [Image: old arcade cabinet]
 Arcade cabinets of the 80s didn't come with instructions...
 ```
 
-✅ Use **Citation** for source attribution
+âœ… Use **Citation** for source attribution
 ```markdown
 [Citation: Wikipedia - Video Game Walkthrough]
 ```
 
 ### Don'ts
 
-❌ Vague instructions
+âŒ Vague instructions
 ```markdown
-❌ [Image: stuff]
-❌ [B-roll: things from the past]
+âŒ [Image: stuff]
+âŒ [B-roll: things from the past]
 ```
 
-❌ Orphaned instructions (disconnected from text)
+âŒ Orphaned instructions (disconnected from text)
 ```markdown
-❌ [Image: random screenshot]
-❌ [B-roll: something]
+âŒ [Image: random screenshot]
+âŒ [B-roll: something]
 Text that has nothing to do with above...
 ```
 
-❌ Over-instructing
+âŒ Over-instructing
 ```markdown
-❌ Every sentence has a [Image: ...] instruction
+âŒ Every sentence has a [Image: ...] instruction
 ```
 
-❌ Mixing instruction formats
+âŒ Mixing instruction formats
 ```markdown
-❌ [image: lowercase]
-❌ Image: without brackets
+âŒ [image: lowercase]
+âŒ Image: without brackets
 ```
 
 ## Markdown Validation
@@ -406,3 +406,4 @@ This format is designed to:
 - **Generate searchable queries** for B-roll assets
 - **Map to FCPXML** timeline structure
 - **Support manual override** of auto-generated content
+

@@ -1,6 +1,6 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
-Test runner for vid-orchestrator end-to-end integration tests.
+Test runner for screenwrite end-to-end integration tests.
 
 This script runs the comprehensive end-to-end integration test suite
 that validates the complete workflow from markdown script to FCPXML output.

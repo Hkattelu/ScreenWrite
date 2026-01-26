@@ -1,4 +1,4 @@
-# Product Guidelines: vid-orchestrator
+﻿# Product Guidelines: screenwrite
 
 ## Tone and Voice
 - **Professional & Technical:** All user-facing communication, including CLI messages, documentation, and error reports, should be precise, technically accurate, and clear.
@@ -18,3 +18,4 @@
 - **Modern & Minimalist:** Any graphical interfaces (like the planned beat preview) should feature clean layouts, high contrast, and a "content-first" design.
 - **Utility over Decoration:** Avoid unnecessary animations or decorative elements that do not serve a functional purpose.
 - **Dark-Mode Optimized:** Given the developer and editor target audience, interfaces should be optimized for dark environments with clear, legible typography.
+

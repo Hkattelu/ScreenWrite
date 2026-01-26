@@ -1,4 +1,4 @@
-"""
+﻿"""
 Unit tests for XMLGenerator module.
 
 Tests FCPXML 1.8 generation, validation, and structure.
@@ -10,8 +10,8 @@ import tempfile
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-from vid_orchestrator.generators.xml_generator import XMLGenerator
-from vid_orchestrator.core.beat import Beat
+from screenwrite.generators.xml_generator import XMLGenerator
+from screenwrite.core.beat import Beat
 
 
 class TestXMLGenerator(unittest.TestCase):
@@ -410,7 +410,7 @@ class TestXMLGeneratorEdgeCases(unittest.TestCase):
         """Test handling special characters in beat text."""
         beat = Beat(
             id="beat_001",
-            text="Test with special chars: <>&\"' and unicode: é ñ ü",
+            text="Test with special chars: <>&\"' and unicode: Ã© Ã± Ã¼",
             stock_keyword="test special",
             youtube_search_phrase="test unicode"
         )
@@ -467,3 +467,4 @@ class TestXMLGeneratorEdgeCases(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+

@@ -1,4 +1,4 @@
-# Markdown Cheat Sheet for Video Scripts
+﻿# Markdown Cheat Sheet for Video Scripts
 
 Quick reference for the enhanced markdown format.
 
@@ -131,29 +131,29 @@ Final message and call to action...
 
 ## Do's and Don'ts
 
-### ✅ Do
+### âœ… Do
 
 - Use specific, visual descriptions
   ```markdown
-  ✅ [Image: Python code in Visual Studio Code editor]
+  âœ… [Image: Python code in Visual Studio Code editor]
   ```
 
 - Place instructions near relevant text
   ```markdown
-  ✅ [Image: website homepage]
+  âœ… [Image: website homepage]
      Visit the website and click signup.
   ```
 
 - Chain instructions logically
   ```markdown
-  ✅ [Image: download button on website]
+  âœ… [Image: download button on website]
      [B-roll: file saving dialog animation]
      [Annotation: "Choose your location"]
   ```
 
 - Use consistent instruction types
   ```markdown
-  ✅ [Image: ...]
+  âœ… [Image: ...]
      [B-roll: ...]
      [Annotation: ...]
      [Citation: ...]
@@ -161,34 +161,34 @@ Final message and call to action...
 
 - Add citations for sources
   ```markdown
-  ✅ [Citation: Wikipedia - Video Game History]
+  âœ… [Citation: Wikipedia - Video Game History]
   ```
 
-### ❌ Don't
+### âŒ Don't
 
 - Be vague
   ```markdown
-  ❌ [Image: stuff]
-  ❌ [B-roll: things]
+  âŒ [Image: stuff]
+  âŒ [B-roll: things]
   ```
 
 - Use wrong capitalization
   ```markdown
-  ❌ [image: lowercase action]
-  ❌ [IMAGE: ALL CAPS]
-  ❌ Image: no brackets
+  âŒ [image: lowercase action]
+  âŒ [IMAGE: ALL CAPS]
+  âŒ Image: no brackets
   ```
 
 - Leave orphaned instructions
   ```markdown
-  ❌ [Image: random screenshot]
+  âŒ [Image: random screenshot]
      [Complete tangent content]
   ```
 
 - Over-instruct every sentence
   ```markdown
-  ❌ [Image: something] Text here. [Image: another thing] More text.
-  ❌ [B-roll: yet another] Final text.
+  âŒ [Image: something] Text here. [Image: another thing] More text.
+  âŒ [B-roll: yet another] Final text.
   ```
 
 ## Word Count Guide
@@ -350,15 +350,15 @@ Verify your script before processing:
 
 ```bash
 # Test parsing without fetching assets
-python -m vid_orchestrator your_script.md --output test.fcpxml --no-fetch --verbose
+python -m screenwrite your_script.md --output test.fcpxml --no-fetch --verbose
 ```
 
 Check for:
-- ✓ Proper metadata extraction
-- ✓ Valid beat generation
-- ✓ Correct instruction parsing
-- ✓ Appropriate word counts
-- ✓ Natural flow when read aloud
+- âœ“ Proper metadata extraction
+- âœ“ Valid beat generation
+- âœ“ Correct instruction parsing
+- âœ“ Appropriate word counts
+- âœ“ Natural flow when read aloud
 
 ## Need Help?
 
@@ -366,3 +366,4 @@ Check for:
 - **Migration Guide**: See `UPGRADE_TO_ENHANCED_FORMAT.md`
 - **Complete Example**: See `examples/video_walkthroughs_enhanced.md`
 - **Original Guide**: See `MARKDOWN_SCRIPT_GUIDE.md`
+

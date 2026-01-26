@@ -1,32 +1,32 @@
-# 🎬 Footage
+﻿# ðŸŽ¬ ScreenWrite
 
 **Script to Timeline, Automatically.**
 
-Footage is an automated video production engine that transforms Markdown scripts into professionally structured DaVinci Resolve timelines. It parses your script, generates intelligent B-roll search queries, and fetches high-quality assets from YouTube and Pexels—all in one workflow.
+ScreenWrite is an automated video production engine that transforms Markdown scripts into professionally structured DaVinci Resolve timelines. It parses your script, generates intelligent B-roll search queries, and fetches high-quality assets from YouTube and Pexelsâ€”all in one workflow.
 
 ---
 
-## ✨ Features
+## âœ¨ Features
 
-- **📝 Editorial Markdown Parser**: Converts standard markdown into timed video "beats" (5-10s segments).
-- **🎬 Automated B-roll**: Intelligently fetches footage from YouTube (yt-dlp) and Pexels Stock.
-- **⚡ Pro-Grade Export**: Generates FCPXML 1.8 files ready for direct import into DaVinci Resolve or Final Cut Pro.
-- **🖥️ Minimalist Web UI**: A clean, "editorial-style" web interface for reviewing and fine-tuning your timeline.
-- **🛠️ Powerful CLI**: Robust command-line tool for automated batch processing.
-- **🎯 Smart Fallback**: Prioritizes specific YouTube clips with seamless fallback to Pexels stock footage.
+- **ðŸ“ Editorial Markdown Parser**: Converts standard markdown into timed video "beats" (5-10s segments).
+- **ðŸŽ¬ Automated B-roll**: Intelligently fetches footage from YouTube (yt-dlp) and Pexels Stock.
+- **âš¡ Pro-Grade Export**: Generates FCPXML 1.8 files ready for direct import into DaVinci Resolve or Final Cut Pro.
+- **ðŸ–¥ï¸ Minimalist Web UI**: A clean, "editorial-style" web interface for reviewing and fine-tuning your timeline.
+- **ðŸ› ï¸ Powerful CLI**: Robust command-line tool for automated batch processing.
+- **ðŸŽ¯ Smart Fallback**: Prioritizes specific YouTube clips with seamless fallback to Pexels stock footage.
 
 ---
 
-## 🚀 Quick Start
+## ðŸš€ Quick Start
 
 ### 1. Installation
 
-Footage requires **FFmpeg** for video processing.
+ScreenWrite requires **FFmpeg** for video processing.
 
 ```bash
 # Clone the repository
-git clone https://github.com/Hkattelu/footage.git
-cd footage
+git clone https://github.com/Hkattelu/ScreenWrite.git
+cd ScreenWrite
 
 # Install as a local package
 pip install -e .
@@ -38,7 +38,7 @@ choco install ffmpeg
 ### 2. Start the Engine (CLI)
 Convert a script directly from your terminal:
 ```bash
-vid-orchestrator script.md -o timeline.fcpxml
+screenwrite script.md -o timeline.fcpxml
 ```
 
 ### 3. Launch the Web UI
@@ -57,9 +57,9 @@ Visit `http://localhost:3000` to start your project.
 
 ---
 
-## 📖 The Script Format
+## ðŸ“– The Script Format
 
-Footage uses a refined Markdown syntax designed for video creators.
+ScreenWrite uses a refined Markdown syntax designed for video creators.
 
 ```markdown
 Title: My Documentary
@@ -80,18 +80,18 @@ of our place in the world.
 
 ---
 
-## 🛠️ Architecture
+## ðŸ› ï¸ Architecture
 
-Footage is built on a modular pipeline designed for extensibility:
+ScreenWrite is built on a modular pipeline designed for extensibility:
 
-1.  **Parser**: Text → Timing → Search Queries
+1.  **Parser**: Text â†’ Timing â†’ Search Queries
 2.  **Orchestrator**: Coordinates multi-source asset fetching.
 3.  **Fetchers**: YouTube (yt-dlp) & Pexels (API) integrations.
 4.  **Generator**: Produces standard FCPXML 1.8 manifests.
 
 ---
 
-## ⚙️ Configuration
+## âš™ï¸ Configuration
 
 Set your Pexels API key to enable high-quality stock footage:
 
@@ -105,6 +105,8 @@ export PEXELS_API_KEY="your_key_here"
 
 ---
 
-## ⚖️ License
+## âš–ï¸ License
 
 MIT License. See `LICENSE` for details.
+
+

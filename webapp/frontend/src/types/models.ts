@@ -1,5 +1,5 @@
-/**
- * TypeScript types for footage web app
+﻿/**
+ * TypeScript types for ScreenWrite web app
  */
 
 export interface Beat {
@@ -75,3 +75,4 @@ export interface ProgressUpdate {
     message?: string
   }
 }
+

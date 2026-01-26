@@ -1,5 +1,5 @@
-"""
-Unified test runner and linting script for vid-orchestrator.
+﻿"""
+Unified test runner and linting script for screenwrite.
 
 Runs linting checks (flake8, pylint) and all test suites.
 """
@@ -26,17 +26,17 @@ def run_command(cmd, description, check=True):
         )
         
         if result.returncode == 0:
-            print(f"\n✓ {description} - PASSED")
+            print(f"\nâœ“ {description} - PASSED")
             return True
         else:
-            print(f"\n✗ {description} - FAILED (exit code: {result.returncode})")
+            print(f"\nâœ— {description} - FAILED (exit code: {result.returncode})")
             return False
             
     except subprocess.CalledProcessError as e:
-        print(f"\n✗ {description} - FAILED (exit code: {e.returncode})")
+        print(f"\nâœ— {description} - FAILED (exit code: {e.returncode})")
         return False
     except FileNotFoundError:
-        print(f"\n✗ {description} - SKIPPED (command not found)")
+        print(f"\nâœ— {description} - SKIPPED (command not found)")
         return None
 
 
@@ -72,7 +72,7 @@ def run_coverage():
     try:
         subprocess.run(["coverage", "--version"], capture_output=True, check=True)
     except (subprocess.CalledProcessError, FileNotFoundError):
-        print("✗ Coverage - SKIPPED (coverage not installed)")
+        print("âœ— Coverage - SKIPPED (coverage not installed)")
         print("  Install with: pip install coverage")
         return None
     
@@ -84,7 +84,7 @@ def run_coverage():
     )
     
     if result1.returncode != 0:
-        print("\n✗ Coverage - FAILED (tests failed)")
+        print("\nâœ— Coverage - FAILED (tests failed)")
         return False
     
     # Generate coverage report
@@ -103,17 +103,17 @@ def run_coverage():
     print("HTML coverage report generated in: htmlcov/index.html")
     
     if result2.returncode == 0:
-        print("\n✓ Coverage - PASSED")
+        print("\nâœ“ Coverage - PASSED")
         return True
     else:
-        print("\n✗ Coverage - FAILED")
+        print("\nâœ— Coverage - FAILED")
         return False
 
 
 def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description="Run linting and tests for vid-orchestrator",
+        description="Run linting and tests for screenwrite",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -162,7 +162,7 @@ Examples:
     
     # Target directories for linting
     target_dirs = [
-        str(project_root / "vid_orchestrator"),
+        str(project_root / "screenwrite"),
         str(project_root / "tests")
     ]
     
@@ -173,7 +173,7 @@ Examples:
         "coverage": None
     }
     
-    print(f"\nvid-orchestrator Quality Checks")
+    print(f"\nscreenwrite Quality Checks")
     print(f"Project root: {project_root}")
     
     # Run linting checks
@@ -201,10 +201,10 @@ Examples:
     
     for name, result in results.items():
         if result is True:
-            status = "✓ PASSED"
+            status = "âœ“ PASSED"
             passed += 1
         elif result is False:
-            status = "✗ FAILED"
+            status = "âœ— FAILED"
             failed += 1
         else:
             status = "- SKIPPED"
@@ -216,10 +216,10 @@ Examples:
     
     # Determine exit code
     if failed > 0:
-        print("\n✗ Some checks failed")
+        print("\nâœ— Some checks failed")
         return 1
     elif passed > 0:
-        print("\n✓ All checks passed!")
+        print("\nâœ“ All checks passed!")
         return 0
     else:
         print("\n- No checks were run")
@@ -228,3 +228,4 @@ Examples:
 
 if __name__ == "__main__":
     sys.exit(main())
+

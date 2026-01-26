@@ -1,4 +1,4 @@
-# Markdown Format Enhancement - Quick Start Guide
+﻿# Markdown Format Enhancement - Quick Start Guide
 
 Your markdown syntax has been enhanced to support more robust video scripts. Here's what's new and how to use it.
 
@@ -48,7 +48,7 @@ Tags: python, tutorial, beginner
 [Annotation: "Import the library first"]
 [Screenshot: command line output]
 [B-roll: person typing code]
-[Footage: video clip of installation]
+[ScreenWrite: video clip of installation]
 [Interview: expert discussing best practices]
 [Visual: relevant concept diagram]
 ```
@@ -207,12 +207,12 @@ Final engagement message...
 
 | Action | What It Means | When to Use |
 |--------|--------------|------------|
-| `[Show: ...]` | Display image/photo/footage | Most common, default choice |
+| `[Show: ...]` | Display image/photo/ScreenWrite | Most common, default choice |
 | `[Display: ...]` | Present/overlay content | UI screens, magazine pages |
 | `[Annotation: ...]` | Add on-screen text | Dates, titles, highlights |
 | `[Screenshot: ...]` | Software interface | Code editor, website |
 | `[B-roll: ...]` | Background video footage | People working, processes |
-| `[Footage: ...]` | Specific video recording | Movie clips, recordings |
+| `[ScreenWrite: ...]` | Specific video recording | Movie clips, recordings |
 | `[Interview: ...]` | Interview or discussion | People talking/speaking |
 | `[Visual: ...]` | General visual reference | Diagrams, illustrations |
 
@@ -344,35 +344,35 @@ What do you think? Comment your opinion!
 ## Syntax Rules
 
 ### Do's
-✅ Use consistent capitalization: `[Show: ...]`, `[Display: ...]`  
-✅ Be specific: `[Show: Pac-Man arcade cabinet from 1982]`  
-✅ Place instructions near related text  
-✅ Use brackets: `[` and `]`  
-✅ Use colon: `:` between action and content  
+âœ… Use consistent capitalization: `[Show: ...]`, `[Display: ...]`  
+âœ… Be specific: `[Show: Pac-Man arcade cabinet from 1982]`  
+âœ… Place instructions near related text  
+âœ… Use brackets: `[` and `]`  
+âœ… Use colon: `:` between action and content  
 
 ### Don'ts
-❌ Don't use lowercase: `[show: ...]` (wrong capitalization)  
-❌ Don't be vague: `[Show: stuff]`  
-❌ Don't forget brackets: `Show: content`  
-❌ Don't forget colon: `[Show content]`  
-❌ Don't orphan instructions (no related text nearby)  
+âŒ Don't use lowercase: `[show: ...]` (wrong capitalization)  
+âŒ Don't be vague: `[Show: stuff]`  
+âŒ Don't forget brackets: `Show: content`  
+âŒ Don't forget colon: `[Show content]`  
+âŒ Don't orphan instructions (no related text nearby)  
 
 ### Valid Examples
 ```markdown
-✅ [Show: Python.org homepage]
-✅ [Display: IDE setup window]
-✅ [Annotation: "Step 1 of 5"]
-✅ [B-roll: developer typing code]
-✅ [Screenshot: command line output]
+âœ… [Show: Python.org homepage]
+âœ… [Display: IDE setup window]
+âœ… [Annotation: "Step 1 of 5"]
+âœ… [B-roll: developer typing code]
+âœ… [Screenshot: command line output]
 ```
 
 ### Invalid Examples
 ```markdown
-❌ [show: lowercase]
-❌ [SHOW: ALL CAPS]
-❌ Show: no brackets
-❌ [Show content without colon]
-❌ [Show: ] (empty content)
+âŒ [show: lowercase]
+âŒ [SHOW: ALL CAPS]
+âŒ Show: no brackets
+âŒ [Show content without colon]
+âŒ [Show: ] (empty content)
 ```
 
 ---
@@ -402,15 +402,15 @@ Better (16 words):
 ### Verify syntax is correct
 ```bash
 # Parse without fetching assets
-python -m vid_orchestrator your_script.md --output test.fcpxml --no-fetch --verbose
+python -m screenwrite your_script.md --output test.fcpxml --no-fetch --verbose
 ```
 
 ### Check for common issues
-- ✓ Metadata appears at top (no blank lines before Title)
-- ✓ Instructions use `[Action: content]` format
-- ✓ Instructions have proper capitalization
-- ✓ Each beat is 13-25 words
-- ✓ Script reads naturally when spoken aloud
+- âœ“ Metadata appears at top (no blank lines before Title)
+- âœ“ Instructions use `[Action: content]` format
+- âœ“ Instructions have proper capitalization
+- âœ“ Each beat is 13-25 words
+- âœ“ Script reads naturally when spoken aloud
 
 ---
 
@@ -444,17 +444,17 @@ A: Only if you want better control over B-roll. Not required.
 A: Most content uses `[Show: ...]`. Use `[Annotation: ...]` for on-screen text.
 
 **Q: Can I add my own action types?**  
-A: Currently: Show, Display, Annotation, Screenshot, B-roll, Footage, Interview, Visual. Others will be parsed but not specially handled.
+A: Currently: Show, Display, Annotation, Screenshot, B-roll, ScreenWrite, Interview, Visual. Others will be parsed but not specially handled.
 
 ---
 
 ## Getting Help
 
-1. **Quick answer?** → Check this file
-2. **Full reference?** → See `docs/MARKDOWN_SCRIPT_FORMAT.md`
-3. **Examples?** → See `examples/video_walkthroughs_enhanced.md`
-4. **Step-by-step?** → Read `docs/UPGRADE_TO_ENHANCED_FORMAT.md`
-5. **Quick lookup?** → Use `docs/MARKDOWN_CHEAT_SHEET.md`
+1. **Quick answer?** â†’ Check this file
+2. **Full reference?** â†’ See `docs/MARKDOWN_SCRIPT_FORMAT.md`
+3. **Examples?** â†’ See `examples/video_walkthroughs_enhanced.md`
+4. **Step-by-step?** â†’ Read `docs/UPGRADE_TO_ENHANCED_FORMAT.md`
+5. **Quick lookup?** â†’ Use `docs/MARKDOWN_CHEAT_SHEET.md`
 
 ---
 
@@ -471,7 +471,10 @@ Start with just adding a `Title:` line and upgrade at your own pace.
 
 ---
 
-**Status**: ✅ Ready to use  
-**Compatibility**: ✅ 100% backwards compatible  
-**Examples**: ✅ Provided  
-**Documentation**: ✅ Complete
+**Status**: âœ… Ready to use  
+**Compatibility**: âœ… 100% backwards compatible  
+**Examples**: âœ… Provided  
+**Documentation**: âœ… Complete
+
+
+

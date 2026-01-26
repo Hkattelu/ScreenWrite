@@ -1,10 +1,10 @@
-# Initial Concept
+﻿# Initial Concept
 A Python CLI tool that automates video timeline creation from markdown scripts with automatic B-roll footage fetching.
 
-# Product Guide: vid-orchestrator
+# Product Guide: screenwrite
 
 ## Product Vision
-vid-orchestrator aims to revolutionize the initial stages of video production by bridging the gap between a written script and a structured editing timeline. By automating the tedious tasks of script segmentation, B-roll sourcing, and timeline assembly, it empowers creators to focus on the creative aspects of storytelling rather than the mechanical hurdles of media organization.
+screenwrite aims to revolutionize the initial stages of video production by bridging the gap between a written script and a structured editing timeline. By automating the tedious tasks of script segmentation, B-roll sourcing, and timeline assembly, it empowers creators to focus on the creative aspects of storytelling rather than the mechanical hurdles of media organization.
 
 ## Target Users
 - **Content Creators & YouTubers:** Seeking to drastically reduce the time spent hunting for and placing B-roll footage for talking-head or educational content.
@@ -25,3 +25,4 @@ vid-orchestrator aims to revolutionize the initial stages of video production by
 - **CLI-First Philosophy:** The core experience remains a powerful Command Line Interface, ensuring the tool is scriptable and integrates well into developer workflows.
 - **Optional Cloud Connectivity:** Integration with external AI APIs (e.g., OpenAI, Anthropic) is strictly optional, allowing users to choose between high-accuracy cloud processing or local, cost-free operation.
 - **Minimalist Dependency Footprint:** Prioritizing lightweight, standard libraries and tools (like `ffmpeg` and `yt-dlp`) to ensure ease of installation and compatibility across consumer-grade hardware.
+

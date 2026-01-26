@@ -1,8 +1,8 @@
-# Design Document: vid-orchestrator
+﻿# Design Document: screenwrite
 
 ## Overview
 
-vid-orchestrator is a modular Python CLI tool that orchestrates the conversion of markdown video scripts into DaVinci Resolve-compatible FCPXML timelines with auto-fetched B-roll. The system follows a pipeline architecture with four main stages:
+screenwrite is a modular Python CLI tool that orchestrates the conversion of markdown video scripts into DaVinci Resolve-compatible FCPXML timelines with auto-fetched B-roll. The system follows a pipeline architecture with four main stages:
 
 1. **Script Parsing**: Convert markdown into structured beats with metadata
 2. **Asset Fetching**: Download B-roll from YouTube or Pexels
@@ -17,54 +17,54 @@ The design prioritizes modularity, allowing each component to be developed, test
 
 ```
 Markdown Script
-    ↓
-[Script Parser] → Beat objects with queries
-    ↓
-[Asset Fetchers] → Downloaded video files
-    ↓
-[XML Generator] → FCPXML timeline
-    ↓
-[Orchestrator] → Output file + optional Resolve import
+    â†“
+[Script Parser] â†’ Beat objects with queries
+    â†“
+[Asset Fetchers] â†’ Downloaded video files
+    â†“
+[XML Generator] â†’ FCPXML timeline
+    â†“
+[Orchestrator] â†’ Output file + optional Resolve import
 ```
 
 ### Module Structure
 
 ```
-vid_orchestrator/
-├── core/
-│   ├── __init__.py
-│   └── beat.py                 # Beat dataclass
-├── parsing/
-│   ├── __init__.py
-│   └── script_parser.py        # Markdown → beats
-├── fetchers/
-│   ├── __init__.py
-│   ├── base_fetcher.py         # Abstract base class
-│   ├── youtube_client.py       # yt-dlp wrapper
-│   └── pexels_client.py        # Pexels API client
-├── generators/
-│   ├── __init__.py
-│   └── xml_generator.py        # FCPXML builder
-├── orchestrator.py             # Main coordinator
-├── cli.py                      # CLI interface
-├── resolve_integration.py      # Resolve fusionscript wrapper
-└── utils.py                    # Shared utilities (logging, etc.)
+screenwrite/
+â”œâ”€â”€ core/
+â”‚   â”œâ”€â”€ __init__.py
+â”‚   â””â”€â”€ beat.py                 # Beat dataclass
+â”œâ”€â”€ parsing/
+â”‚   â”œâ”€â”€ __init__.py
+â”‚   â””â”€â”€ script_parser.py        # Markdown â†’ beats
+â”œâ”€â”€ fetchers/
+â”‚   â”œâ”€â”€ __init__.py
+â”‚   â”œâ”€â”€ base_fetcher.py         # Abstract base class
+â”‚   â”œâ”€â”€ youtube_client.py       # yt-dlp wrapper
+â”‚   â””â”€â”€ pexels_client.py        # Pexels API client
+â”œâ”€â”€ generators/
+â”‚   â”œâ”€â”€ __init__.py
+â”‚   â””â”€â”€ xml_generator.py        # FCPXML builder
+â”œâ”€â”€ orchestrator.py             # Main coordinator
+â”œâ”€â”€ cli.py                      # CLI interface
+â”œâ”€â”€ resolve_integration.py      # Resolve fusionscript wrapper
+â””â”€â”€ utils.py                    # Shared utilities (logging, etc.)
 ```
 
 ### Dependency Graph
 
 ```
 Beat (core)
-  ↑
-  ├─ ScriptParser (parsing)
-  ├─ YouTubeClient (fetchers)
-  ├─ PexelsClient (fetchers)
-  └─ XMLGenerator (generators)
-       ↑
-       └─ VideoOrchestrator (orchestrator)
-            ↑
-            ├─ CLI (cli)
-            └─ ResolveIntegration (resolve_integration)
+  â†‘
+  â”œâ”€ ScriptParser (parsing)
+  â”œâ”€ YouTubeClient (fetchers)
+  â”œâ”€ PexelsClient (fetchers)
+  â””â”€ XMLGenerator (generators)
+       â†‘
+       â””â”€ VideoOrchestrator (orchestrator)
+            â†‘
+            â”œâ”€ CLI (cli)
+            â””â”€ ResolveIntegration (resolve_integration)
 ```
 
 ## Components and Interfaces
@@ -147,9 +147,9 @@ class AssetFetcher(ABC):
 - Return file path or None on failure
 
 **Error Handling**:
-- Network errors → log and return None
-- ffmpeg not installed → log warning and return untrimmed file
-- No results found → log and return None
+- Network errors â†’ log and return None
+- ffmpeg not installed â†’ log warning and return untrimmed file
+- No results found â†’ log and return None
 
 #### PexelsClient (fetchers/pexels_client.py)
 
@@ -166,9 +166,9 @@ class AssetFetcher(ABC):
 - Return file path or None on failure
 
 **Error Handling**:
-- Missing API key → log and return None
-- Rate limit exceeded → log and return None
-- Network errors → log and return None
+- Missing API key â†’ log and return None
+- Rate limit exceeded â†’ log and return None
+- Network errors â†’ log and return None
 
 ### 4. XMLGenerator (generators/xml_generator.py)
 
@@ -212,7 +212,7 @@ class AssetFetcher(ABC):
 
 **Timing Calculation**:
 - FCPXML uses frame counts (30fps assumed)
-- Duration in seconds × 30 = frame count
+- Duration in seconds Ã— 30 = frame count
 - Offset calculated as cumulative sum of previous beat durations
 
 ### 5. VideoOrchestrator (orchestrator.py)
@@ -228,7 +228,7 @@ class AssetFetcher(ABC):
 
 **Workflow**:
 1. Parse script into beats
-2. Fetch assets for each beat (YouTube → Pexels fallback)
+2. Fetch assets for each beat (YouTube â†’ Pexels fallback)
 3. Generate FCPXML timeline
 4. Optionally import to Resolve
 5. Return success/failure status
@@ -253,7 +253,7 @@ class AssetFetcher(ABC):
 
 **Example Usage**:
 ```bash
-python -m vid_orchestrator script.md --output timeline.fcpxml --pexels-key YOUR_KEY
+python -m screenwrite script.md --output timeline.fcpxml --pexels-key YOUR_KEY
 ```
 
 ### 7. Resolve Integration (resolve_integration.py)
@@ -274,9 +274,9 @@ python -m vid_orchestrator script.md --output timeline.fcpxml --pexels-key YOUR_
 - Return success/failure
 
 **Error Handling**:
-- Resolve not running → log and skip
-- Fusionscript not available → log and skip
-- Import errors → log and continue
+- Resolve not running â†’ log and skip
+- Fusionscript not available â†’ log and skip
+- Import errors â†’ log and continue
 
 ## Data Models
 
@@ -337,19 +337,19 @@ class Config:
 ### Error Categories
 
 1. **Input Errors** (user responsibility)
-   - Missing script file → Clear error message with path
-   - Invalid markdown → Parse error with line number
-   - Invalid output path → Directory creation or error
+   - Missing script file â†’ Clear error message with path
+   - Invalid markdown â†’ Parse error with line number
+   - Invalid output path â†’ Directory creation or error
 
 2. **Network Errors** (graceful degradation)
-   - YouTube unavailable → Skip to Pexels
-   - Pexels rate limit → Skip fetching, continue
-   - Connection timeout → Log and retry once
+   - YouTube unavailable â†’ Skip to Pexels
+   - Pexels rate limit â†’ Skip fetching, continue
+   - Connection timeout â†’ Log and retry once
 
 3. **System Errors** (graceful degradation)
-   - ffmpeg not installed → Skip trimming, use full video
-   - Resolve not running → Skip import, save FCPXML
-   - Insufficient disk space → Log and fail gracefully
+   - ffmpeg not installed â†’ Skip trimming, use full video
+   - Resolve not running â†’ Skip import, save FCPXML
+   - Insufficient disk space â†’ Log and fail gracefully
 
 ### Error Logging
 
@@ -377,7 +377,7 @@ Unit tests verify specific examples and edge cases:
 Property-based tests verify universal properties that should hold across all inputs:
 
 - **Beat duration consistency**: Duration always 5-10 seconds
-- **Round-trip parsing**: Parse → serialize → parse produces equivalent beats
+- **Round-trip parsing**: Parse â†’ serialize â†’ parse produces equivalent beats
 - **XML structure validity**: Generated FCPXML always valid
 - **Asset mapping completeness**: All beats have asset entries
 - **Timing accuracy**: Cumulative beat durations match timeline length
@@ -393,27 +393,27 @@ Property-based tests verify universal properties that should hold across all inp
 
 ```
 tests/
-├── unit/
-│   ├── test_beat.py
-│   ├── test_script_parser.py
-│   ├── test_youtube_client.py
-│   ├── test_pexels_client.py
-│   ├── test_xml_generator.py
-│   ├── test_orchestrator.py
-│   └── test_cli.py
-├── integration/
-│   ├── test_end_to_end.py
-│   └── test_resolve_integration.py
-├── fixtures/
-│   ├── sample_script.md
-│   ├── expected_output.fcpxml
-│   └── mock_responses.json
-└── conftest.py
+â”œâ”€â”€ unit/
+â”‚   â”œâ”€â”€ test_beat.py
+â”‚   â”œâ”€â”€ test_script_parser.py
+â”‚   â”œâ”€â”€ test_youtube_client.py
+â”‚   â”œâ”€â”€ test_pexels_client.py
+â”‚   â”œâ”€â”€ test_xml_generator.py
+â”‚   â”œâ”€â”€ test_orchestrator.py
+â”‚   â””â”€â”€ test_cli.py
+â”œâ”€â”€ integration/
+â”‚   â”œâ”€â”€ test_end_to_end.py
+â”‚   â””â”€â”€ test_resolve_integration.py
+â”œâ”€â”€ fixtures/
+â”‚   â”œâ”€â”€ sample_script.md
+â”‚   â”œâ”€â”€ expected_output.fcpxml
+â”‚   â””â”€â”€ mock_responses.json
+â””â”€â”€ conftest.py
 ```
 
 ## Correctness Properties
 
-A property is a characteristic or behavior that should hold true across all valid executions of a system—essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees.
+A property is a characteristic or behavior that should hold true across all valid executions of a systemâ€”essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees.
 
 ### Property 1: Beat Duration Bounds
 
@@ -620,24 +620,24 @@ A property is a characteristic or behavior that should hold true across all vali
 ### Error Categories and Responses
 
 **Input Validation Errors**:
-- Invalid markdown syntax → Parse error with line number and context
-- Missing required files → FileNotFoundError with helpful path suggestion
-- Invalid output path → OSError with suggestion to create directory
+- Invalid markdown syntax â†’ Parse error with line number and context
+- Missing required files â†’ FileNotFoundError with helpful path suggestion
+- Invalid output path â†’ OSError with suggestion to create directory
 
 **Network Errors**:
-- YouTube search fails → Log warning, try Pexels
-- Pexels API fails → Log warning, skip asset
-- Connection timeout → Retry once, then skip
+- YouTube search fails â†’ Log warning, try Pexels
+- Pexels API fails â†’ Log warning, skip asset
+- Connection timeout â†’ Retry once, then skip
 
 **System Errors**:
-- ffmpeg not installed → Log warning, skip trimming
-- Insufficient disk space → Log error, fail gracefully
-- Resolve not running → Log info, skip import
+- ffmpeg not installed â†’ Log warning, skip trimming
+- Insufficient disk space â†’ Log error, fail gracefully
+- Resolve not running â†’ Log info, skip import
 
 **API Errors**:
-- Missing API key → Log info, skip fetcher
-- Rate limit exceeded → Log warning, skip fetcher
-- Invalid API response → Log error, skip asset
+- Missing API key â†’ Log info, skip fetcher
+- Rate limit exceeded â†’ Log warning, skip fetcher
+- Invalid API response â†’ Log error, skip asset
 
 ### Logging Strategy
 
@@ -647,4 +647,5 @@ A property is a characteristic or behavior that should hold true across all vali
 - **ERROR**: Critical failures (invalid script, file I/O error)
 
 All logs include timestamp, component name, and context for debugging.
+
 

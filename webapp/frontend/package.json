@@ -1,7 +1,7 @@
-{
-  "name": "footage-webapp",
+﻿{
+  "name": "screenwrite-webapp",
   "version": "1.0.0",
-  "description": "Web UI for vid-orchestrator (footage)",
+  "description": "Web UI for screenwrite (footage)",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -27,3 +27,5 @@
     "vite": "^7.3.1"
   }
 }
+
+

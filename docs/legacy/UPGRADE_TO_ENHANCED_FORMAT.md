@@ -1,4 +1,4 @@
-# Upgrading to Enhanced Markdown Format
+﻿# Upgrading to Enhanced Markdown Format
 
 This guide shows how to upgrade your existing markdown scripts to use the new enhanced format with B-roll instructions, metadata, and better structure support.
 
@@ -131,7 +131,7 @@ Common actions:
 - `[Annotation: ...]` - on-screen text
 - `[Screenshot: ...]` - software interface
 - `[B-roll: ...]` - video footage
-- `[Footage: ...]` - specific recording
+- `[ScreenWrite: ...]` - specific recording
 - `[Interview: ...]` - interview clip
 - `[Visual: ...]` - general reference
 
@@ -299,11 +299,11 @@ You can upgrade gradually:
 
 ## Benefits of Upgrading
 
-✅ **Better B-Roll**: Explicit instructions mean more precise asset selection
-✅ **Clearer Intent**: Readers (and the parser) understand what you want shown
-✅ **Better Organization**: Metadata and sections make scripts more readable
-✅ **Future-Proof**: Parser improvements will better utilize these features
-✅ **Professional Structure**: Follows video production conventions
+âœ… **Better B-Roll**: Explicit instructions mean more precise asset selection
+âœ… **Clearer Intent**: Readers (and the parser) understand what you want shown
+âœ… **Better Organization**: Metadata and sections make scripts more readable
+âœ… **Future-Proof**: Parser improvements will better utilize these features
+âœ… **Professional Structure**: Follows video production conventions
 
 ## Reference
 
@@ -397,3 +397,4 @@ If you have questions about the enhanced format:
 1. Check the [MARKDOWN_SCRIPT_FORMAT.md](MARKDOWN_SCRIPT_FORMAT.md) specification
 2. Look at examples in the docs/examples/ directory
 3. Review the best practices section in the format guide
+

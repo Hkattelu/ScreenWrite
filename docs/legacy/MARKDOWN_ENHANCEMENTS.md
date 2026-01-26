@@ -1,12 +1,12 @@
-# Markdown Format Enhancements - Implementation Summary
+﻿# Markdown Format Enhancements - Implementation Summary
 
 **Date**: January 25, 2026  
-**Status**: ✅ Complete and backwards compatible  
+**Status**: âœ… Complete and backwards compatible  
 **Impact**: Enhanced video script support with explicit B-roll control
 
 ## What's New
 
-The markdown flavor used by vid-orchestrator has been significantly expanded to support more robust video scripts with:
+The markdown flavor used by screenwrite has been significantly expanded to support more robust video scripts with:
 
 1. **Structured Metadata** - Title, Hook, Channel, Duration, Tags
 2. **Inline B-Roll Instructions** - `[action: content]` syntax for explicit footage specification
@@ -56,7 +56,7 @@ Save it as hello.py in your Documents folder.
 ## Code Changes
 
 ### Updated Files
-- `vid_orchestrator/parsing/script_parser.py`
+- `screenwrite/parsing/script_parser.py`
   - Added `ScriptMetadata` dataclass for metadata extraction
   - Added `BRollInstruction` dataclass for B-roll instruction representation
   - Enhanced `_extract_content()` to parse metadata
@@ -69,7 +69,7 @@ Save it as hello.py in your Documents folder.
 
 ## Backwards Compatibility
 
-✅ **100% backwards compatible**
+âœ… **100% backwards compatible**
 
 - Old scripts without metadata work fine
 - Scripts without `[...]` instructions parse normally
@@ -152,7 +152,7 @@ Tags: comma, separated, tags (optional)
 [Annotation: on-screen text]
 [Screenshot: UI or interface]
 [B-roll: video footage]
-[Footage: specific recording]
+[ScreenWrite: specific recording]
 [Interview: interview clip]
 [Visual: general visual reference]
 ```
@@ -206,17 +206,17 @@ Matches capitalized action with content in brackets.
 
 ### Parse a script with metadata and B-roll instructions
 ```bash
-python -m vid_orchestrator examples/video_walkthroughs_enhanced.md \
+python -m screenwrite examples/video_walkthroughs_enhanced.md \
   --output test.fcpxml --verbose
 ```
 
 ### Compare old vs new
 ```bash
 # Old format
-python -m vid_orchestrator old_script.md --output old.fcpxml
+python -m screenwrite old_script.md --output old.fcpxml
 
 # New format
-python -m vid_orchestrator new_script.md --output new.fcpxml
+python -m screenwrite new_script.md --output new.fcpxml
 ```
 
 Both should generate valid FCPXML output.
@@ -224,7 +224,7 @@ Both should generate valid FCPXML output.
 ### Verify parsing
 ```bash
 python -c "
-from vid_orchestrator.parsing.script_parser import ScriptParser
+from screenwrite.parsing.script_parser import ScriptParser
 parser = ScriptParser()
 beats = parser.parse('your_script.md')
 print(f'Parsed {len(beats)} beats')
@@ -301,12 +301,12 @@ A: See the Cheat Sheet. Most content uses `[Show: ...]` or `[B-roll: ...]`. Use 
 
 ## Deployment Notes
 
-- ✅ Code compiles successfully
-- ✅ Backwards compatible (no breaking changes)
-- ✅ No dependency changes required
-- ✅ Documentation complete
-- ✅ Example scripts provided
-- ✅ Ready for immediate use
+- âœ… Code compiles successfully
+- âœ… Backwards compatible (no breaking changes)
+- âœ… No dependency changes required
+- âœ… Documentation complete
+- âœ… Example scripts provided
+- âœ… Ready for immediate use
 
 ## Support
 
@@ -318,8 +318,10 @@ For issues or questions:
 
 ---
 
-**Implementation Status**: ✅ Complete  
-**Testing Status**: ✅ Verified (syntax check passed)  
-**Documentation Status**: ✅ Complete (5 new docs)  
-**Example Status**: ✅ Provided (walkthrough script)  
-**Backwards Compatibility**: ✅ Confirmed
+**Implementation Status**: âœ… Complete  
+**Testing Status**: âœ… Verified (syntax check passed)  
+**Documentation Status**: âœ… Complete (5 new docs)  
+**Example Status**: âœ… Provided (walkthrough script)  
+**Backwards Compatibility**: âœ… Confirmed
+
+
