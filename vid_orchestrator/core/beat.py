@@ -52,8 +52,7 @@ class Beat:
         """
         # Check required fields first
         assert self.text.strip(), f"Beat {self.id}: Text cannot be empty"
-        assert self.stock_keyword.strip(), f"Beat {self.id}: Stock keyword cannot be empty"
-        assert self.youtube_search_phrase.strip(), f"Beat {self.id}: YouTube search phrase cannot be empty"
+        # Note: Keywords can be empty if no B-roll is desired for this beat
         
         # Allow beats 3-10 seconds (more lenient for edge cases)
         # Minimum 3s for short transitions, maximum 10s for content

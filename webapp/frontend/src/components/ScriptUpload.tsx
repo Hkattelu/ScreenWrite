@@ -6,7 +6,7 @@
 
 import { useState, useRef } from 'react'
 import { uploadScript, getErrorMessage } from '../services/api'
-import type { Beat, UploadResponse } from '../types/models'
+import type { UploadResponse } from '../types/models'
 
 interface ScriptUploadProps {
   onUploadSuccess: (data: UploadResponse) => void
@@ -64,67 +64,60 @@ export function ScriptUpload({ onUploadSuccess }: ScriptUploadProps) {
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto">
-      <div className="card">
-        <h2 className="text-2xl font-bold mb-6">Upload Your Script</h2>
-
-        {/* Drop zone */}
-        <div
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-          className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-            isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300 bg-gray-50'
-          }`}
-        >
-          <svg
-            className="mx-auto h-12 w-12 text-gray-400 mb-4"
-            stroke="currentColor"
-            fill="none"
-            viewBox="0 0 48 48"
-          >
-            <path
-              d="M28 8H12a4 4 0 00-4 4v20a4 4 0 004 4h24a4 4 0 004-4V20m-8-12l-5.293-5.293a1 1 0 00-1.414 0L12 9m14-1v6"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-
-          <p className="text-gray-700 font-medium mb-2">Drop your markdown script here</p>
-          <p className="text-gray-500 text-sm mb-4">or</p>
-
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".md,.txt"
-            onChange={handleFileInput}
-            disabled={isLoading}
-            className="hidden"
-          />
-          <button 
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isLoading}
-            className="btn-primary"
-          >
-            {isLoading ? 'Uploading...' : 'Choose File'}
-          </button>
-
-          <p className="text-gray-500 text-xs mt-4">Markdown (.md) or Text (.txt) files only</p>
+    <div className="w-full">
+      {/* Drop zone */}
+      <div
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        onClick={() => fileInputRef.current?.click()}
+        className={`
+          group relative cursor-pointer
+          border-2 border-dashed rounded-xl p-16
+          flex flex-col items-center justify-center
+          transition-all duration-300 ease-out
+          ${
+            isDragging
+              ? 'border-black bg-gray-50 scale-[1.01]'
+              : 'border-gray-200 hover:border-gray-400 hover:bg-gray-50/50'
+          }
+        `}
+      >
+        <div className="text-center space-y-4">
+          <div className={`
+            text-4xl font-light transition-colors duration-300
+            ${isDragging ? 'text-black' : 'text-gray-300 group-hover:text-gray-400'}
+          `}>
+            +
+          </div>
+          
+          <div className="space-y-1">
+            <p className="text-lg font-medium text-gray-900">
+              {isLoading ? 'Processing Script...' : 'Drop script here'}
+            </p>
+            <p className="text-sm text-gray-400 font-mono">
+              Markdown or Text
+            </p>
+          </div>
         </div>
 
-        {/* Error message */}
-        {error && <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">{error}</div>}
-
-        {/* Help text */}
-        <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <h3 className="font-semibold text-blue-900 mb-2">Script Format</h3>
-          <p className="text-sm text-blue-800">
-            Your markdown should have headers (##) for sections and text content describing the footage you need for
-            each segment. Duration is calculated automatically.
-          </p>
-        </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".md,.txt"
+          onChange={handleFileInput}
+          disabled={isLoading}
+          className="hidden"
+        />
       </div>
+
+      {/* Minimal Error */}
+      {error && (
+        <div className="mt-4 text-center">
+          <p className="text-sm text-red-600 bg-red-50 inline-block px-3 py-1 rounded-full">{error}</p>
+        </div>
+      )}
     </div>
   )
 }
+

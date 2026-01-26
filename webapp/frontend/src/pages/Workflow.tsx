@@ -165,23 +165,41 @@ export function Workflow() {
          )}
 
         {currentStep === 'review' && sessionId && (
-          <div className="card max-w-4xl">
-            <h2 className="text-2xl font-bold mb-6">Review Your Beats</h2>
-            <BeatList beats={beats} onBeatsUpdate={handleBeatsUpdate} editable={true} />
+          <div className="max-w-4xl mx-auto">
+             {/* Header */}
+            <div className="mb-8 flex items-end justify-between px-4">
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Review Beats</h2>
+                <p className="text-gray-500 mt-2">Fine-tune your script segments before generation.</p>
+              </div>
+            </div>
 
-            <div className="flex gap-4 mt-8 justify-end">
-              <button
-                onClick={() => setCurrentStep('upload')}
-                className="btn-secondary"
-              >
-                Back
-              </button>
-              <button
-                onClick={() => setCurrentStep('configure')}
-                className="btn-primary"
-              >
-                Continue to Configuration
-              </button>
+            {/* List Container */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200">
+              <div className="px-6 pb-6 pt-2">
+                 <BeatList beats={beats} onBeatsUpdate={handleBeatsUpdate} editable={true} />
+              </div>
+              
+              {/* Footer Actions */}
+              <div className="bg-gray-50 px-6 py-4 border-t border-gray-100 flex gap-4 justify-between items-center rounded-b-2xl">
+                 <span className="text-sm text-gray-400 font-medium">
+                    {beats.length} segments ready
+                 </span>
+                 <div className="flex gap-4">
+                  <button
+                    onClick={() => setCurrentStep('upload')}
+                    className="px-6 py-2.5 rounded-lg font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-200 transition-colors"
+                  >
+                    Back
+                  </button>
+                  <button
+                    onClick={() => setCurrentStep('configure')}
+                    className="px-6 py-2.5 rounded-lg font-medium text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-all hover:shadow-md"
+                  >
+                    Continue
+                  </button>
+                 </div>
+              </div>
             </div>
           </div>
         )}
