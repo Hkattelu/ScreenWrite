@@ -219,6 +219,7 @@ class AssetOrchestrator:
         
         logger.info(f"Starting parallel batch fetch for {len(queries)} assets (max_workers={max_workers}, cache={enable_cache})")
         
+        # Use ThreadPoolExecutor for parallel processing to improve performance
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             # Map futures to their query IDs
             future_to_id = {}
