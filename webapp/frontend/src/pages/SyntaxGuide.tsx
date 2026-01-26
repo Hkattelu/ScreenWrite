@@ -68,32 +68,32 @@ Continue your narrative.`}
           <section>
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Visual Instructions</h2>
             <p className="text-gray-600 mb-6 leading-relaxed">
-              Explicitly request visuals using bracket notation. Place instructions <strong>immediately before</strong> the text they relate to.
+              Explicitly request visuals using bracket notation with a <code className="font-mono text-black">@</code> prefix. Place instructions <strong>immediately before</strong> the text they relate to.
             </p>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
               <div>
                 <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3">Syntax</h3>
                 <code className="block bg-gray-50 p-3 rounded border border-gray-200 text-sm font-mono text-blue-600">
-                  [Action: Description]
+                  [@Action: Description]
                 </code>
               </div>
               <div>
                 <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3">Supported Actions</h3>
                  <ul className="text-sm text-gray-600 space-y-1">
-                   <li><span className="font-mono text-black font-medium">Image</span> â€” Static assets</li>
-                   <li><span className="font-mono text-black font-medium">B-roll</span> â€” Video footage</li>
-                   <li><span className="font-mono text-black font-medium">Annotation</span> â€” Text overlays</li>
-                   <li><span className="font-mono text-black font-medium">Citation</span> â€” Source credits</li>
+                   <li><span className="font-mono text-black font-medium">Image</span> — Static assets</li>
+                   <li><span className="font-mono text-black font-medium">B-roll</span> — Video footage</li>
+                   <li><span className="font-mono text-black font-medium">Annotation</span> — Text overlays</li>
+                   <li><span className="font-mono text-black font-medium">Citation</span> — Source credits</li>
                  </ul>
               </div>
             </div>
 
-            <div className="bg-gray-900 rounded-lg p-6 font-mono text-sm text-gray-300 leading-normal overflow-x-auto">
-{`[Image: old text-based walkthrough guide]
+            <div className="bg-gray-900 rounded-lg p-6 font-mono text-sm text-gray-300 leading-normal overflow-x-auto shadow-sm">
+{`[@Image: old text-based walkthrough guide]
 The walkthrough format has changed dramatically over the years.
 
-[Annotation: "1981 - First video game guidebook"]
+[@Annotation: "1981 - First video game guidebook"]
 The earliest instances of walkthroughs came from physical books.`}
             </div>
           </section>

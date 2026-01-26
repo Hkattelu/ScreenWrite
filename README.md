@@ -69,14 +69,14 @@ Hook: A journey through the clouds.
 The sun rises over the distant peaks, 
 casting long shadows across the valley.
 
-[B-roll: aerial view of mountains at sunrise]
+[@B-roll: aerial view of mountains at sunrise]
 Nature has a way of reminding us 
 of our place in the world.
 ```
 
 - **Headers (`##`)**: Define new sections and provide search context.
 - **Paragraphs**: Automatically chunked into 5-10 second segments.
-- **Instructions (`[...]`)**: Explicitly request specific B-roll or Annotations.
+- **Instructions (`[@...]`)**: Explicitly request specific B-roll or Annotations.
 
 ---
 

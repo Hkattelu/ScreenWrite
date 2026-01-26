@@ -19,10 +19,10 @@ Tags: tag1, tag2, tag3
 Place these immediately before the text they accompany.
 
 ```markdown
-[B-roll: video footage, interviews, or gameplay]
-[Image: images, screenshots, diagrams, or UI]
-[Annotation: prominent on-screen text or labels]
-[Citation: source attribution (bottom left corner)]
+[@B-roll: video footage, interviews, or gameplay]
+[@Image: images, screenshots, diagrams, or UI]
+[@Annotation: prominent on-screen text or labels]
+[@Citation: source attribution (bottom left corner)]
 ```
 
 ---
@@ -33,13 +33,13 @@ Place these immediately before the text they accompany.
 ```markdown
 ## Historical Context
 
-[Annotation: "Year: 1985"]
+[@Annotation: "Year: 1985"]
 This happened in 1985 and it was important.
 
-[Image: historical photograph]
+[@Image: historical photograph]
 Here is what it looked like.
 
-[Citation: Wikipedia]
+[@Citation: Wikipedia]
 Documentation of this moment.
 ```
 
@@ -48,13 +48,13 @@ Documentation of this moment.
 ## Do's and Don'ts
 
 ### ✅ DO
-- **Be Specific**: `[Image: Python code in VS Code]`
+- **Be Specific**: `[@Image: Python code in VS Code]`
 - **Chain Logically**: Place instructions in the order they should appear.
 - **Add Citations**: Credit your sources clearly.
 
 ### ❌ DON'T
-- **Be Vague**: Avoid `[Image: stuff]` or `[B-roll: things]`.
-- **Use Wrong Syntax**: Brackets and Colons are required: `[Action: Description]`.
+- **Be Vague**: Avoid `[@Image: stuff]` or `[@B-roll: things]`.
+- **Use Wrong Syntax**: Brackets, Colons, and the `@` prefix are required: `[@Action: Description]`.
 - **Over-instruct**: Let the text drive the timing; use instructions for specific needs.
 
 ---

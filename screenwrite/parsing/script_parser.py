@@ -8,7 +8,7 @@ Markdown Script Specification:
 - Metadata (key: value) at the top provides title, hook, channel
 - Headers (# and ##) provide context for content sections
 - Body text is automatically chunked into 5-10 second beats
-- Inline B-roll instructions ([action: content]) override auto-generated queries
+- Inline B-roll instructions ([@action: content]) override auto-generated queries
 - Each beat gets auto-generated stock keywords and YouTube search phrases
 - Text is processed using a 2.5 words per second heuristic for timing
 """
@@ -422,7 +422,7 @@ class ScriptParser:
         """
         Extract all B-roll instructions from text.
         
-        Finds patterns like [Show: content], [Display: content], etc.
+        Finds patterns like [@Show: content], [@Display: content], etc.
         
         Args:
             text: Text to search for instructions
@@ -432,9 +432,10 @@ class ScriptParser:
         """
         instructions_dict = {}
         
-        # Pattern: [action: content] where action is capitalized
-        # Matches [Show: ...], [Display: ...], [Annotation: ...], etc.
-        pattern = r'\[([A-Z][a-z]+):\s*([^\]]+)\]'
+        # Pattern: [@action: content] where action is capitalized
+        # Matches [@Show: ...], [@Display: ...], [@Annotation: ...], etc.
+        # Supports optional space: [ @Show: ...]
+        pattern = r'\[\s*@([A-Z][a-zA-Z]*):\s*([^\]]+)\]'
         
         matches = re.finditer(pattern, text)
         

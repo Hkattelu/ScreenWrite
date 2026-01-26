@@ -33,19 +33,19 @@ Use standard Markdown headers to define sections.
 ## Section Header
 Your script content goes here. Write naturally as you would speak in your video. 
 
-[B-roll: close up of person typing]
+[@B-roll: close up of person typing]
 The system will automatically break this into appropriate segments.
 ```
 
 ### Visual Instructions
-You can explicitly request visuals using bracket notation. Place these **immediately before** the text they relate to.
+You can explicitly request visuals using bracket notation with a `@` prefix. Place these **immediately before** the text they relate to.
 
 | Action | Description | Example |
 | :--- | :--- | :--- |
-| `[B-roll: ...]` | Background video footage | `[B-roll: mountain sunset]` |
-| `[Image: ...]` | Static images or screenshots | `[Image: software logo]` |
-| `[Annotation: ...]` | On-screen text overlays | `[Annotation: "Tip #1"]` |
-| `[Citation: ...]` | Source credits | `[Citation: Wikipedia]` |
+| `[@B-roll: ...]` | Background video footage | `[@B-roll: mountain sunset]` |
+| `[@Image: ...]` | Static images or screenshots | `[@Image: software logo]` |
+| `[@Annotation: ...]` | On-screen text overlays | `[@Annotation: "Tip #1"]` |
+| `[@Citation: ...]` | Source credits | `[@Citation: Wikipedia]` |
 
 ---
 
