@@ -3,40 +3,46 @@
 @tailwind utilities;
 
 :root {
-  --font-display: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   
-  /* Vibrant High-Chroma Brand Colors */
-  --brand-primary: oklch(65% 0.3 285);    /* Intense Violet */
-  --brand-highlight: oklch(75% 0.25 160);  /* Neon Teal */
-  --brand-accent: oklch(80% 0.25 60);      /* Bright Sunset */
-  --brand-surface: oklch(96% 0.03 285);    /* Slightly deeper surface */
+  /* Refined Minimalist Palette */
+  --brand-primary: #3b82f6;    /* blue-500 (softer than 600) */
+  --brand-surface: #ffffff;
+  --brand-muted: #f9fafb;      /* gray-50 */
+  --brand-border: #f3f4f6;     /* gray-100 */
 }
 
 body {
   font-family: var(--font-display);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  color: rgb(17 24 39); /* text-gray-900 */
+  color: #111827;
   background-color: var(--brand-surface);
 }
 
-/* Utility classes */
-
-.btn {
-  @apply px-6 py-3 rounded-lg font-medium transition-all duration-200 active:scale-[0.98];
-}
-
-.btn-primary {
-  @apply btn text-white shadow-sm hover:shadow-md;
-  background-color: var(--brand-primary);
-  &:hover {
-    filter: brightness(1.1);
+/* Custom Typography */
+@layer base {
+  h1, h2, h3, h4 {
+    @apply tracking-tight font-semibold;
   }
 }
 
+/* Refined Utility classes */
+.btn {
+  @apply px-6 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 active:scale-[0.98] flex items-center justify-center gap-2;
+}
+
+.btn-primary {
+  @apply btn text-white bg-blue-600 hover:bg-blue-700 shadow-sm;
+}
+
 .btn-secondary {
-  @apply btn bg-gray-100 text-gray-900 hover:bg-gray-200;
+  @apply btn bg-white text-gray-600 border border-gray-200 hover:bg-gray-50;
+}
+
+.btn-black {
+  @apply btn bg-gray-900 text-white hover:bg-black;
 }
 
 .btn-success {
@@ -44,36 +50,38 @@ body {
 }
 
 .input {
-  @apply px-4 py-3 bg-gray-50 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-all;
-  focus-within: ring-[var(--brand-primary)];
+  @apply px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500/40 transition-all;
 }
 
 .label {
-  @apply block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2;
+  @apply block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-2;
 }
 
-/* Decorative */
-.bg-mesh {
-  background-color: #fff;
-  background-image: 
-    radial-gradient(at 0% 0%, oklch(95% 0.05 280 / 0.5) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, oklch(95% 0.05 90 / 0.3) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, oklch(95% 0.05 280 / 0.5) 0px, transparent 50%),
-    radial-gradient(at 0% 100%, oklch(95% 0.05 90 / 0.3) 0px, transparent 50%);
+/* Subtle Cinematic Effects */
+.film-grain {
+  position: relative;
+}
+.film-grain::after {
+  content: "";
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background-image: url("https://grainy-gradients.vercel.app/noise.svg");
+  opacity: 0.02; /* Even subtler */
+  pointer-events: none;
+  z-index: 100;
 }
 
-/* Custom Scrollbar for code blocks */
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 5px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
+  background: #f1f5f9;
+  border-radius: 10px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #e2e8f0;
 }

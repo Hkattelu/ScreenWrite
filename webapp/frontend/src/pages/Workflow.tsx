@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { ScriptUpload } from '../components/ScriptUpload'
 import { BeatList } from '../components/BeatList'
@@ -6,6 +6,13 @@ import { ConfigPanel } from '../components/ConfigPanel'
 import { exportFcpxml, updateBeats, updateConfig, getErrorMessage } from '../services/api'
 import type { UploadResponse, Config, Beat } from '../types/models'
 import { motion, AnimatePresence } from 'framer-motion'
+import { 
+  CheckCircle2, 
+  ChevronRight,
+  ArrowLeft,
+  ArrowRight,
+  Info
+} from 'lucide-react'
 
 type WorkflowStep = 'upload' | 'review' | 'configure' | 'export'
 
@@ -17,8 +24,9 @@ export function Workflow() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [exportResult, setExportResult] = useState<any>(null)
+  
+  const [reviewedIds, setReviewedIds] = useState<Set<string>>(new Set())
 
-  // Initialize from Home page if upload was done there
   useEffect(() => {
     const state = location.state as any
     if (state?.uploadData) {
@@ -82,76 +90,71 @@ export function Workflow() {
   ]
 
   const currentStepIndex = steps.findIndex((s) => s.id === currentStep)
+  
+  const isReviewComplete = useMemo(() => {
+    return beats.length > 0 && reviewedIds.size === beats.length
+  }, [reviewedIds, beats.length])
 
   return (
-    <div className="min-h-screen bg-white py-12">
-      <div className="max-w-5xl mx-auto px-6">
-        {/* Minimal Progress Indicator */}
-        {sessionId && (
-          <motion.div 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-12 flex items-center justify-between"
-          >
-            <div className="flex items-center gap-4">
-              <span className="font-mono text-xs font-bold text-gray-300 uppercase tracking-widest">
-                Step {currentStepIndex + 1} of {steps.length}
-              </span>
-              <h1 className="text-xl font-bold text-black tracking-tight uppercase">
-                {steps[currentStepIndex].label}
-              </h1>
-            </div>
-            
-            <div className="flex gap-1">
-              {steps.map((_, idx) => (
-                <motion.div 
-                  key={idx} 
-                  initial={false}
-                  animate={{ 
-                    backgroundColor: idx <= currentStepIndex ? 'var(--brand-primary)' : '#f3f4f6',
-                    width: idx === currentStepIndex ? 48 : 32 
-                  }}
-                  className="h-1.5 rounded-full transition-all duration-500"
-                />
-              ))}
-            </div>
-          </motion.div>
-        )}
+    <div className="min-h-screen bg-white">
+      {/* Streamlined Header */}
+      <div className="border-b border-gray-100 sticky top-0 z-30 bg-white/80 backdrop-blur-md">
+        <div className="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
+          <Link to="/" className="font-bold text-sm tracking-tight text-gray-900">
+            ScreenWrite<span className="text-blue-500"></span>
+          </Link>
+          
+          <nav className="flex items-center gap-1">
+            {steps.map((step, idx) => {
+              const isPast = idx < currentStepIndex
+              const isCurrent = idx === currentStepIndex
+              
+              return (
+                <div key={step.id} className="flex items-center">
+                  <div className={`
+                    text-[11px] font-semibold tracking-wide px-3 py-1 rounded-lg transition-all
+                    ${isCurrent ? 'text-blue-600 bg-blue-50' : isPast ? 'text-gray-900' : 'text-gray-400'}
+                  `}>
+                    {step.label}
+                  </div>
+                  {idx < steps.length - 1 && (
+                    <ChevronRight size={12} className="text-gray-200 mx-0.5" />
+                  )}
+                </div>
+              )
+            })}
+          </nav>
+        </div>
+      </div>
 
+      <div className="max-w-4xl mx-auto px-6 py-12">
         {/* Error display */}
         <AnimatePresence>
           {error && (
             <motion.div 
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mb-8 p-4 bg-red-50 border border-red-100 rounded-lg text-red-600 text-sm font-medium flex items-center gap-3 overflow-hidden"
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="mb-8 p-3 bg-red-50 border border-red-100 rounded-xl text-red-600 text-xs font-medium flex items-center gap-2"
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+              <Info size={14} />
               {error}
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Step content */}
         <AnimatePresence mode="wait">
           {currentStep === 'upload' && (
             <motion.div 
               key="upload"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               className="max-w-xl mx-auto py-12"
             >
-              <div className="mb-8 flex items-center justify-between">
-                <h2 className="text-2xl font-bold tracking-tight">Upload Script</h2>
-                <Link 
-                  to="/syntax-guide" 
-                  className="text-gray-400 hover:text-black font-medium text-xs uppercase tracking-wider transition-colors"
-                >
-                  View Syntax Guide
-                </Link>
+              <div className="mb-10 text-center">
+                <h2 className="text-2xl font-bold mb-2">Upload Script</h2>
+                <p className="text-gray-500 text-sm">Markdown files are parsed into editable segments.</p>
               </div>
               <ScriptUpload onUploadSuccess={handleUploadSuccess} />
             </motion.div>
@@ -160,36 +163,52 @@ export function Workflow() {
           {currentStep === 'review' && sessionId && (
             <motion.div 
               key="review"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              className="w-full"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
             >
-              <div className="pb-12">
-                <BeatList beats={beats} onBeatsUpdate={handleBeatsUpdate} editable={true} />
-              </div>
+              <BeatList 
+                beats={beats} 
+                onBeatsUpdate={handleBeatsUpdate} 
+                editable={true}
+                reviewedIds={reviewedIds}
+                onToggleReviewed={(id) => {
+                  const next = new Set(reviewedIds)
+                  if (next.has(id)) next.delete(id)
+                  else next.add(id)
+                  setReviewedIds(next)
+                }}
+              />
               
-              {/* Minimal Footer Actions */}
-              <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-gray-100 py-4 px-6 z-20">
-                <div className="max-w-5xl mx-auto flex justify-between items-center">
-                  <span className="font-mono text-xs font-bold text-gray-400 uppercase tracking-widest">
-                      {beats.length} Segments Parsed
-                  </span>
-                  <div className="flex gap-4">
-                    <button
-                      onClick={() => setCurrentStep('upload')}
-                      className="px-6 py-2 text-sm font-bold text-gray-400 hover:text-black uppercase tracking-widest transition-colors"
-                    >
-                      Back
-                    </button>
-                    <button
-                      onClick={() => setCurrentStep('configure')}
-                      className="btn-primary py-2 px-8 text-sm uppercase tracking-widest"
-                    >
-                      Configure
-                    </button>
-                  </div>
+              <div className="mt-12 pt-8 border-t border-gray-100 flex items-center justify-between">
+                <button
+                  onClick={() => setCurrentStep('upload')}
+                  className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-900"
+                >
+                  <ArrowLeft size={16} />
+                  Back to Upload
+                </button>
+                
+                <div className="flex items-center gap-6">
+                  {!isReviewComplete && (
+                    <span className="text-[11px] font-medium text-amber-600 flex items-center gap-1.5">
+                      <Info size={14} />
+                      Review all segments to proceed
+                    </span>
+                  )}
+                  <button
+                    disabled={!isReviewComplete}
+                    onClick={() => setCurrentStep('configure')}
+                    className={`
+                      px-8 py-3 rounded-xl text-sm font-semibold transition-all flex items-center gap-2
+                      ${isReviewComplete 
+                        ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm' 
+                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'}
+                    `}
+                  >
+                    Configure Pipeline
+                    <ArrowRight size={16} />
+                  </button>
                 </div>
               </div>
             </motion.div>
@@ -198,28 +217,36 @@ export function Workflow() {
           {currentStep === 'configure' && (
             <motion.div 
               key="configure"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               className="max-w-2xl mx-auto"
             >
-              <ConfigPanel onConfigChange={handleConfigChange} isLoading={isLoading} />
+              <div className="mb-10">
+                <h2 className="text-2xl font-bold mb-1">Configuration</h2>
+                <p className="text-gray-500 text-sm">Adjust search sources and output settings.</p>
+              </div>
 
-              <div className="mt-12 flex gap-4 justify-between items-center">
+              <div className="bg-gray-50/50 p-8 rounded-2xl border border-gray-100">
+                <ConfigPanel onConfigChange={handleConfigChange} isLoading={isLoading} />
+              </div>
+
+              <div className="mt-10 flex items-center justify-between">
                 <button
                   onClick={() => setCurrentStep('review')}
-                  className="px-6 py-2 text-sm font-bold text-gray-400 hover:text-black uppercase tracking-widest transition-colors"
+                  className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-900"
                   disabled={isLoading}
                 >
+                  <ArrowLeft size={16} />
                   Back to Review
                 </button>
                 <button
                   onClick={() => setCurrentStep('export')}
-                  className="btn-primary px-10 uppercase tracking-widest text-sm"
+                  className="bg-gray-900 text-white px-8 py-3 rounded-xl text-sm font-semibold hover:bg-black transition-all flex items-center gap-2"
                   disabled={isLoading}
                 >
-                  Go to Export
+                  Continue to Export
+                  <ArrowRight size={16} />
                 </button>
               </div>
             </motion.div>
@@ -228,54 +255,40 @@ export function Workflow() {
           {currentStep === 'export' && (
             <motion.div 
               key="export"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              className="max-w-2xl mx-auto py-12"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="max-w-2xl mx-auto"
             >
-              <h2 className="text-3xl font-bold tracking-tighter mb-8">Generate Timeline</h2>
+              <div className="text-center mb-10">
+                <h2 className="text-2xl font-bold mb-2">Ready for Export</h2>
+                <p className="text-gray-500 text-sm">Generate your FCPXML timeline.</p>
+              </div>
 
               {exportResult ? (
-                <motion.div 
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="space-y-8"
-                >
-                  <div className="p-8 bg-gray-50 rounded-2xl border border-gray-100">
-                    <div className="flex items-center gap-3 mb-6">
-                      <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                      <h3 className="text-lg font-bold uppercase tracking-tight">Timeline Ready</h3>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-y-6 gap-x-12 mb-8">
-                      <div>
-                        <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Filename</span>
-                        <p className="font-mono text-sm text-gray-900 truncate">{exportResult.filename}</p>
-                      </div>
-                      <div>
-                        <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Segments</span>
-                        <p className="font-mono text-sm text-gray-900">{exportResult.beatCount}</p>
-                      </div>
-                      <div>
-                        <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Duration</span>
-                        <p className="font-mono text-sm text-gray-900">{exportResult.estimatedDuration.toFixed(1)}s</p>
-                      </div>
-                      <div>
-                        <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Size</span>
-                        <p className="font-mono text-sm text-gray-900">{(exportResult.fileSize / 1024).toFixed(2)} KB</p>
-                      </div>
-                    </div>
-
-                    <motion.a 
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      href={exportResult.downloadUrl} 
-                      className="btn-success block text-center py-4 uppercase tracking-widest text-sm font-bold shadow-lg shadow-emerald-100"
-                    >
-                      Download FCPXML
-                    </motion.a>
+                <div className="p-8 bg-gray-50 border border-gray-100 rounded-2xl">
+                  <div className="flex items-center gap-2 mb-8 text-emerald-600">
+                    <CheckCircle2 size={20} />
+                    <span className="font-bold text-sm">Generation Complete</span>
                   </div>
+
+                  <div className="grid grid-cols-2 gap-8 mb-10">
+                    <div>
+                      <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Timeline</span>
+                      <p className="text-sm font-medium text-gray-900 truncate">{exportResult.filename}</p>
+                    </div>
+                    <div>
+                      <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Duration</span>
+                      <p className="text-sm font-medium text-gray-900">{exportResult.estimatedDuration.toFixed(1)}s</p>
+                    </div>
+                  </div>
+
+                  <a 
+                    href={exportResult.downloadUrl} 
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-center py-3 rounded-xl font-bold text-sm block transition-all shadow-sm"
+                  >
+                    Download FCPXML
+                  </a>
 
                   <button
                     onClick={() => {
@@ -283,43 +296,36 @@ export function Workflow() {
                       setCurrentStep('upload')
                       setBeats([])
                       setExportResult(null)
+                      setReviewedIds(new Set())
                     }}
-                    className="w-full py-4 text-xs font-bold text-gray-400 hover:text-black uppercase tracking-widest transition-colors"
+                    className="w-full mt-6 text-xs font-semibold text-gray-400 hover:text-gray-900 transition-colors"
                   >
-                    Start New Project
+                    Start a New Project
                   </button>
-                </motion.div>
+                </div>
               ) : (
                 <div className="space-y-8">
-                  <p className="text-xl text-gray-500 font-light leading-relaxed">
-                    Your {beats.length} segments are ready to be transformed into a DaVinci Resolve timeline.
-                  </p>
-
-                  <div className="bg-blue-50/50 p-6 rounded-xl border border-blue-100/50">
-                    <p className="text-xs text-blue-600 font-medium leading-relaxed">
-                      <span className="font-bold uppercase mr-2">Note:</span> 
-                      Asset downloading happens in the background. You can preview and review
-                      downloaded assets before finalizing.
+                  <div className="bg-white p-8 border border-gray-100 rounded-2xl shadow-sm">
+                    <p className="text-gray-600 leading-relaxed">
+                      Final step: transform your <span className="font-bold text-gray-900">{beats.length} reviewed segments</span> into a high-quality timeline file.
                     </p>
                   </div>
 
-                  <div className="flex gap-6 items-center pt-4">
+                  <div className="flex items-center justify-between pt-4">
                     <button
                       onClick={() => setCurrentStep('configure')}
-                      className="text-sm font-bold text-gray-400 hover:text-black uppercase tracking-widest transition-colors"
+                      className="text-sm font-medium text-gray-500 hover:text-gray-900"
                       disabled={isLoading}
                     >
                       Back
                     </button>
-                    <motion.button
-                      whileHover={{ scale: 1.01 }}
-                      whileTap={{ scale: 0.99 }}
+                    <button
                       onClick={handleExport}
                       disabled={isLoading}
-                      className="btn-primary flex-grow py-4 uppercase tracking-widest text-sm"
+                      className="bg-blue-600 text-white px-10 py-3 rounded-xl font-bold text-sm hover:bg-blue-700 transition-all shadow-sm disabled:bg-gray-100 disabled:text-gray-400"
                     >
-                      {isLoading ? 'Processing...' : 'Generate Timeline'}
-                    </motion.button>
+                      {isLoading ? 'Generating...' : 'Generate FCPXML'}
+                    </button>
                   </div>
                 </div>
               )}

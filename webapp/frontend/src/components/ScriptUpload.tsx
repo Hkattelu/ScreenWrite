@@ -7,6 +7,8 @@
 import { useState, useRef } from 'react'
 import { uploadScript, getErrorMessage } from '../services/api'
 import type { UploadResponse } from '../types/models'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Upload, AlertCircle, FilePlus, Sparkles } from 'lucide-react'
 
 interface ScriptUploadProps {
   onUploadSuccess: (data: UploadResponse) => void
@@ -44,7 +46,6 @@ export function ScriptUpload({ onUploadSuccess }: ScriptUploadProps) {
   }
 
   const handleFile = async (file: File) => {
-    // Validate file type
     if (!file.name.endsWith('.md') && !file.name.endsWith('.txt')) {
       setError('Please upload a .md or .txt file')
       return
@@ -65,41 +66,65 @@ export function ScriptUpload({ onUploadSuccess }: ScriptUploadProps) {
 
   return (
     <div className="w-full">
-      {/* Drop zone */}
-      <div
+      <motion.div
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
         className={`
           group relative cursor-pointer
-          border-2 border-dashed rounded-2xl p-16
+          border border-dashed rounded-2xl p-12
           flex flex-col items-center justify-center
-          transition-all duration-500 ease-out
+          transition-all duration-300
           ${
             isDragging
-              ? 'border-[var(--brand-primary)] bg-[var(--brand-primary)]/5 scale-[1.02] shadow-2xl shadow-[var(--brand-primary)]/10'
-              : 'border-gray-200 hover:border-gray-300 bg-white/50 backdrop-blur-sm'
+              ? 'border-blue-500 bg-blue-50/30 shadow-sm'
+              : 'border-gray-200 hover:border-gray-300 bg-white'
           }
         `}
       >
-        <div className="text-center space-y-4">
-          <div className={`
-            text-5xl font-light transition-all duration-500
-            ${isDragging ? 'text-[var(--brand-primary)] scale-125 rotate-90' : 'text-gray-300 group-hover:text-gray-400'}
-          `}>
-            +
-          </div>
-          
-          <div className="space-y-1">
-            <p className="text-xl font-bold text-gray-900 tracking-tight">
-              {isLoading ? 'Processing Script...' : 'Drop script here'}
-            </p>
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-              Markdown or Text
-            </p>
-          </div>
-        </div>
+        <AnimatePresence mode="wait">
+          {isLoading ? (
+            <motion.div 
+              key="loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center space-y-4"
+            >
+              <div className="relative mx-auto w-10 h-10">
+                <motion.div 
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                  className="absolute inset-0 border-2 border-blue-500/10 border-t-blue-500 rounded-full"
+                />
+              </div>
+              <p className="text-sm font-semibold text-gray-900">Processing script...</p>
+            </motion.div>
+          ) : (
+            <motion.div 
+              key="idle"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center space-y-4"
+            >
+              <div className={`
+                w-12 h-12 rounded-xl flex items-center justify-center mx-auto transition-all duration-300
+                ${isDragging ? 'bg-blue-500 text-white' : 'bg-gray-50 text-gray-400 group-hover:bg-gray-100 group-hover:text-gray-600'}
+              `}>
+                {isDragging ? <Upload size={20} /> : <FilePlus size={20} />}
+              </div>
+              
+              <div className="space-y-1">
+                <p className="text-sm font-bold text-gray-900">
+                  {isDragging ? 'Drop script to upload' : 'Select a script to get started'}
+                </p>
+                <p className="text-xs text-gray-400">
+                  Markdown (.md) or Text (.txt)
+                </p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <input
           ref={fileInputRef}
@@ -109,15 +134,20 @@ export function ScriptUpload({ onUploadSuccess }: ScriptUploadProps) {
           disabled={isLoading}
           className="hidden"
         />
-      </div>
+      </motion.div>
 
-      {/* Minimal Error */}
-      {error && (
-        <div className="mt-6 text-center">
-          <p className="text-sm font-medium text-red-600 bg-red-50 inline-block px-4 py-2 rounded-full border border-red-100 shadow-sm">{error}</p>
-        </div>
-      )}
+      <AnimatePresence>
+        {error && (
+          <motion.div 
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-6 flex items-center justify-center gap-2 text-red-600 bg-red-50 py-2 px-4 rounded-xl border border-red-100 text-xs font-medium"
+          >
+             <AlertCircle size={14} />
+             {error}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
-
