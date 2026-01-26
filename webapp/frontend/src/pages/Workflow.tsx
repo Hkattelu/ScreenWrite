@@ -19,11 +19,6 @@ export function Workflow() {
   const [currentStep, setCurrentStep] = useState<WorkflowStep>('upload')
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [beats, setBeats] = useState<Beat[]>([])
-  const [config, setConfig] = useState<Config>({
-    youtubeEnabled: true,
-    pexelsEnabled: true,
-    outputDir: './output',
-  })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [exportResult, setExportResult] = useState<any>(null)
@@ -57,7 +52,6 @@ export function Workflow() {
   }
 
   const handleConfigChange = async (newConfig: Config) => {
-    setConfig(newConfig)
     if (sessionId) {
       try {
         await updateConfig(sessionId, newConfig)
