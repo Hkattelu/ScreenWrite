@@ -18,41 +18,42 @@ export function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-brand-surface relative overflow-hidden flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen relative overflow-hidden flex flex-col items-center justify-center p-4" style={{ backgroundColor: 'var(--brand-surface)' }}>
       {/* Immersive Animated Background */}
-      <div className="absolute inset-0 z-0 pointer-events-none">
+      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
         {/* Shape 1: Deep Violet */}
         <motion.div 
           animate={{ 
-            scale: [1, 1.4, 1.1],
-            x: [0, 100, -50, 0],
-            y: [0, -50, 100, 0]
+            scale: [1, 1.2, 1],
+            x: ['-10%', '10%', '-5%'],
+            y: ['-10%', '5%', '-10%']
           }}
           transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-brand-primary/30 blur-[100px]" 
+          className="absolute top-0 left-0 w-[80vw] h-[80vh] rounded-full filter blur-[60px]" 
+          style={{ backgroundColor: 'var(--brand-primary)', opacity: 0.5 }}
         />
         {/* Shape 2: Vibrant Teal */}
         <motion.div 
           animate={{ 
-            scale: [1.2, 1, 1.3],
-            x: [0, -120, 80, 0],
-            y: [0, 100, -40, 0]
+            scale: [1.1, 0.9, 1.2],
+            x: ['10%', '-15%', '10%'],
+            y: ['10%', '20%', '10%']
           }}
           transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute bottom-[-15%] right-[-5%] w-[70%] h-[70%] rounded-full bg-brand-highlight/20 blur-[120px]" 
+          className="absolute bottom-0 right-0 w-[90vw] h-[90vh] rounded-full filter blur-[80px]" 
+          style={{ backgroundColor: 'var(--brand-highlight)', opacity: 0.4 }}
         />
         {/* Shape 3: Sunset Orange */}
         <motion.div 
           animate={{ 
-            scale: [0.8, 1.2, 0.9],
-            x: [0, 150, -100, 0],
-            y: [0, 80, -120, 0]
+            scale: [0.9, 1.3, 1],
+            x: ['20%', '-10%', '20%'],
+            y: ['-20%', '10%', '-20%']
           }}
           transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-[20%] right-[-10%] w-[40%] h-[40%] rounded-full bg-brand-accent/25 blur-[90px]" 
+          className="absolute top-1/4 right-0 w-[50vw] h-[50vh] rounded-full filter blur-[50px]" 
+          style={{ backgroundColor: 'var(--brand-accent)', opacity: 0.45 }}
         />
-        {/* Shape 4: Soft Glow Center */}
-        <div className="absolute inset-0 bg-white/20 backdrop-overlay" />
       </div>
 
       <motion.div 
@@ -61,7 +62,7 @@ export function Home() {
         transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
         className="w-full max-w-2xl relative z-10"
       >
-        <div className="bg-white/40 backdrop-blur-3xl border border-white/40 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] rounded-[40px] p-12 md:p-20 space-y-16">
+        <div className="bg-white/60 backdrop-blur-2xl border border-white/40 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] rounded-[40px] p-12 md:p-20 space-y-16">
           {/* Minimal Header */}
           <div className="text-center space-y-4">
             <motion.div
@@ -69,17 +70,20 @@ export function Home() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
             >
-              <h1 className="text-8xl font-black tracking-tightest text-black leading-none">
-                Screen<span className="text-brand-primary inline-block transform -rotate-2 hover:rotate-0 transition-transform duration-500">Write</span>
+              <h1 
+                className="text-8xl font-medium tracking-tight text-black leading-none"
+                style={{ fontFamily: "'Charter', 'Bitstream Charter', 'Sitka Text', Cambria, serif" }}
+              >
+                Screen<span className="text-brand-primary italic inline-block transform -rotate-2 hover:rotate-0 transition-transform duration-500">Write</span>
               </h1>
             </motion.div>
             <motion.p 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 1, delay: 0.5 }}
-              className="text-xl text-gray-500 font-bold tracking-widest uppercase opacity-80"
+              className="text-xl text-gray-500 font-bold tracking-[0.2em] uppercase opacity-80"
             >
-              The Creative Video Engine
+              B-roll made easy
             </motion.p>
           </div>
 
@@ -102,10 +106,10 @@ export function Home() {
           >
             <Link 
               to="/syntax-guide" 
-              className="group inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-gray-400 hover:text-brand-primary transition-all"
+              className="inline-flex items-center gap-3 px-8 py-4 bg-black text-white rounded-full text-xs font-black uppercase tracking-widest hover:bg-brand-primary transition-all duration-300 shadow-xl shadow-black/10"
             >
               <span>Explore the syntax</span>
-              <span className="w-12 h-px bg-gray-200 group-hover:w-16 group-hover:bg-brand-primary transition-all duration-500" />
+              <span className="w-8 h-px bg-white/30" />
             </Link>
           </motion.div>
         </div>

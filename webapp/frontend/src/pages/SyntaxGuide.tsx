@@ -17,7 +17,7 @@ export function SyntaxGuide() {
         <header className="mb-20">
           <h1 className="text-6xl font-extrabold tracking-tighter text-gray-900 mb-6">Syntax Guide</h1>
           <p className="text-xl text-gray-500 leading-relaxed font-light uppercase tracking-tight">
-            Structure your markdown for <span className="text-[var(--brand-primary)] font-bold">ScreenWrite</span> automation.
+            Structure your markdown for <span className="text-[var(--brand-primary)] font-bold">ScreenWrite</span>.
           </p>
         </header>
 
@@ -29,23 +29,42 @@ export function SyntaxGuide() {
             <p className="text-gray-600 mb-6 leading-relaxed">
               Define the context for your video at the very top of your file. This helps the AI understand the tone and topic.
             </p>
-            <div className="bg-gray-900 rounded-lg p-6 font-mono text-sm text-gray-300 leading-normal overflow-x-auto shadow-sm">
+            <div className="bg-gray-900 rounded-lg p-6 font-mono text-sm text-gray-300 leading-normal overflow-x-auto shadow-sm whitespace-break-spaces">
 {`Title: The Lost Art of Text-Based Game Walkthroughs
 Hook: Welcome viewers. Today I'll take you through gaming history.
 Channel: Gaming History
 Duration: 12:30
 Tags: gaming, history, walkthroughs`}
             </div>
-            <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 gap-4">
-               {['Title', 'Hook', 'Channel', 'Duration', 'Thumbnail', 'Tags'].map(key => (
-                 <div key={key} className="flex items-baseline gap-2">
-                   <span className="font-mono text-xs font-bold text-gray-400 uppercase">{key}</span>
-                 </div>
-               ))}
+            
+            <div className="mt-8 border border-gray-100 rounded-2xl overflow-hidden">
+              <table className="w-full text-left border-collapse">
+                <thead className="bg-gray-50 border-b border-gray-100">
+                  <tr>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700">Key</th>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700">Description</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {[
+                    { key: 'Title', desc: 'Primary video title and context' },
+                    { key: 'Hook', desc: 'Opening statement or catchphrase' },
+                    { key: 'Channel', desc: 'Your brand or channel name' },
+                    { key: 'Duration', desc: 'Target length (e.g. 10:00)' },
+                    { key: 'Thumbnail', desc: 'Visual concept for the thumbnail' },
+                    { key: 'Tags', desc: 'Comma-separated search keywords' },
+                  ].map((item) => (
+                    <tr key={item.key}>
+                      <td className="px-6 py-4 font-mono text-sm text-black font-bold">{item.key}</td>
+                      <td className="px-6 py-4 text-sm text-gray-600 font-medium">{item.desc}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </section>
 
-          <hr className="border-gray-100" />
+          <hr className="border-gray-700" />
 
           {/* Section: Structure */}
           <section>
@@ -53,16 +72,15 @@ Tags: gaming, history, walkthroughs`}
             <p className="text-gray-600 mb-6 leading-relaxed">
               Use standard Markdown headers to divide your script. These headers provide semantic context for the B-roll searcher.
             </p>
-            <div className="bg-gray-50 rounded-lg p-6 border border-gray-100 font-mono text-sm text-gray-800">
+            <div className="bg-gray-50 rounded-lg p-6 border border-gray-100 font-mono text-sm text-gray-800 whitespace-break-spaces">
 {`## Main Section
 Write your script naturally here.
-
 ## Next Section
 Continue your narrative.`}
             </div>
           </section>
 
-          <hr className="border-gray-100" />
+          <hr className="border-gray-700" />
 
           {/* Section: B-Roll Instructions */}
           <section>
@@ -71,71 +89,42 @@ Continue your narrative.`}
               Explicitly request visuals using bracket notation with a <code className="font-mono text-black">@</code> prefix. Place instructions <strong>immediately before</strong> the text they relate to.
             </p>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-              <div>
-                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3">Syntax</h3>
-                <code className="block bg-gray-50 p-3 rounded border border-gray-200 text-sm font-mono text-blue-600">
-                  [@Action: Description]
-                </code>
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3">Supported Actions</h3>
-                 <ul className="text-sm text-gray-600 space-y-1">
-                   <li><span className="font-mono text-black font-medium">Image</span> — Static assets</li>
-                   <li><span className="font-mono text-black font-medium">B-roll</span> — Video footage</li>
-                   <li><span className="font-mono text-black font-medium">Annotation</span> — Text overlays</li>
-                   <li><span className="font-mono text-black font-medium">Citation</span> — Source credits</li>
-                 </ul>
-              </div>
+            <div className="border border-gray-100 rounded-2xl overflow-hidden mb-8">
+              <table className="w-full text-left border-collapse">
+                <thead className="bg-gray-50 border-b border-gray-100">
+                  <tr>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700">Action</th>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700">Description</th>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700">Example</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  <tr>
+                    <td className="px-6 py-4 font-mono text-sm text-brand-primary font-bold">@B-roll</td>
+                    <td className="px-6 py-4 text-sm text-gray-600 font-medium">Video footage</td>
+                    <td className="px-6 py-4 font-mono text-[11px] text-gray-400">[@B-roll: sunset]</td>
+                  </tr>
+                  <tr>
+                    <td className="px-6 py-4 font-mono text-sm text-brand-primary font-bold">@Image</td>
+                    <td className="px-6 py-4 text-sm text-gray-600 font-medium">Static assets</td>
+                    <td className="px-6 py-4 font-mono text-[11px] text-gray-400">[@Image: logo]</td>
+                  </tr>
+                  <tr>
+                    <td className="px-6 py-4 font-mono text-sm text-brand-primary font-bold">@Annotation</td>
+                    <td className="px-6 py-4 text-sm text-gray-600 font-medium">Text overlays</td>
+                    <td className="px-6 py-4 font-mono text-[11px] text-gray-400">[@Annotation: "Title"]</td>
+                  </tr>
+                  <tr>
+                    <td className="px-6 py-4 font-mono text-sm text-brand-primary font-bold">@Citation</td>
+                    <td className="px-6 py-4 text-sm text-gray-600 font-medium">Source credits</td>
+                    <td className="px-6 py-4 font-mono text-[11px] text-gray-400">[@Citation: Wikipedia]</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
 
             <div className="bg-gray-900 rounded-lg p-6 font-mono text-sm text-gray-300 leading-normal overflow-x-auto shadow-sm">
-{`[@Image: old text-based walkthrough guide]
-The walkthrough format has changed dramatically over the years.
-
-[@Annotation: "1981 - First video game guidebook"]
-The earliest instances of walkthroughs came from physical books.`}
-            </div>
-          </section>
-
-          <hr className="border-gray-100" />
-
-          {/* Section: Best Practices (Comparison) */}
-          <section>
-            <h2 className="text-2xl font-bold text-gray-900 mb-8">Writing for ScreenWrite</h2>
-            
-            <div className="grid md:grid-cols-2 gap-12">
-              <div>
-                <h3 className="text-emerald-600 font-bold mb-4 flex items-center gap-2">
-                  <span>Specific & Visual</span>
-                </h3>
-                <div className="space-y-6">
-                  <div>
-                     <p className="text-sm text-gray-500 mb-2">Reference specific tools</p>
-                     <p className="font-medium text-gray-900">"Open Visual Studio Code and create a new Python file"</p>
-                  </div>
-                  <div>
-                     <p className="text-sm text-gray-500 mb-2">Describe user actions</p>
-                     <p className="font-medium text-gray-900">"Click the green 'Run' button in the toolbar"</p>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-red-500 font-bold mb-4 flex items-center gap-2">
-                  <span>Vague & Abstract</span>
-                </h3>
-                <div className="space-y-6 opacity-60">
-                   <div>
-                     <p className="text-sm text-gray-500 mb-2">Generic instructions</p>
-                     <p className="font-medium text-gray-900">"Open your editor and create a new file"</p>
-                  </div>
-                  <div>
-                     <p className="text-sm text-gray-500 mb-2">Abstract concepts</p>
-                     <p className="font-medium text-gray-900">"Execute the program"</p>
-                  </div>
-                </div>
-              </div>
+{`[@Image: old text-based walkthrough guide]\n\nThe walkthrough format has changed dramatically over the years.\n\n[@Annotation: "1981 - First video game guidebook"]\n\nThe earliest instances of walkthroughs came from physical books.`}
             </div>
           </section>
           

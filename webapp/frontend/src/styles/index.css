@@ -6,18 +6,19 @@
   --font-display: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   
-  /* Vibrant Brand Colors */
-  --brand-primary: oklch(60% 0.25 285);    /* Deep, saturated violet */
-  --brand-highlight: oklch(75% 0.2 150);  /* Vibrant teal/emerald */
-  --brand-accent: oklch(80% 0.2 60);      /* Warm sunset orange */
-  --brand-surface: oklch(98% 0.02 285);
+  /* Vibrant High-Chroma Brand Colors */
+  --brand-primary: oklch(65% 0.3 285);    /* Intense Violet */
+  --brand-highlight: oklch(75% 0.25 160);  /* Neon Teal */
+  --brand-accent: oklch(80% 0.25 60);      /* Bright Sunset */
+  --brand-surface: oklch(96% 0.03 285);    /* Slightly deeper surface */
 }
 
 body {
   font-family: var(--font-display);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  @apply text-gray-900 bg-brand-surface;
+  color: rgb(17 24 39); /* text-gray-900 */
+  background-color: var(--brand-surface);
 }
 
 /* Utility classes */
