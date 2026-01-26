@@ -93,7 +93,7 @@ Short text.
 ## Section
 This is body text with some content.
 """
-        context, body = self.parser._extract_content(content)
+        context, body, metadata = self.parser._extract_content(content)
         
         self.assertIn("Main Title", context)
         self.assertIn("Section", context)

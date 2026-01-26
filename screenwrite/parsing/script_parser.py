@@ -403,14 +403,25 @@ class ScriptParser:
         
         i: int = 0
         while i < len(words):
-            # Take target_size words, but don't exceed max_words
-            chunk_size: int = min(target_size, max_words, len(words) - i)
+            remaining_total = len(words) - i
             
-            # If this would leave a remainder that's too small, adjust
-            remaining: int = len(words) - i - chunk_size
-            if remaining > 0 and remaining < min_words:
-                # Reduce current chunk size to leave enough for next chunk
-                chunk_size = max(min_words, len(words) - i - min_words)
+            # If what's left already fits in one chunk, take it all
+            if remaining_total <= max_words:
+                chunks.append(' '.join(words[i:]))
+                break
+                
+            # We must split. Determine how much to take.
+            # We want to take roughly target_size, but we must leave at least min_words.
+            # So chunk_size <= remaining_total - min_words
+            chunk_size = min(target_size, remaining_total - min_words)
+            
+            # Also ensure chunk_size itself is at least min_words
+            chunk_size = max(min_words, chunk_size)
+            
+            # Safety check: if chunk_size > max_words here, it means we can't 
+            # satisfy both min and max requirements (e.g. max < 2*min).
+            # In that case, we prioritize max_words to avoid huge beats.
+            chunk_size = min(chunk_size, max_words)
             
             chunk_words: List[str] = words[i:i + chunk_size]
             chunks.append(' '.join(chunk_words))
@@ -521,41 +532,6 @@ class ScriptParser:
                     sentences = [text.strip()]
         
         return sentences
-    
-    def _split_long_chunk(self, chunk: str, min_words: int, max_words: int) -> List[str]:
-        """
-        Split a chunk that's too long into smaller valid chunks.
-        
-        Args:
-            chunk: Text chunk that's too long
-            min_words: Minimum words per chunk
-            max_words: Maximum words per chunk
-            
-        Returns:
-            List of smaller chunks
-        """
-        words = chunk.split()
-        chunks = []
-        
-        # Split into chunks of target size
-        target_size = (min_words + max_words) // 2  # ~19 words
-        
-        i = 0
-        while i < len(words):
-            # Take target_size words, but don't exceed max_words
-            chunk_size = min(target_size, max_words, len(words) - i)
-            
-            # If this would leave a remainder that's too small, adjust
-            remaining = len(words) - i - chunk_size
-            if remaining > 0 and remaining < min_words:
-                # Reduce current chunk size to leave enough for next chunk
-                chunk_size = max(min_words, len(words) - i - min_words)
-            
-            chunk_words = words[i:i + chunk_size]
-            chunks.append(' '.join(chunk_words))
-            i += chunk_size
-        
-        return chunks
     
     def _generate_stock_keyword(self, text: str, context: str = '') -> str:
         """

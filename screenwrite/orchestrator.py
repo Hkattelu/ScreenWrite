@@ -50,6 +50,8 @@ class VideoOrchestrator:
                  pexels_enabled: bool = True,
                  resolve_enabled: bool = False,
                  skip_failed_beats: bool = False,
+                 max_workers: int = 4,
+                 enable_asset_cache: bool = True,
                  verbose: bool = False):
         """
         Initialize the video orchestrator.
@@ -61,6 +63,8 @@ class VideoOrchestrator:
             pexels_enabled: Whether to enable Pexels fetching  
             resolve_enabled: Whether to enable DaVinci Resolve integration
             skip_failed_beats: Continue processing if some beats fail to fetch assets
+            max_workers: Maximum number of parallel download threads (default: 4)
+            enable_asset_cache: Whether to use persistent asset cache (default: True)
             verbose: Enable debug logging
         """
         # Configure logging level
@@ -90,6 +94,8 @@ class VideoOrchestrator:
         # Configuration
         self.resolve_enabled = resolve_enabled
         self.skip_failed_beats = skip_failed_beats
+        self.max_workers = max_workers
+        self.enable_asset_cache = enable_asset_cache
         self.resolve_integration = None
         
         if skip_failed_beats:
@@ -325,7 +331,11 @@ class VideoOrchestrator:
         
         # Fetch assets in batch with error handling
         try:
-            asset_map = self.asset_orchestrator.fetch_assets_batch(queries)
+            asset_map = self.asset_orchestrator.fetch_assets_batch(
+                queries, 
+                max_workers=self.max_workers,
+                enable_cache=self.enable_asset_cache
+            )
             
             # Update beat objects with asset paths
             for beat in beats:

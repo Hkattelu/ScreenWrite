@@ -8,6 +8,7 @@ enabling faster processing when the same script is processed multiple times.
 import json
 import hashlib
 import time
+import shutil
 from pathlib import Path
 from typing import Optional, List
 from dataclasses import asdict
@@ -131,11 +132,18 @@ def load_cached_beats(file_path: str, max_age_hours: int = 24) -> Optional[List[
 
 
 def clear_cache() -> None:
-    """Clear all cached beats."""
+    """Clear all cached beats and assets."""
     try:
+        # Clear beat cache files
         cache_dir = _get_cache_dir()
         for cache_file in cache_dir.glob("*.json"):
             cache_file.unlink()
+            
+        # Clear asset cache files
+        asset_dir = _get_asset_cache_dir()
+        for asset_file in asset_dir.glob("*"):
+            if asset_file.is_file():
+                asset_file.unlink()
     except Exception:
         # Fail silently
         pass
@@ -153,4 +161,89 @@ def get_cache_size() -> int:
         return sum(f.stat().st_size for f in cache_dir.glob("*.json"))
     except Exception:
         return 0
+
+
+def _get_asset_cache_dir() -> Path:
+    """Get the asset cache directory, creating if necessary."""
+    asset_dir = _get_cache_dir() / "assets"
+    asset_dir.mkdir(parents=True, exist_ok=True)
+    return asset_dir
+
+
+def get_asset_cache_path(query: str, duration: float, fetcher_name: str) -> Path:
+    """
+    Generate a unique cache path for an asset based on its parameters.
+    
+    Args:
+        query: Search query
+        duration: Target duration
+        fetcher_name: Name of the fetcher (e.g., "YouTube", "Pexels")
+        
+    Returns:
+        Path object for the cached file (without extension)
+    """
+    # Create a unique key from parameters
+    key_data = f"{query.strip().lower()}|{duration:.1f}|{fetcher_name.lower()}"
+    key_hash = hashlib.md5(key_data.encode()).hexdigest()
+    
+    return _get_asset_cache_dir() / key_hash
+
+
+def find_in_asset_cache(query: str, duration: float, 
+                       fetcher_name: str) -> Optional[str]:
+    """
+    Check if a matching asset exists in the cache.
+    
+    Args:
+        query: Search query
+        duration: Target duration
+        fetcher_name: Name of the fetcher
+        
+    Returns:
+        Path to cached file if found, None otherwise
+    """
+    base_cache_path = get_asset_cache_path(query, duration, fetcher_name)
+    
+    # Check for any file starting with this hash (handles different extensions)
+    cache_dir = _get_asset_cache_dir()
+    matches = list(cache_dir.glob(f"{base_cache_path.name}.*"))
+    
+    if matches:
+        cache_file = matches[0]
+        # Verify file is not empty and reasonably fresh (e.g., < 30 days)
+        if cache_file.stat().st_size > 0:
+            return str(cache_file)
+            
+    return None
+
+
+def save_to_asset_cache(file_path: str, query: str, 
+                       duration: float, fetcher_name: str) -> Optional[str]:
+    """
+    Save a downloaded file to the asset cache.
+    
+    Args:
+        file_path: Path to the downloaded file
+        query: Search query used
+        duration: Target duration
+        fetcher_name: Name of the fetcher
+        
+    Returns:
+        Path to the cached file, or None if saving failed
+    """
+    try:
+        source_path = Path(file_path)
+        if not source_path.exists():
+            return None
+            
+        extension = source_path.suffix
+        base_cache_path = get_asset_cache_path(query, duration, fetcher_name)
+        target_path = base_cache_path.with_suffix(extension)
+        
+        # Copy file to cache
+        shutil.copy2(source_path, target_path)
+        return str(target_path)
+    except Exception:
+        # Caching failures should not break the main workflow
+        return None
 

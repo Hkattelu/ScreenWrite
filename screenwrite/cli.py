@@ -16,6 +16,7 @@ from . import __version__
 from .orchestrator import VideoOrchestrator
 from .utils.logging import setup_logging, get_logger
 from .utils.script_linter import lint_script_file, print_lint_issues
+from .utils.cache import clear_cache
 from .utils.error_handling import (
     validate_markdown_file,
     ensure_output_directory,
@@ -120,6 +121,25 @@ Examples:
         '--skip-failed-beats',
         action='store_true',
         help='Continue processing if some beats fail to fetch assets (graceful degradation)'
+    )
+    
+    parser.add_argument(
+        '--max-workers',
+        type=int,
+        default=4,
+        help='Maximum number of parallel download threads (default: 4)'
+    )
+    
+    parser.add_argument(
+        '--disable-cache',
+        action='store_true',
+        help='Disable persistent asset caching'
+    )
+    
+    parser.add_argument(
+        '--clear-cache',
+        action='store_true',
+        help='Clear all cached beats and assets before running'
     )
     
     return parser
@@ -294,6 +314,11 @@ def main() -> int:
         # Validate arguments with comprehensive error handling
         validate_arguments(args)
         
+        # Clear cache if requested
+        if args.clear_cache:
+            print("Clearing cache...", file=sys.stderr)
+            clear_cache()
+        
         # Lint script for quality issues (verbose mode)
         if args.verbose:
             try:
@@ -313,6 +338,8 @@ def main() -> int:
             'pexels_enabled': not args.disable_pexels and bool(pexels_key),
             'resolve_enabled': args.resolve,
             'skip_failed_beats': args.skip_failed_beats,
+            'max_workers': args.max_workers,
+            'enable_asset_cache': not args.disable_cache,
             'verbose': args.verbose
         }
         

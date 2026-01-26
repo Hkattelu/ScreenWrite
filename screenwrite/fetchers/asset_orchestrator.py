@@ -7,12 +7,15 @@ to Pexels if YouTube fails, and handles all error conditions gracefully.
 """
 
 import logging
+import shutil
 from typing import List, Optional, Dict, Any
 from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from .base_fetcher import AssetFetcher
 from .youtube_client import YouTubeClient
 from .pexels_client import PexelsClient
+from ..utils.cache import find_in_asset_cache, save_to_asset_cache
 
 try:
     from rich.progress import track
@@ -77,9 +80,10 @@ class AssetOrchestrator:
                    youtube_query: str, 
                    stock_query: str, 
                    duration: float,
-                   beat_id: str = None) -> Optional[str]:
+                   beat_id: str = None,
+                   enable_cache: bool = True) -> Optional[str]:
         """
-        Fetch an asset using the fallback strategy.
+        Fetch an asset using the fallback strategy with caching support.
         
         Tries YouTube first with youtube_query, then falls back to Pexels
         with stock_query if YouTube fails. Returns the path to the first
@@ -90,6 +94,7 @@ class AssetOrchestrator:
             stock_query: Search query for stock ScreenWrite (Pexels)
             duration: Target duration in seconds
             beat_id: Optional beat identifier for logging context
+            enable_cache: Whether to use the persistent asset cache (default: True)
             
         Returns:
             Path to downloaded video file, or None if all fetchers failed
@@ -127,6 +132,26 @@ class AssetOrchestrator:
                         logger.debug(f"{beat_context}Skipping {fetcher.name} - no valid query")
                         continue
                 
+                # Check cache first
+                if enable_cache:
+                    cached_path = find_in_asset_cache(query, duration, fetcher.name)
+                    if cached_path:
+                        # Copy from cache to output directory
+                        try:
+                            cached_file = Path(cached_path)
+                            output_ext = cached_file.suffix
+                            safe_query = "".join(c for c in query if c.isalnum() or c in (' ', '-', '_')).rstrip()
+                            safe_query = safe_query.replace(' ', '_')[:30]
+                            
+                            target_filename = f"cached_{fetcher.name.lower()}_{safe_query}_{cached_file.name}{output_ext}"
+                            target_path = Path(self.output_dir) / target_filename
+                            
+                            shutil.copy2(cached_path, target_path)
+                            logger.info(f"{beat_context}Cache hit for {fetcher.name}: '{query}' -> {target_path}")
+                            return str(target_path)
+                        except Exception as e:
+                            logger.warning(f"{beat_context}Failed to copy from cache: {e}")
+
                 logger.info(f"{beat_context}Attempting to fetch asset using {fetcher.name} with query: '{query}'")
                 attempted_fetchers.append(fetcher.name)
                 
@@ -139,6 +164,13 @@ class AssetOrchestrator:
                         file_path = Path(asset_path)
                         if file_path.exists() and file_path.stat().st_size > 0:
                             logger.info(f"{beat_context}Successfully fetched asset using {fetcher.name}: {asset_path}")
+                            
+                            # Save to cache if enabled
+                            if enable_cache:
+                                saved_cache = save_to_asset_cache(asset_path, query, duration, fetcher.name)
+                                if saved_cache:
+                                    logger.debug(f"{beat_context}Saved asset to cache: {saved_cache}")
+                                    
                             return asset_path
                         else:
                             logger.warning(f"{beat_context}{fetcher.name} returned invalid file path: {asset_path}")
@@ -161,9 +193,11 @@ class AssetOrchestrator:
         return None
     
     def fetch_assets_batch(self, 
-                          queries: List[Dict[str, Any]]) -> Dict[str, Optional[str]]:
+                          queries: List[Dict[str, Any]],
+                          max_workers: int = 4,
+                          enable_cache: bool = True) -> Dict[str, Optional[str]]:
         """
-        Fetch multiple assets in batch.
+        Fetch multiple assets in batch using parallel threads with caching.
         
         Args:
             queries: List of query dictionaries, each containing:
@@ -171,6 +205,8 @@ class AssetOrchestrator:
                 - 'youtube_query': YouTube search query
                 - 'stock_query': Stock ScreenWrite search query  
                 - 'duration': Target duration in seconds
+            max_workers: Maximum number of parallel download threads (default: 4)
+            enable_cache: Whether to use the persistent asset cache (default: True)
                 
         Returns:
             Dictionary mapping query IDs to downloaded file paths (or None if failed)
@@ -181,37 +217,50 @@ class AssetOrchestrator:
             logger.warning("No queries provided for batch fetching")
             return results
         
-        logger.info(f"Starting batch fetch for {len(queries)} assets")
+        logger.info(f"Starting parallel batch fetch for {len(queries)} assets (max_workers={max_workers}, cache={enable_cache})")
         
-        # Use rich progress bar if available, otherwise fall back to simple iteration
-        iterator = track(queries, description="Fetching assets...", disable=not HAS_RICH) if HAS_RICH else queries
-        
-        for i, query_info in enumerate(iterator, 1):
-            try:
-                query_id = query_info.get('id', f'query_{i}')
-                youtube_query = query_info.get('youtube_query', '')
-                stock_query = query_info.get('stock_query', '')
-                duration = query_info.get('duration', 5.0)
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            # Map futures to their query IDs
+            future_to_id = {}
+            for i, q in enumerate(queries, 1):
+                query_id = q.get('id', f'query_{i}')
+                yt_query = q.get('youtube_query', '')
+                st_query = q.get('stock_query', '')
+                duration = q.get('duration', 5.0)
                 
-                logger.debug(f"Processing batch item {i}/{len(queries)}: {query_id}")
-                
-                asset_path = self.fetch_asset(youtube_query, stock_query, duration, beat_id=query_id)
-                results[query_id] = asset_path
-                
-                if asset_path:
-                    logger.debug(f"Batch item {query_id} succeeded: {asset_path}")
-                else:
-                    logger.debug(f"Batch item {query_id} failed")
+                future = executor.submit(
+                    self.fetch_asset, 
+                    yt_query, 
+                    st_query, 
+                    duration, 
+                    beat_id=query_id,
+                    enable_cache=enable_cache
+                )
+                future_to_id[future] = query_id
+
+            # Process completed downloads
+            iterator = as_completed(future_to_id)
+            if HAS_RICH:
+                iterator = track(iterator, total=len(queries), description="Fetching assets...", disable=not HAS_RICH)
+            
+            for future in iterator:
+                query_id = future_to_id[future]
+                try:
+                    asset_path = future.result()
+                    results[query_id] = asset_path
                     
-            except Exception as e:
-                logger.error(f"Error processing batch item {i}: {e}")
-                query_id = query_info.get('id', f'query_{i}')
-                results[query_id] = None
+                    if asset_path:
+                        logger.debug(f"Parallel fetch for {query_id} succeeded: {asset_path}")
+                    else:
+                        logger.debug(f"Parallel fetch for {query_id} failed")
+                except Exception as e:
+                    logger.error(f"Error in parallel fetch thread for {query_id}: {e}")
+                    results[query_id] = None
         
         # Log batch summary
         successful = sum(1 for path in results.values() if path is not None)
         total = len(results)
-        logger.info(f"Batch fetch completed: {successful}/{total} assets downloaded successfully")
+        logger.info(f"Parallel batch fetch completed: {successful}/{total} assets downloaded successfully")
         
         return results
     
