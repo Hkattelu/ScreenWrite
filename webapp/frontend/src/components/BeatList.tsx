@@ -104,7 +104,13 @@ export function BeatList({ beats, onBeatsUpdate, editable = false }: BeatListPro
           const viewMode = getModeFromBeat(beat)
 
           return (
-            <div key={beat.id} className="group py-6 hover:bg-gray-50/50 transition-colors -mx-4 px-4 rounded-lg">
+            <div 
+              key={beat.id} 
+              className={`
+                group py-6 px-4 rounded-xl transition-all duration-200 -mx-4
+                ${editingId === beat.id ? 'bg-white' : 'hover:bg-gray-50 active:bg-gray-100/50 active:scale-[0.998] cursor-default'}
+              `}
+            >
               {editingId === beat.id ? (
                 // Edit mode (Inline Form)
                 <div className="bg-white p-6 shadow-xl rounded-lg border border-gray-100 ring-1 ring-black/5">

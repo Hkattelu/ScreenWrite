@@ -86,50 +86,31 @@ export function Workflow() {
     { id: 'export', label: 'Export' },
   ]
 
+  const currentStepIndex = steps.findIndex((s) => s.id === currentStep)
+
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-4xl mx-auto px-4">
-        {/* Step indicator */}
+    <div className="min-h-screen bg-white py-12">
+      <div className="max-w-5xl mx-auto px-6">
+        {/* Minimal Progress Indicator */}
         {sessionId && (
-          <div className="mb-12">
-            <div className="flex justify-between mb-8">
-              {steps.map((step, idx) => (
-                <div key={step.id} className="flex-1">
-                  <div
-                    className={`flex items-center ${
-                      idx < steps.length - 1 ? 'pb-4' : ''
-                    }`}
-                  >
-                    <button
-                      onClick={() => {
-                        const stepIndex = steps.findIndex((s) => s.id === step.id)
-                        const currentIndex = steps.findIndex((s) => s.id === currentStep)
-                        if (stepIndex <= currentIndex) {
-                          setCurrentStep(step.id)
-                        }
-                      }}
-                      className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-colors ${
-                        currentStep === step.id
-                          ? 'bg-blue-500 text-white'
-                          : steps.findIndex((s) => s.id === step.id) < steps.findIndex((s) => s.id === currentStep)
-                            ? 'bg-green-500 text-white'
-                            : 'bg-gray-200 text-gray-600'
-                      }`}
-                    >
-                      {steps.findIndex((s) => s.id === step.id) < steps.findIndex((s) => s.id === currentStep) ? '✓' : idx + 1}
-                    </button>
-                    <span className="ml-2 font-medium text-gray-700">{step.label}</span>
-                  </div>
-                  {idx < steps.length - 1 && (
-                    <div
-                      className={`h-12 w-1 ml-5 ${
-                        steps.findIndex((s) => s.id === step.id) < steps.findIndex((s) => s.id === currentStep)
-                          ? 'bg-green-500'
-                          : 'bg-gray-200'
-                      }`}
-                    />
-                  )}
-                </div>
+          <div className="mb-12 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <span className="font-mono text-xs font-bold text-gray-300 uppercase tracking-widest">
+                Step {currentStepIndex + 1} of {steps.length}
+              </span>
+              <h1 className="text-xl font-bold text-black tracking-tight uppercase">
+                {steps[currentStepIndex].label}
+              </h1>
+            </div>
+            
+            <div className="flex gap-1">
+              {steps.map((_, idx) => (
+                <div 
+                  key={idx} 
+                  className={`h-1 w-8 rounded-full transition-all duration-500 ${
+                    idx <= currentStepIndex ? 'bg-black' : 'bg-gray-100'
+                  }`}
+                />
               ))}
             </div>
           </div>
@@ -137,21 +118,22 @@ export function Workflow() {
 
         {/* Error display */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
-            <p className="font-medium">Error: {error}</p>
+          <div className="mb-8 p-4 bg-red-50 border border-red-100 rounded-lg text-red-600 text-sm font-medium flex items-center gap-3">
+            <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+            {error}
           </div>
         )}
 
         {/* Step content */}
          {currentStep === 'upload' && (
-           <div>
-             <div className="mb-6 flex items-center justify-between">
-               <h2 className="text-2xl font-bold">Upload Your Script</h2>
+           <div className="max-w-xl mx-auto py-12">
+             <div className="mb-8 flex items-center justify-between">
+               <h2 className="text-2xl font-bold tracking-tight">Upload Script</h2>
                <Link 
                  to="/syntax-guide" 
-                 className="text-blue-600 hover:text-blue-800 font-semibold text-sm"
+                 className="text-gray-400 hover:text-black font-medium text-xs uppercase tracking-wider transition-colors"
                >
-                 📖 View Syntax Guide
+                 View Syntax Guide
                </Link>
              </div>
              <ScriptUpload onUploadSuccess={handleUploadSuccess} />
@@ -159,38 +141,29 @@ export function Workflow() {
          )}
 
         {currentStep === 'review' && sessionId && (
-          <div className="max-w-4xl mx-auto">
-             {/* Header */}
-            <div className="mb-8 flex items-end justify-between px-4">
-              <div>
-                <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Review Beats</h2>
-                <p className="text-gray-500 mt-2">Fine-tune your script segments before generation.</p>
-              </div>
+          <div className="w-full">
+            <div className="pb-12">
+               <BeatList beats={beats} onBeatsUpdate={handleBeatsUpdate} editable={true} />
             </div>
-
-            {/* List Container */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200">
-              <div className="px-6 pb-6 pt-2">
-                 <BeatList beats={beats} onBeatsUpdate={handleBeatsUpdate} editable={true} />
-              </div>
-              
-              {/* Footer Actions */}
-              <div className="bg-gray-50 px-6 py-4 border-t border-gray-100 flex gap-4 justify-between items-center rounded-b-2xl">
-                 <span className="text-sm text-gray-400 font-medium">
-                    {beats.length} segments ready
+            
+            {/* Minimal Footer Actions */}
+            <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-gray-100 py-4 px-6 z-20">
+              <div className="max-w-5xl mx-auto flex justify-between items-center">
+                 <span className="font-mono text-xs font-bold text-gray-400 uppercase tracking-widest">
+                    {beats.length} Segments Parsed
                  </span>
                  <div className="flex gap-4">
                   <button
                     onClick={() => setCurrentStep('upload')}
-                    className="px-6 py-2.5 rounded-lg font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-200 transition-colors"
+                    className="px-6 py-2 text-sm font-bold text-gray-400 hover:text-black uppercase tracking-widest transition-colors"
                   >
                     Back
                   </button>
                   <button
                     onClick={() => setCurrentStep('configure')}
-                    className="px-6 py-2.5 rounded-lg font-medium text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-all hover:shadow-md"
+                    className="btn-primary py-2 px-8 text-sm uppercase tracking-widest"
                   >
-                    Continue
+                    Configure
                   </button>
                  </div>
               </div>
@@ -199,58 +172,60 @@ export function Workflow() {
         )}
 
         {currentStep === 'configure' && (
-          <div>
+          <div className="max-w-2xl mx-auto">
             <ConfigPanel onConfigChange={handleConfigChange} isLoading={isLoading} />
 
-            <div className="max-w-2xl mx-auto mt-6 flex gap-4 justify-end">
+            <div className="mt-12 flex gap-4 justify-between items-center">
               <button
                 onClick={() => setCurrentStep('review')}
-                className="btn-secondary"
+                className="px-6 py-2 text-sm font-bold text-gray-400 hover:text-black uppercase tracking-widest transition-colors"
                 disabled={isLoading}
               >
-                Back
+                Back to Review
               </button>
               <button
                 onClick={() => setCurrentStep('export')}
-                className="btn-primary"
+                className="btn-primary px-10 uppercase tracking-widest text-sm"
                 disabled={isLoading}
               >
-                Proceed to Export
+                Go to Export
               </button>
             </div>
           </div>
         )}
 
         {currentStep === 'export' && (
-          <div className="card max-w-2xl mx-auto">
-            <h2 className="text-2xl font-bold mb-6">Generate Timeline</h2>
+          <div className="max-w-2xl mx-auto py-12">
+            <h2 className="text-3xl font-bold tracking-tighter mb-8">Generate Timeline</h2>
 
             {exportResult ? (
-              <div>
-                <div className="p-6 bg-green-50 border border-green-200 rounded-lg mb-6">
-                  <h3 className="text-lg font-semibold text-green-900 mb-2">✓ Timeline Generated Successfully</h3>
-                  <p className="text-green-800 mb-4">Your FCPXML file is ready to download and import into DaVinci Resolve.</p>
+              <div className="space-y-8">
+                <div className="p-8 bg-gray-50 rounded-2xl border border-gray-100">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <h3 className="text-lg font-bold uppercase tracking-tight">Timeline Ready</h3>
+                  </div>
 
-                  <div className="grid grid-cols-2 gap-4 text-sm mb-6">
+                  <div className="grid grid-cols-2 gap-y-6 gap-x-12 mb-8">
                     <div>
-                      <span className="text-green-700 font-medium">File:</span>
-                      <p className="text-green-900">{exportResult.filename}</p>
+                      <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Filename</span>
+                      <p className="font-mono text-sm text-gray-900 truncate">{exportResult.filename}</p>
                     </div>
                     <div>
-                      <span className="text-green-700 font-medium">Beats:</span>
-                      <p className="text-green-900">{exportResult.beatCount}</p>
+                      <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Segments</span>
+                      <p className="font-mono text-sm text-gray-900">{exportResult.beatCount}</p>
                     </div>
                     <div>
-                      <span className="text-green-700 font-medium">Duration:</span>
-                      <p className="text-green-900">{exportResult.estimatedDuration.toFixed(1)}s</p>
+                      <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Duration</span>
+                      <p className="font-mono text-sm text-gray-900">{exportResult.estimatedDuration.toFixed(1)}s</p>
                     </div>
                     <div>
-                      <span className="text-green-700 font-medium">File Size:</span>
-                      <p className="text-green-900">{(exportResult.fileSize / 1024).toFixed(2)} KB</p>
+                      <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Size</span>
+                      <p className="font-mono text-sm text-gray-900">{(exportResult.fileSize / 1024).toFixed(2)} KB</p>
                     </div>
                   </div>
 
-                  <a href={exportResult.downloadUrl} className="btn-success inline-block">
+                  <a href={exportResult.downloadUrl} className="btn-success block text-center py-4 uppercase tracking-widest text-sm font-bold shadow-lg shadow-emerald-100">
                     Download FCPXML
                   </a>
                 </div>
@@ -262,29 +237,29 @@ export function Workflow() {
                     setBeats([])
                     setExportResult(null)
                   }}
-                  className="btn-primary w-full"
+                  className="w-full py-4 text-xs font-bold text-gray-400 hover:text-black uppercase tracking-widest transition-colors"
                 >
                   Start New Project
                 </button>
               </div>
             ) : (
-              <div>
-                <p className="text-gray-700 mb-6">
-                  Ready to generate your FCPXML timeline? Your {beats.length} beats will be processed and formatted
-                  for DaVinci Resolve.
+              <div className="space-y-8">
+                <p className="text-xl text-gray-500 font-light leading-relaxed">
+                  Your {beats.length} segments are ready to be transformed into a DaVinci Resolve timeline.
                 </p>
 
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                  <p className="text-sm text-blue-800">
-                    <strong>Note:</strong> Asset downloading happens in the background. You can preview and review
+                <div className="bg-blue-50/50 p-6 rounded-xl border border-blue-100/50">
+                  <p className="text-xs text-blue-600 font-medium leading-relaxed">
+                    <span className="font-bold uppercase mr-2">Note:</span> 
+                    Asset downloading happens in the background. You can preview and review
                     downloaded assets before finalizing.
                   </p>
                 </div>
 
-                <div className="flex gap-4 justify-end">
+                <div className="flex gap-6 items-center pt-4">
                   <button
                     onClick={() => setCurrentStep('configure')}
-                    className="btn-secondary"
+                    className="text-sm font-bold text-gray-400 hover:text-black uppercase tracking-widest transition-colors"
                     disabled={isLoading}
                   >
                     Back
@@ -292,15 +267,19 @@ export function Workflow() {
                   <button
                     onClick={handleExport}
                     disabled={isLoading}
-                    className="btn-primary"
+                    className="btn-primary flex-grow py-4 uppercase tracking-widest text-sm"
                   >
-                    {isLoading ? 'Generating...' : 'Generate Timeline'}
+                    {isLoading ? 'Processing...' : 'Generate Timeline'}
                   </button>
                 </div>
               </div>
             )}
           </div>
         )}
+      </div>
+    </div>
+  )
+}
       </div>
     </div>
   )
