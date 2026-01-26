@@ -108,10 +108,10 @@ export function Workflow() {
                   key={idx} 
                   initial={false}
                   animate={{ 
-                    backgroundColor: idx <= currentStepIndex ? '#000' : '#f3f4f6',
+                    backgroundColor: idx <= currentStepIndex ? 'var(--brand-primary)' : '#f3f4f6',
                     width: idx === currentStepIndex ? 48 : 32 
                   }}
-                  className="h-1 rounded-full transition-all duration-500"
+                  className="h-1.5 rounded-full transition-all duration-500"
                 />
               ))}
             </div>

@@ -5,13 +5,19 @@
 :root {
   --font-display: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  
+  /* Vibrant Brand Colors */
+  --brand-primary: oklch(60% 0.25 285);    /* Deep, saturated violet */
+  --brand-highlight: oklch(75% 0.2 150);  /* Vibrant teal/emerald */
+  --brand-accent: oklch(80% 0.2 60);      /* Warm sunset orange */
+  --brand-surface: oklch(98% 0.02 285);
 }
 
 body {
   font-family: var(--font-display);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  @apply text-gray-900 bg-white;
+  @apply text-gray-900 bg-brand-surface;
 }
 
 /* Utility classes */
@@ -21,7 +27,11 @@ body {
 }
 
 .btn-primary {
-  @apply btn bg-black text-white hover:bg-gray-800 shadow-sm hover:shadow-md;
+  @apply btn text-white shadow-sm hover:shadow-md;
+  background-color: var(--brand-primary);
+  &:hover {
+    filter: brightness(1.1);
+  }
 }
 
 .btn-secondary {
@@ -33,11 +43,22 @@ body {
 }
 
 .input {
-  @apply px-4 py-3 bg-gray-50 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black transition-all;
+  @apply px-4 py-3 bg-gray-50 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-all;
+  focus-within: ring-[var(--brand-primary)];
 }
 
 .label {
   @apply block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2;
+}
+
+/* Decorative */
+.bg-mesh {
+  background-color: #fff;
+  background-image: 
+    radial-gradient(at 0% 0%, oklch(95% 0.05 280 / 0.5) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, oklch(95% 0.05 90 / 0.3) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, oklch(95% 0.05 280 / 0.5) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, oklch(95% 0.05 90 / 0.3) 0px, transparent 50%);
 }
 
 /* Custom Scrollbar for code blocks */

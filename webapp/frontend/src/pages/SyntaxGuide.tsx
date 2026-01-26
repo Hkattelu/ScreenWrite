@@ -10,14 +10,14 @@ export function SyntaxGuide() {
   return (
     <div className="min-h-screen bg-white py-12 px-4">
       <div className="max-w-3xl mx-auto">
-        <Link to="/" className="text-sm font-medium text-gray-400 hover:text-black mb-8 inline-block transition-colors">
-          &larr; Back
+        <Link to="/" className="text-sm font-bold uppercase tracking-widest text-gray-400 hover:text-[var(--brand-primary)] mb-12 inline-block transition-colors border-b-2 border-transparent hover:border-[var(--brand-primary)] pb-1">
+          &larr; Back to Editor
         </Link>
 
-        <header className="mb-16">
-          <h1 className="text-5xl font-extrabold tracking-tight text-gray-900 mb-6">Syntax Guide</h1>
-          <p className="text-xl text-gray-500 leading-relaxed font-light">
-            How to format your markdown scripts for optimal B-roll generation and timeline creation.
+        <header className="mb-20">
+          <h1 className="text-6xl font-extrabold tracking-tighter text-gray-900 mb-6">Syntax Guide</h1>
+          <p className="text-xl text-gray-500 leading-relaxed font-light uppercase tracking-tight">
+            Structure your markdown for <span className="text-[var(--brand-primary)] font-bold">ScreenWrite</span> automation.
           </p>
         </header>
 

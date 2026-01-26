@@ -73,29 +73,29 @@ export function ScriptUpload({ onUploadSuccess }: ScriptUploadProps) {
         onClick={() => fileInputRef.current?.click()}
         className={`
           group relative cursor-pointer
-          border-2 border-dashed rounded-xl p-16
+          border-2 border-dashed rounded-2xl p-16
           flex flex-col items-center justify-center
-          transition-all duration-300 ease-out
+          transition-all duration-500 ease-out
           ${
             isDragging
-              ? 'border-black bg-gray-50 scale-[1.01]'
-              : 'border-gray-200 hover:border-gray-400 hover:bg-gray-50/50'
+              ? 'border-[var(--brand-primary)] bg-[var(--brand-primary)]/5 scale-[1.02] shadow-2xl shadow-[var(--brand-primary)]/10'
+              : 'border-gray-200 hover:border-gray-300 bg-white/50 backdrop-blur-sm'
           }
         `}
       >
         <div className="text-center space-y-4">
           <div className={`
-            text-4xl font-light transition-colors duration-300
-            ${isDragging ? 'text-black' : 'text-gray-300 group-hover:text-gray-400'}
+            text-5xl font-light transition-all duration-500
+            ${isDragging ? 'text-[var(--brand-primary)] scale-125 rotate-90' : 'text-gray-300 group-hover:text-gray-400'}
           `}>
             +
           </div>
           
           <div className="space-y-1">
-            <p className="text-lg font-medium text-gray-900">
+            <p className="text-xl font-bold text-gray-900 tracking-tight">
               {isLoading ? 'Processing Script...' : 'Drop script here'}
             </p>
-            <p className="text-sm text-gray-400 font-mono">
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
               Markdown or Text
             </p>
           </div>
@@ -113,8 +113,8 @@ export function ScriptUpload({ onUploadSuccess }: ScriptUploadProps) {
 
       {/* Minimal Error */}
       {error && (
-        <div className="mt-4 text-center">
-          <p className="text-sm text-red-600 bg-red-50 inline-block px-3 py-1 rounded-full">{error}</p>
+        <div className="mt-6 text-center">
+          <p className="text-sm font-medium text-red-600 bg-red-50 inline-block px-4 py-2 rounded-full border border-red-100 shadow-sm">{error}</p>
         </div>
       )}
     </div>

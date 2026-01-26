@@ -7,7 +7,11 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: '#3b82f6',
+        brand: {
+          primary: 'var(--brand-primary)',
+          highlight: 'var(--brand-highlight)',
+          surface: 'var(--brand-surface)',
+        },
         success: '#10b981',
         warning: '#f59e0b',
         error: '#ef4444',
