@@ -578,9 +578,10 @@ class ScriptParser:
         }
         
         # Find matching visual categories from beat text
+        meaningful_words_set = set(meaningful_words)
         for category, keywords in visual_patterns.items():
             for keyword in keywords:
-                if keyword in meaningful_words:
+                if keyword in meaningful_words_set:
                     visual_keywords.append(keyword)
         
         # If we found visual keywords, use the most relevant ones
