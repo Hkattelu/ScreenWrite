@@ -30,15 +30,23 @@ def load_session_state(session_id):
     }
 
 def save_session_state(session_id, state):
-    """Save session state to file."""
+    """Save session state to file atomically."""
     try:
         session_dir = get_session_path(session_id)
         if not os.path.exists(session_dir):
             os.makedirs(session_dir, exist_ok=True)
             
         state_file = os.path.join(session_dir, 'state.json')
-        with open(state_file, 'w') as f:
+        temp_file = os.path.join(session_dir, 'state.json.tmp')
+        
+        # Write to temp file first
+        with open(temp_file, 'w') as f:
             json.dump(state, f, indent=2)
+            f.flush()
+            os.fsync(f.fileno()) # Ensure data is on disk
+            
+        # Atomic rename
+        os.replace(temp_file, state_file)
         return True
     except Exception as e:
         logger.error(f"Failed to save session state for {session_id}: {str(e)}")

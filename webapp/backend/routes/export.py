@@ -98,6 +98,7 @@ def export_fcpxml(session_id):
 
         # Get assets if available
         assets_data = state.get('assets', [])
+        assets = assets_data # Alias for response usage
         
         # Prepare asset map
         asset_map = {}
