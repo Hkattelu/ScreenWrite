@@ -1,30 +1,29 @@
-﻿#!/usr/bin/env python3
-"""
-Test runner for screenwrite end-to-end integration tests.
-
-This script runs the comprehensive end-to-end integration test suite
-that validates the complete workflow from markdown script to FCPXML output.
-"""
-
+﻿import unittest
 import sys
-import unittest
 import os
-
-# Add the project root to the Python path
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import socket
+from unittest.mock import patch
 
 def run_tests():
-    """Run the end-to-end integration tests."""
-    # Discover and run tests
-    loader = unittest.TestLoader()
-    suite = loader.discover('tests', pattern='test_*.py')
+    """Run all tests in the tests directory."""
+    # Ensure project root is in path
+    sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
     
-    # Run tests with verbose output
-    runner = unittest.TextTestRunner(verbosity=2)
-    result = runner.run(suite)
+    # Define a guard function to prevent network access
+    def network_guard(*args, **kwargs):
+        raise RuntimeError("Network access is disabled during tests. Please mock all network calls.")
     
-    # Return exit code based on test results
-    return 0 if result.wasSuccessful() else 1
+    # Patch socket to prevent any network calls
+    with patch('socket.socket', side_effect=network_guard):
+        # Discover and run tests
+        loader = unittest.TestLoader()
+        start_dir = os.path.dirname(__file__)
+        suite = loader.discover(start_dir, pattern='test_*.py')
+        
+        runner = unittest.TextTestRunner(verbosity=2)
+        result = runner.run(suite)
+        
+        sys.exit(not result.wasSuccessful())
 
 if __name__ == '__main__':
-    sys.exit(run_tests())
+    run_tests()

@@ -394,6 +394,9 @@ class TestEndToEndIntegration(unittest.TestCase):
                 'youtube': {'available': True, 'status': 'ready'}
             }
             
+            # Create a new orchestrator instance that will use the mocked AssetOrchestrator
+            orchestrator = VideoOrchestrator(output_dir=str(self.temp_path))
+            
             # Should complete workflow even with no assets
             result = orchestrator.orchestrate(
                 script_path=str(self.script_path),
