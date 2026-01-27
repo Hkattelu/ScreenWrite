@@ -112,20 +112,35 @@ export function ConfigPanel({ onConfigChange, isLoading = false }: ConfigPanelPr
           </div>
 
           <div>
-            <label htmlFor="output_dir" className="block text-sm font-bold text-gray-900 mb-2">
+            <label className="block text-sm font-bold text-gray-900 mb-2">
               Output Directory
             </label>
-            <div className="relative">
-               <input
-                id="output_dir"
-                type="text"
-                value={config.outputDir}
-                onChange={(e) => handleChange('outputDir', e.target.value)}
+            <div className="space-y-3">
+              <input
+                type="file"
+                id="output_dir_picker"
+                webkitdirectory=""
+                directory=""
+                onChange={(e) => {
+                  const path = e.currentTarget.files?.[0]?.webkitRelativePath?.split('/')[0] || config.outputDir
+                  if (path) {
+                    handleChange('outputDir', path)
+                  }
+                }}
                 disabled={isLoading}
-                className="w-full p-3 bg-gray-50 border-0 rounded-lg text-gray-900 focus:ring-2 focus:ring-black font-mono text-sm transition-all"
+                className="hidden"
               />
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                <span className="text-gray-400 text-[10px] font-bold">LOC</span>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => document.getElementById('output_dir_picker')?.click()}
+                  disabled={isLoading}
+                  className="px-4 py-2 bg-black text-white rounded-lg font-semibold text-sm hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                >
+                  Browse Folder
+                </button>
+                <span className="text-sm text-gray-600 font-mono">
+                  {config.outputDir || 'No folder selected'}
+                </span>
               </div>
             </div>
           </div>

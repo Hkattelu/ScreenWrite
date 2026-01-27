@@ -77,14 +77,23 @@ def export_fcpxml(session_id):
         # Reconstruct Beat objects from data
         beats = []
         for beat_data in beats_data:
+            # Beat instantiation requires id, text, stock_keyword, youtube_search_phrase
+            # duration is init=False, so we set it manually after
             beat = Beat(
+                id=beat_data.get('id', f'beat_{len(beats)+1:03d}'),
                 text=beat_data.get('text', ''),
-                duration=beat_data.get('duration', 0),
                 stock_keyword=beat_data.get('stock_keyword', ''),
-                youtube_phrase=beat_data.get('youtube_phrase', ''),
-                header=beat_data.get('header', '')
+                youtube_search_phrase=beat_data.get('youtube_phrase', '') or beat_data.get('youtube_search_phrase', '')
             )
-            beat.id = beat_data.get('id', beat.id)
+            
+            # Restore manually adjusted duration if available
+            if 'duration' in beat_data:
+                beat.duration = float(beat_data['duration'])
+                
+            # Restore asset paths if available
+            if 'asset_paths' in beat_data:
+                beat.asset_paths = beat_data['asset_paths']
+                
             beats.append(beat)
 
         # Get assets if available
