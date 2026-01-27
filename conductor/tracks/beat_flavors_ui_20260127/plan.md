@@ -12,15 +12,15 @@ Goal: Extract the asset preview logic into a standalone component and ensure ful
     - Replace inline asset rendering with the new component.
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Component Refactoring & Type Safety' (Protocol in workflow.md) [skip]
 
-## Phase 2: Implement Minimalist Badges (Annotation & Citation)
+## Phase 2: Implement Minimalist Badges (Annotation & Citation) [checkpoint: ab1b955]
 Goal: Replace video placeholders with stylized labels and icons for text-based beats.
 
-- [ ] Task: Implement `Annotation` flavor UI
+- [x] Task: Implement `Annotation` flavor UI [skip]
     - Render a purple-themed badge with "ANNOTATION" text and `Type` icon.
     - Ensure no video player or loading spinners are rendered for this type.
-- [ ] Task: Implement `Citation` flavor UI
+- [x] Task: Implement `Citation` flavor UI [skip]
     - Render an amber-themed badge with "CITATION" text and `Quote` icon.
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Implement Minimalist Badges (Annotation & Citation)' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Implement Minimalist Badges (Annotation & Citation)' (Protocol in workflow.md) [skip]
 
 ## Phase 3: Implement Image Flavor & Upload
 Goal: Provide a visible upload trigger for image beats.
