@@ -91,11 +91,19 @@ def get_status(session_id):
 
     try:
         state = load_session_state(session_id)
+        assets = state.get('assets', {})
+        
+        # Count non-null assets if it's a dict, otherwise count length if list
+        if isinstance(assets, dict):
+            asset_count = sum(1 for path in assets.values() if path)
+        else:
+            asset_count = len(assets)
+
         return {
             'sessionId': session_id,
             'status': state.get('status', 'unknown'),
             'beatCount': len(state.get('beats', [])),
-            'assetCount': len(state.get('assets', []))
+            'assetCount': asset_count
         }, 200
 
     except Exception as e:

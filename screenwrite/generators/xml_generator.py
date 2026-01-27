@@ -1,4 +1,4 @@
-﻿"""
+"""
 FCPXML Generator for creating Final Cut Pro XML timelines.
 
 This module generates FCPXML 1.8 documents compatible with DaVinci Resolve
@@ -123,7 +123,8 @@ class XMLGenerator:
         format_elem = ET.Element("format")
         format_elem.set("id", self.format_id)
         format_elem.set("name", f"FFVideoFormat{DEFAULT_VIDEO_HEIGHT}p{self.framerate}")
-        format_elem.set("frameDuration", f"{100000//self.framerate}/3000000s")
+        # Standard FCPXML 30fps notation
+        format_elem.set("frameDuration", "100/3000s")
         format_elem.set("width", str(DEFAULT_VIDEO_WIDTH))
         format_elem.set("height", str(DEFAULT_VIDEO_HEIGHT))
         format_elem.set("colorSpace", "1-1-1 (Rec. 709)")
@@ -153,7 +154,7 @@ class XMLGenerator:
         asset.set("name", filename)
         asset.set("uid", f"asset-{resource_id}")
         asset.set("start", "0s")
-        asset.set("duration", "3600s") # Placeholder large duration
+        # Removing placeholder duration - Resolve will probe the file
         asset.set("hasVideo", "1")
         asset.set("format", self.format_id)
         asset.set("hasAudio", "1")
@@ -163,14 +164,15 @@ class XMLGenerator:
         media_rep.set("kind", "original-media")
         media_rep.set("sig", f"sig-{resource_id}")
         
-        # Ensure path is absolute and uses forward slashes for URL
+        # Absolute path with standard file:/// protocol
         abs_path = os.path.abspath(asset_path).replace('\\', '/')
         if not abs_path.startswith('/'):
-            abs_path = '/' + abs_path
-        media_rep.set("src", f"file://localhost{abs_path}")
+            media_rep.set("src", f"file:///{abs_path}")
+        else:
+            media_rep.set("src", f"file://{abs_path}")
         
         return asset
-    
+
     def _create_library(self, beats: List[Beat], asset_map: Dict[str, str]) -> ET.Element:
         """
         Create library element containing the project and sequence.
@@ -205,7 +207,7 @@ class XMLGenerator:
         sequence.set("audioLayout", "stereo")
         sequence.set("audioRate", "48k")
         
-        # Create spine with clips (Primary Storyline)
+        # Create spine with asset-clips (Primary Storyline)
         spine = self._create_spine(beats, asset_map)
         sequence.append(spine)
         
@@ -229,27 +231,26 @@ class XMLGenerator:
             asset_path = asset_map.get(beat.id)
             
             if asset_path:
-                # Primary clip
+                # Primary asset-clip
                 resource_id = self._get_resource_id_for_asset(asset_path)
-                clip = ET.SubElement(spine, "clip")
+                clip = ET.SubElement(spine, "asset-clip")
                 clip.set("name", f"Clip - {beat.id}")
                 clip.set("ref", resource_id)
                 clip.set("offset", self._seconds_to_timecode(cumulative_offset))
                 clip.set("duration", self._seconds_to_timecode(beat.duration))
                 clip.set("start", "0s")
-                clip.set("tcFormat", "NDF")
             else:
                 # Placeholder gap if no asset
                 gap = ET.SubElement(spine, "gap")
                 gap.set("name", f"Gap - {beat.id}")
                 gap.set("offset", self._seconds_to_timecode(cumulative_offset))
                 gap.set("duration", self._seconds_to_timecode(beat.duration))
-                gap.set("start", "3600s")
+                gap.set("start", "0s")
             
             cumulative_offset += beat.duration
         
         return spine
-    
+
     def _get_resource_id_for_asset(self, asset_path: str) -> str:
         """
         Get the resource ID for a given asset path.
@@ -322,7 +323,9 @@ class XMLGenerator:
             
             # Validate spine has gaps
             gaps = spine.findall("gap")
-            if not gaps:
+            # Also allow asset-clips
+            clips = spine.findall("asset-clip")
+            if not gaps and not clips:
                 return False
             
             return True
