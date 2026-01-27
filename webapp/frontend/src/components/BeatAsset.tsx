@@ -1,4 +1,5 @@
-import { Play, Maximize2, RefreshCcw, Film, Type, Quote } from 'lucide-react'
+import { useRef } from 'react'
+import { Play, Maximize2, RefreshCcw, Film, Type, Quote, Image as ImageIcon, Upload } from 'lucide-react'
 import { getMediaUrl } from '../services/api'
 import type { Beat } from '../types/models'
 
@@ -22,6 +23,18 @@ export function BeatAsset({
   onRefresh,
   onMaximize
 }: BeatAssetProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      console.log('Selected file:', e.target.files[0].name)
+      // Future: Implement upload logic here
+    }
+  }
   
   if (visualType === 'annotation') {
     return (
@@ -46,6 +59,34 @@ export function BeatAsset({
         <div className="space-y-1">
           <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">Source</span>
           <p className="text-sm font-bold text-amber-900 tracking-tight">CITATION</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (visualType === 'image') {
+    return (
+      <div className="aspect-video flex flex-col items-center justify-center gap-3 bg-indigo-50 border border-indigo-100 rounded-xl p-6 text-center group relative">
+        <div className="w-10 h-10 rounded-full bg-white border border-indigo-100 flex items-center justify-center text-indigo-500 shadow-sm group-hover:scale-110 transition-transform">
+          <ImageIcon size={18} />
+        </div>
+        <div className="space-y-3">
+          <p className="text-sm font-bold text-indigo-900 tracking-tight">Image Asset</p>
+          <input
+            type="file"
+            ref={fileInputRef}
+            className="hidden"
+            accept="image/*"
+            onChange={handleFileChange}
+          />
+          <button 
+            onClick={handleUploadClick}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-indigo-100 rounded-lg shadow-sm text-xs font-bold text-indigo-600 hover:text-indigo-700 hover:border-indigo-200 transition-all active:scale-95"
+            aria-label="Upload image"
+          >
+            <Upload size={12} />
+            Upload Image
+          </button>
         </div>
       </div>
     )
