@@ -99,6 +99,14 @@ export async function exportFcpxml(
 }
 
 /**
+ * Trigger asset fetching
+ */
+export async function fetchAssets(sessionId: string): Promise<{ success: boolean; message: string }> {
+  const response = await apiClient.post(`/session/${sessionId}/fetch`)
+  return response.data
+}
+
+/**
  * Handle API errors with user-friendly messages
  */
 export function getErrorMessage(error: unknown): string {

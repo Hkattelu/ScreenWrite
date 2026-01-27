@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { ScriptUpload } from '../components/ScriptUpload'
 import { BeatList } from '../components/BeatList'
 import { ConfigPanel } from '../components/ConfigPanel'
-import { exportFcpxml, updateBeats, updateConfig, getErrorMessage, getSession } from '../services/api'
+import { exportFcpxml, updateBeats, updateConfig, getErrorMessage, getSession, fetchAssets, getStatus } from '../services/api'
 import type { UploadResponse, Config, Beat } from '../types/models'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
@@ -17,6 +17,57 @@ import {
 } from 'lucide-react'
 
 type WorkflowStep = 'upload' | 'review' | 'configure' | 'export'
+
+function FetchStatusPoller({ sessionId, onComplete }: { sessionId: string | null, onComplete: () => void }) {
+  const [status, setStatus] = useState<any>(null)
+
+  useEffect(() => {
+    if (!sessionId) return
+
+    const interval = setInterval(async () => {
+      try {
+        const data = await getStatus(sessionId)
+        setStatus(data)
+        if (data.status === 'complete' || data.status === 'error') {
+          // Stop polling if complete (but we keep showing the status)
+          // onComplete() 
+        }
+      } catch (e) {
+        console.error("Polling error", e)
+      }
+    }, 2000)
+
+    return () => clearInterval(interval)
+  }, [sessionId])
+
+  if (!status || status.status === 'initialized' || status.status === 'configured') return null
+
+  if (status.status === 'fetching') {
+    return (
+      <div className="mb-8 p-6 bg-blue-50 border border-blue-100 rounded-2xl flex items-center gap-4">
+        <Loader2 size={24} className="text-blue-600 animate-spin" />
+        <div>
+          <h4 className="text-sm font-bold text-blue-900">Downloading Assets...</h4>
+          <p className="text-xs text-blue-600 mt-1">Found {status.assetCount} assets so far. This usually takes 1-2 minutes.</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (status.status === 'complete' || status.status === 'exported') {
+    return (
+      <div className="mb-8 p-6 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center gap-4">
+        <CheckCircle2 size={24} className="text-emerald-600" />
+        <div>
+          <h4 className="text-sm font-bold text-emerald-900">Downloads Complete</h4>
+          <p className="text-xs text-emerald-600 mt-1">{status.assetCount} assets are ready for your timeline.</p>
+        </div>
+      </div>
+    )
+  }
+
+  return null
+}
 
 export function Workflow() {
   const location = useLocation()
@@ -107,6 +158,26 @@ export function Workflow() {
         setError(getErrorMessage(err))
         setIsSaving(false)
       }
+    }
+  }
+
+  const handleFetchAssets = async () => {
+    if (!sessionId) return
+    setIsLoading(true)
+    setError(null)
+    try {
+      await fetchAssets(sessionId)
+      // Polling for status update would be ideal here, 
+      // but for now we'll rely on the user refreshing or a basic timeout
+      // In a real app, use SWR or React Query with polling
+      
+      // Temporary: move to export step immediately, backend runs in background
+      // Ideally show a progress bar
+      setCurrentStep('export')
+    } catch (err) {
+      setError(getErrorMessage(err))
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -328,11 +399,11 @@ export function Workflow() {
                   Back to Review
                 </button>
                 <button
-                  onClick={() => setCurrentStep('export')}
+                  onClick={handleFetchAssets}
                   className="bg-gray-900 text-white px-8 py-3 rounded-xl text-sm font-semibold hover:bg-black transition-all flex items-center gap-2"
                   disabled={isLoading}
                 >
-                  Continue to Export
+                  {isLoading ? 'Starting Downloads...' : 'Fetch Assets & Continue'}
                   <ArrowRight size={16} />
                 </button>
               </div>
@@ -351,6 +422,9 @@ export function Workflow() {
                 <h2 className="text-2xl font-bold mb-2">Ready for Export</h2>
                 <p className="text-gray-500 text-sm">Generate your FCPXML timeline.</p>
               </div>
+
+              {/* Status Polling for Fetching */}
+              <FetchStatusPoller sessionId={sessionId} onComplete={() => {}} />
 
               {exportResult ? (
                 <div className="p-8 bg-gray-50 border border-gray-100 rounded-2xl">

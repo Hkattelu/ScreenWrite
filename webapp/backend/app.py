@@ -38,10 +38,12 @@ logger = logging.getLogger(__name__)
 from routes.upload import upload_bp
 from routes.api import api_bp
 from routes.export import export_bp
+from routes.fetch import fetch_bp
 
 app.register_blueprint(upload_bp, url_prefix='/api')
 app.register_blueprint(api_bp, url_prefix='/api')
 app.register_blueprint(export_bp, url_prefix='/api')
+app.register_blueprint(fetch_bp, url_prefix='/api')
 
 
 @app.route('/api/health', methods=['GET'])

@@ -59,13 +59,11 @@ class YouTubeClient(AssetFetcher):
             self._yt_dlp_available = True
             logger.debug("yt-dlp is available for YouTube fetching")
             
-        # Check if ffmpeg is available using comprehensive dependency check
-        ffmpeg_result = check_dependency('ffmpeg', 'FFmpeg')
-        self._ffmpeg_available = ffmpeg_result.is_valid
+        # Check if ffmpeg is available using internal robust check
+        self._ffmpeg_available = self._check_ffmpeg()
         
         if not self._ffmpeg_available:
-            logger.warning(f"FFmpeg not available: {ffmpeg_result.error_message}")
-            logger.warning("Video trimming will be unavailable - videos will be downloaded at full length")
+            logger.warning("FFmpeg not available (check failed). Video trimming will be unavailable.")
         else:
             logger.debug("FFmpeg is available for video trimming")
     
@@ -109,15 +107,22 @@ class YouTubeClient(AssetFetcher):
             True if ffmpeg is available, False otherwise
         """
         try:
-            subprocess.run(
-                ["ffmpeg", "-version"], 
-                capture_output=True, 
-                check=True,
-                timeout=10
-            )
-            return True
+            # On Windows, subprocess.run can return weird codes even if successful
+            # Use 'where' on Windows or 'which' on Unix to check existence first
+            import shutil
+            if shutil.which("ffmpeg"):
+                # Try running version command to be sure
+                subprocess.run(
+                    ["ffmpeg", "-version"], 
+                    capture_output=True, 
+                    check=False, # Don't raise on non-zero return code
+                    timeout=10
+                )
+                # If we get here without exception, binary exists and is executable
+                return True
+            return False
         except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired):
-            logger.warning("ffmpeg not found. Video trimming will be unavailable.")
+            logger.warning("ffmpeg check failed. Video trimming/merging will be unavailable.")
             return False
     
     def fetch(self, query: str, duration: float) -> Optional[str]:
@@ -180,7 +185,7 @@ class YouTubeClient(AssetFetcher):
                 error=e
             )
             return None
-    
+
     def _search(self, query: str) -> Optional[str]:
         """
         Search YouTube for videos matching the query.
@@ -236,7 +241,7 @@ class YouTubeClient(AssetFetcher):
                 error=e
             )
             raise NetworkError(f"YouTube search error: {e}")
-    
+
     def _download(self, video_url: str, query: str) -> Optional[str]:
         """
         Download video from YouTube URL.
@@ -261,10 +266,12 @@ class YouTubeClient(AssetFetcher):
             # Determine format based on ffmpeg availability
             # If ffmpeg is missing, we must avoid formats that need merging (video+audio)
             if self._ffmpeg_available:
-                format_selector = 'best[height<=720]/best'
+                # Use a broader format selector if ffmpeg is available
+                # best[height<=720] might fail if no 720p is available, fallback to best
+                format_selector = 'bestvideo[height<=1080]+bestaudio/best[height<=1080]/best'
             else:
                 # Select best format that has both video and audio (pre-merged)
-                format_selector = 'best[height<=720][vcodec!=none][acodec!=none]/best[vcodec!=none][acodec!=none]/best'
+                format_selector = 'best[ext=mp4]/best'
 
             # Configure yt-dlp for download
             ydl_opts = {
@@ -274,6 +281,8 @@ class YouTubeClient(AssetFetcher):
                 'no_warnings': True,
                 'socket_timeout': 60,  # 60 second timeout
                 'retries': 3,  # Built-in yt-dlp retries
+                # Force ffmpeg location if available in path but check failed weirdly
+                # 'ffmpeg_location': 'ffmpeg' 
             }
             
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -299,6 +308,20 @@ class YouTubeClient(AssetFetcher):
                     return None
                     
         except yt_dlp.utils.DownloadError as e:
+            # If "empty file" error occurs, it might be an ffmpeg merge failure
+            # Try falling back to a pre-merged format even if we thought we had ffmpeg
+            if "empty" in str(e).lower() and self._ffmpeg_available:
+                logger.warning("Download failed with empty file, trying fallback format without merge...")
+                try:
+                    ydl_opts['format'] = 'best[ext=mp4]/best'
+                    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                        info = ydl.extract_info(video_url, download=True)
+                        filename = ydl.prepare_filename(info)
+                        if os.path.exists(filename):
+                             return filename
+                except Exception as retry_e:
+                    logger.error(f"Fallback download also failed: {retry_e}")
+            
             # Network or YouTube-specific errors
             raise NetworkError(f"YouTube download failed: {e}")
         except Exception as e:
