@@ -566,23 +566,26 @@ class ScriptParser:
         visual_keywords = []
         
         # Common visual elements for stock ScreenWrite - prioritize beat-specific content
+        # Keys are the strong search terms we want to use
+        # Values are the trigger words found in text that map to these terms
         visual_patterns = {
-            'coding': ['coding', 'programming', 'developer', 'programmer', 'code'],
-            'computer': ['computer', 'laptop', 'keyboard', 'screen', 'monitor', 'typing'],
-            'learning': ['tutorial', 'learning', 'education', 'student', 'study'],
-            'business': ['office', 'meeting', 'presentation', 'team', 'work', 'business'],
-            'writing': ['writing', 'editor', 'file', 'document', 'text'],
-            'terminal': ['terminal', 'command', 'console', 'shell'],
+            'coding': ['coding', 'programming', 'developer', 'programmer', 'code', 'script'],
+            'computer': ['computer', 'laptop', 'keyboard', 'screen', 'monitor', 'desktop'],
+            'typing': ['typing', 'type', 'input', 'enter'],
+            'studying': ['tutorial', 'learning', 'education', 'student', 'study', 'reading'],
+            'office': ['office', 'meeting', 'presentation', 'team', 'work', 'business', 'colleague'],
+            'writing': ['writing', 'editor', 'file', 'document', 'text', 'paper', 'note'],
+            'technology': ['terminal', 'command', 'console', 'shell', 'data', 'database', 'server', 'system'],
             'person': ['person', 'people', 'man', 'woman', 'user'],
-            'technology': ['software', 'application', 'program', 'system', 'digital']
+            'digital': ['software', 'application', 'program', 'digital', 'tech', 'app']
         }
         
         # Find matching visual categories from beat text
         meaningful_words_set = set(meaningful_words)
-        for category, keywords in visual_patterns.items():
-            for keyword in keywords:
-                if keyword in meaningful_words_set:
-                    visual_keywords.append(keyword)
+        for category, triggers in visual_patterns.items():
+            for trigger in triggers:
+                if trigger in meaningful_words_set:
+                    visual_keywords.append(category)
         
         # If we found visual keywords, use the most relevant ones
         if visual_keywords:

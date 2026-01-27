@@ -133,10 +133,10 @@ This is body text with some content.
         keyword = self.parser._generate_stock_keyword(text, context)
         
         self.assertTrue(keyword.strip())
-        # Should contain programming-related or visual terms
+        # Should contain mapped visual categories (e.g. code -> coding, screen -> computer)
         keyword_lower = keyword.lower()
         has_visual_term = any(term in keyword_lower for term in 
-                             ['code', 'visual', 'studio', 'programming', 'button', 'screen'])
+                             ['coding', 'computer', 'technology', 'digital'])
         self.assertTrue(has_visual_term, f"Keyword '{keyword}' missing visual terms")
     
     def test_generate_youtube_phrase_extracts_technical_terms(self):
