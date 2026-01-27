@@ -36,6 +36,8 @@ class Beat:
     youtube_search_phrase: str
     duration: float = field(init=False)
     asset_paths: Dict[str, Optional[str]] = field(default_factory=dict)
+    visual_type: str = 'auto'
+    visual_content: Optional[str] = None
     
     def __post_init__(self):
         """Auto-calculate duration from word count using the configured words per second heuristic."""
@@ -77,5 +79,6 @@ class Beat:
         """
         return (
             f"Beat(id='{self.id}', duration={self.duration:.1f}s, "
-            f"words={len(self.text.split())}, text='{self.text[:BEAT_TEXT_TRUNCATION_LENGTH]}...')"
+            f"words={len(self.text.split())}, text='{self.text[:BEAT_TEXT_TRUNCATION_LENGTH]}...', "
+            f"type='{self.visual_type}')"
         )

@@ -19,7 +19,10 @@ import {
   Film,
   RefreshCcw,
   Play,
-  Maximize2
+  Maximize2,
+  Tag,
+  Quote,
+  Type
 } from 'lucide-react'
 import { refreshBeatAsset, getMediaUrl } from '../services/api'
 
@@ -357,6 +360,19 @@ export function BeatList({
                           <Clock size={10} />
                           {beat.duration.toFixed(1)}s
                         </span>
+                        {beat.visual_type && beat.visual_type !== 'auto' && beat.visual_type !== 'b-roll' && (
+                          <span className={`
+                            text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full flex items-center gap-1
+                            ${beat.visual_type === 'annotation' ? 'bg-purple-50 text-purple-600' :
+                              beat.visual_type === 'citation' ? 'bg-amber-50 text-amber-600' :
+                              'bg-indigo-50 text-indigo-600'}
+                          `}>
+                            {beat.visual_type === 'annotation' ? <Type size={10} /> :
+                             beat.visual_type === 'citation' ? <Quote size={10} /> :
+                             <Image size={10} />}
+                            {beat.visual_type}
+                          </span>
+                        )}
                         <div className={`
                           flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border
                           ${viewMode === 'none' ? 'bg-gray-50 text-gray-400 border-gray-100' :

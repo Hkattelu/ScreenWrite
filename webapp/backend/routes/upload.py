@@ -54,8 +54,6 @@ def upload_sample():
 
         # Parse script
         parser = ScriptParser()
-        beats = parser.parse(target_path)
-
         # Convert beats to dict for JSON serialization
         beats_data = [
             {
@@ -63,7 +61,9 @@ def upload_sample():
                 'text': beat.text,
                 'duration': beat.duration,
                 'stock_keyword': beat.stock_keyword,
-                'youtube_phrase': beat.youtube_search_phrase
+                'youtube_phrase': beat.youtube_search_phrase,
+                'visual_type': beat.visual_type,
+                'visual_content': beat.visual_content
             }
             for beat in beats
         ]
@@ -166,7 +166,9 @@ def upload_script():
                 'text': beat.text,
                 'duration': beat.duration,
                 'stock_keyword': beat.stock_keyword,
-                'youtube_phrase': beat.youtube_search_phrase
+                'youtube_phrase': beat.youtube_search_phrase,
+                'visual_type': beat.visual_type,
+                'visual_content': beat.visual_content
             }
             for beat in beats
         ]

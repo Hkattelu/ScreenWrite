@@ -172,12 +172,29 @@ class ScriptParser:
                     beat_id = f"beat_{i+1:03d}"
                     
                     # Check if this chunk has an associated B-roll instruction
-                    broll_query = self._find_associated_broll(chunk, body_with_instructions)
+                    broll_instruction = self._find_associated_broll(chunk, body_with_instructions)
                     
-                    if broll_query:
+                    visual_type = 'auto'
+                    visual_content = None
+                    
+                    if broll_instruction:
                         # Use B-roll instruction as the primary query
-                        stock_keyword = broll_query
-                        youtube_phrase = broll_query
+                        stock_keyword = broll_instruction.content
+                        youtube_phrase = broll_instruction.content
+                        
+                        # Map action to visual_type
+                        action_lower = broll_instruction.action.lower()
+                        if action_lower in ('annotation', 'text', 'title'):
+                            visual_type = 'annotation'
+                        elif action_lower in ('citation', 'source', 'credit'):
+                            visual_type = 'citation'
+                        elif action_lower in ('image', 'img', 'screenshot'):
+                            visual_type = 'image'
+                        else:
+                            # Default for Show, Display, B-roll, etc.
+                            visual_type = 'b-roll'
+                            
+                        visual_content = broll_instruction.content
                     else:
                         # Auto-generate queries
                         stock_keyword = self._generate_stock_keyword(chunk, full_context)
@@ -187,7 +204,9 @@ class ScriptParser:
                         id=beat_id,
                         text=chunk.strip(),
                         stock_keyword=stock_keyword,
-                        youtube_search_phrase=youtube_phrase
+                        youtube_search_phrase=youtube_phrase,
+                        visual_type=visual_type,
+                        visual_content=visual_content
                     )
                     beats.append(beat)
                     
@@ -463,7 +482,7 @@ class ScriptParser:
         
         return instructions_dict
     
-    def _find_associated_broll(self, chunk: str, instructions_dict: Dict[str, List[BRollInstruction]]) -> Optional[str]:
+    def _find_associated_broll(self, chunk: str, instructions_dict: Dict[str, List[BRollInstruction]]) -> Optional[BRollInstruction]:
         """
         Find if a text chunk has an associated B-roll instruction.
         
@@ -474,7 +493,7 @@ class ScriptParser:
             instructions_dict: Dictionary of extracted instructions (content -> list of BRollInstructions)
             
         Returns:
-            B-roll query string if found, None otherwise
+            BRollInstruction object if found, None otherwise
         """
         if not instructions_dict:
             return None
@@ -489,8 +508,8 @@ class ScriptParser:
             # This handles cases like "[Display: pages from Mastering Pac-Man...]" 
             # appearing just before the chunk text
             if content_lower in chunk_lower:
-                # Return the original content (preserves capitalization and phrasing)
-                return content
+                # Return the first matching instruction
+                return instructions[0]
         
         return None
     

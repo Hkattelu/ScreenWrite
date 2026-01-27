@@ -160,7 +160,7 @@ export function ScriptUpload({ onUploadSuccess }: ScriptUploadProps) {
           className="group flex items-center gap-3 px-6 py-3 rounded-xl border border-blue-100 bg-blue-50/30 text-blue-600 hover:bg-blue-50 hover:border-blue-200 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Wand2 size={16} className="group-hover:rotate-12 transition-transform" />
-          <span className="text-xs font-bold uppercase tracking-wider">Try with an Example</span>
+          <span className="text-xs text-white/90 font-bold uppercase tracking-wider">Try with an Example</span>
         </button>
       </div>
 
