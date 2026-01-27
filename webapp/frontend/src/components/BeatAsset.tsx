@@ -43,7 +43,7 @@ export function BeatAsset({
           <Type size={18} />
         </div>
         <div className="space-y-1">
-          <span className="text-[10px] font-black uppercase tracking-widest text-purple-400">Type</span>
+          <span className="text-xs font-black uppercase tracking-widest text-purple-600">Type</span>
           <p className="text-sm font-bold text-purple-900 tracking-tight">ANNOTATION</p>
         </div>
       </div>
@@ -57,7 +57,7 @@ export function BeatAsset({
           <Quote size={18} />
         </div>
         <div className="space-y-1">
-          <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">Source</span>
+          <span className="text-xs font-black uppercase tracking-widest text-amber-600">Source</span>
           <p className="text-sm font-bold text-amber-900 tracking-tight">CITATION</p>
         </div>
       </div>
@@ -119,6 +119,7 @@ export function BeatAsset({
                 onMaximize(beatId)
               }}
               className="p-2 bg-white/20 hover:bg-white/40 backdrop-blur-md rounded-full text-white transition-all"
+              aria-label="Maximize video preview"
             >
               <Maximize2 size={16} />
             </button>
@@ -128,6 +129,7 @@ export function BeatAsset({
             disabled={isRefreshing}
             className="absolute top-2 right-2 p-1.5 bg-white/90 backdrop-blur-md rounded-lg shadow-sm text-gray-600 hover:text-blue-600 transition-all active:scale-95 disabled:opacity-50"
             title="Refresh Footage"
+            aria-label="Refresh footage"
           >
             <RefreshCcw size={12} className={isRefreshing ? 'animate-spin' : ''} />
           </button>
