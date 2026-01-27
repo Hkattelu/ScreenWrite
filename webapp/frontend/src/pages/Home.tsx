@@ -160,19 +160,19 @@ export function Home() {
 
           >
 
-            <div className="bg-white/[0.02] backdrop-blur-3xl border border-white/5 shadow-[0_48px_96px_-24px_rgba(0,0,0,0.5)] rounded-[32px] overflow-hidden">
+                        <div className="bg-white/[0.02] backdrop-blur-3xl border border-white/5 shadow-[0_48px_96px_-24px_rgba(0,0,0,0.5)] rounded-[32px] overflow-hidden">
 
-               <div className="p-1">
+                           <div className="p-1">
 
-                 <div className="bg-[#111] rounded-[30px] p-8 md:p-12">
+                             <div className="bg-black/40 rounded-[30px] p-8 md:p-12">
 
-                   <ScriptUpload onUploadSuccess={handleUploadSuccess} />
+                               <ScriptUpload onUploadSuccess={handleUploadSuccess} />
 
-                 </div>
+                             </div>
 
-               </div>
+                           </div>
 
-            </div>
+                        </div>
 
           </motion.div>
 

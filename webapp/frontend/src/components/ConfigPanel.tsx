@@ -6,6 +6,7 @@
 
 import { useState } from 'react'
 import type { Config } from '../types/models'
+import { motion } from 'framer-motion'
 
 interface ConfigPanelProps {
   onConfigChange: (config: Config) => void
