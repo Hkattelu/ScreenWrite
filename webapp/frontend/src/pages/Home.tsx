@@ -36,22 +36,40 @@ export function Home() {
 
         
 
-        {/* Subtle Light Leak */}
-
-        <motion.div 
-
-          animate={{ 
-
-            opacity: [0.3, 0.5, 0.3],
-
-            x: ['-20%', '10%', '-20%'],
-
+        {/* Mesh Gradient 1: Deep Blue/Violet */}
+        <motion.div
+          animate={{
+            scale: [1, 1.2, 1],
+            x: ['-10%', '10%', '-5%'],
+            y: ['-10%', '5%', '-10%']
           }}
+          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-0 left-0 w-[80vw] h-[80vh] rounded-full filter blur-[100px] opacity-20"
+          style={{ backgroundColor: '#4f46e5' }}
+        />
 
-          transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
+        {/* Mesh Gradient 2: Cyan/Teal */}
+        <motion.div
+          animate={{
+            scale: [1.1, 0.9, 1.2],
+            x: ['10%', '-15%', '10%'],
+            y: ['10%', '20%', '10%']
+          }}
+          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute bottom-0 right-0 w-[90vw] h-[90vh] rounded-full filter blur-[120px] opacity-20"
+          style={{ backgroundColor: '#0891b2' }}
+        />
 
-          className="absolute -top-[20%] -left-[10%] w-[100vw] h-[100vh] rounded-full filter blur-[120px] bg-blue-900/20" 
-
+        {/* Mesh Gradient 3: Accent Purple/Orange */}
+        <motion.div
+          animate={{
+            scale: [0.9, 1.3, 1],
+            x: ['20%', '-10%', '20%'],
+            y: ['-20%', '10%', '-20%']
+          }}
+          transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-1/4 right-0 w-[50vw] h-[50vh] rounded-full filter blur-[100px] opacity-20"
+          style={{ backgroundColor: '#7c3aed' }}
         />
 
         
