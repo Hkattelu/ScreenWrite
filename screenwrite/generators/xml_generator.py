@@ -226,28 +226,24 @@ class XMLGenerator:
         """
         spine = ET.Element("spine")
         
-        cumulative_offset = 0.0
         for beat in beats:
             asset_path = asset_map.get(beat.id)
             
             if asset_path:
                 # Primary asset-clip
+                # No offset needed in spine; elements are sequential
                 resource_id = self._get_resource_id_for_asset(asset_path)
                 clip = ET.SubElement(spine, "asset-clip")
                 clip.set("name", f"Clip - {beat.id}")
                 clip.set("ref", resource_id)
-                clip.set("offset", self._seconds_to_timecode(cumulative_offset))
                 clip.set("duration", self._seconds_to_timecode(beat.duration))
                 clip.set("start", "0s")
             else:
                 # Placeholder gap if no asset
                 gap = ET.SubElement(spine, "gap")
                 gap.set("name", f"Gap - {beat.id}")
-                gap.set("offset", self._seconds_to_timecode(cumulative_offset))
                 gap.set("duration", self._seconds_to_timecode(beat.duration))
                 gap.set("start", "0s")
-            
-            cumulative_offset += beat.duration
         
         return spine
 
@@ -271,11 +267,11 @@ class XMLGenerator:
     def _seconds_to_timecode(self, seconds: float) -> str:
         """Convert seconds to FCPXML timecode format."""
         frames = int(seconds * self.framerate)
-        return f"{frames}/{self.framerate}s"
+        return f"{frames * 100}/3000s"
     
     def _frames_to_timecode(self, frames: int) -> str:
         """Convert frames to FCPXML timecode format."""
-        return f"{frames}/{self.framerate}s"
+        return f"{frames * 100}/3000s"
     
     def _validate_xml(self, root: ET.Element) -> bool:
         """
