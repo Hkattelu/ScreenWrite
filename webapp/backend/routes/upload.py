@@ -9,6 +9,7 @@ import uuid
 import logging
 from flask import Blueprint, request, jsonify, current_app
 from werkzeug.utils import secure_filename
+from session_utils import save_session_state
 
 # Import from parent screenwrite module
 import sys
@@ -78,6 +79,17 @@ def upload_sample():
                 'warnings': []
             }
         }
+
+        # Persist initial state
+        initial_state = {
+            'sessionId': session_id,
+            'status': 'initialized',
+            'config': {},
+            'beats': beats_data,
+            'summary': response['summary'],
+            'assets': []
+        }
+        save_session_state(session_id, initial_state)
 
         logger.info(f'Session {session_id} created using sample script')
         return response, 200
@@ -168,6 +180,17 @@ def upload_script():
                 'warnings': warnings
             }
         }
+
+        # Persist initial state
+        initial_state = {
+            'sessionId': session_id,
+            'status': 'initialized',
+            'config': {},
+            'beats': beats_data,
+            'summary': response['summary'],
+            'assets': []
+        }
+        save_session_state(session_id, initial_state)
 
         logger.info(f'Session {session_id} created with {len(beats)} beats')
         return response, 200

@@ -11,7 +11,8 @@ import {
   ChevronRight,
   ArrowLeft,
   ArrowRight,
-  Info
+  Info,
+  Save
 } from 'lucide-react'
 
 type WorkflowStep = 'upload' | 'review' | 'configure' | 'export'
@@ -22,6 +23,7 @@ export function Workflow() {
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [beats, setBeats] = useState<Beat[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [exportResult, setExportResult] = useState<any>(null)
   
@@ -46,20 +48,26 @@ export function Workflow() {
   const handleBeatsUpdate = async (updatedBeats: Beat[]) => {
     setBeats(updatedBeats)
     if (sessionId) {
+      setIsSaving(true)
       try {
         await updateBeats(sessionId, updatedBeats)
+        setTimeout(() => setIsSaving(false), 800)
       } catch (err) {
         setError(getErrorMessage(err))
+        setIsSaving(false)
       }
     }
   }
 
   const handleConfigChange = async (newConfig: Config) => {
     if (sessionId) {
+      setIsSaving(true)
       try {
         await updateConfig(sessionId, newConfig)
+        setTimeout(() => setIsSaving(false), 800)
       } catch (err) {
         setError(getErrorMessage(err))
+        setIsSaving(false)
       }
     }
   }
@@ -100,9 +108,25 @@ export function Workflow() {
       {/* Streamlined Header */}
       <div className="border-b border-gray-100 sticky top-0 z-30 bg-white/80 backdrop-blur-md">
         <div className="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link to="/" className="font-bold text-sm tracking-tight text-gray-900">
-            ScreenWrite<span className="text-blue-500"></span>
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link to="/" className="font-bold text-sm tracking-tight text-gray-900">
+              ScreenWrite<span className="text-blue-500"></span>
+            </Link>
+            
+            <AnimatePresence>
+              {isSaving && (
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="flex items-center gap-1.5 text-[10px] font-medium text-gray-400"
+                >
+                  <Save size={12} className="animate-pulse" />
+                  Saving...
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
           
           <nav className="flex items-center gap-1">
             {steps.map((step, idx) => {
