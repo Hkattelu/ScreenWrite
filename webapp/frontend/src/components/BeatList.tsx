@@ -50,6 +50,23 @@ export function BeatList({
     return 'auto'
   }
 
+  const handleSkip = (beat: Beat) => {
+    if (!onBeatsUpdate) return
+
+    const updatedBeats = beats.map((b) => {
+      if (b.id === beat.id) {
+        return { ...b, stock_keyword: '', youtube_phrase: '' }
+      }
+      return b
+    })
+
+    onBeatsUpdate(updatedBeats)
+    
+    if (onToggleReviewed && !reviewedIds.has(beat.id)) {
+      onToggleReviewed(beat.id)
+    }
+  }
+
   const handleEdit = (beat: Beat) => {
     setEditingId(beat.id)
     setEditValues(beat)
@@ -304,13 +321,28 @@ export function BeatList({
                     </div>
 
                     {editable && (
-                      <button
-                        onClick={() => handleEdit(beat)}
-                        className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-all opacity-40 group-hover:opacity-100"
-                        title="Edit Segment"
-                      >
-                        <Edit3 size={14} />
-                      </button>
+                      <div className="flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all duration-200">
+                        <button
+                          onClick={() => handleEdit(beat)}
+                          className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-all"
+                          title="Edit Segment"
+                        >
+                          <Edit3 size={14} />
+                        </button>
+                        
+                        {viewMode !== 'none' && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleSkip(beat)
+                            }}
+                            className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all"
+                            title="Skip Visuals (None)"
+                          >
+                            <Slash size={14} />
+                          </button>
+                        )}
+                      </div>
                     )}
                   </div>
                 )}

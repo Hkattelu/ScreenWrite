@@ -2,7 +2,7 @@ import { useState, useRef } from 'react'
 import { uploadScript, uploadSample, getErrorMessage } from '../services/api'
 import type { UploadResponse } from '../types/models'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Upload, AlertCircle, FilePlus, Sparkles, Wand2 } from 'lucide-react'
+import { Upload, AlertCircle, FilePlus, Wand2 } from 'lucide-react'
 
 interface ScriptUploadProps {
   onUploadSuccess: (data: UploadResponse) => void

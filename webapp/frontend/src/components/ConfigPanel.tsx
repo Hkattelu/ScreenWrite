@@ -115,33 +115,28 @@ export function ConfigPanel({ onConfigChange, isLoading = false }: ConfigPanelPr
             <label className="block text-sm font-bold text-gray-900 mb-2">
               Output Directory
             </label>
-            <div className="space-y-3">
-              <input
-                type="file"
-                id="output_dir_picker"
-                webkitdirectory=""
-                directory=""
-                onChange={(e) => {
-                  const path = e.currentTarget.files?.[0]?.webkitRelativePath?.split('/')[0] || config.outputDir
-                  if (path) {
-                    handleChange('outputDir', path)
+            <div className="flex items-center gap-3">
+              <button
+                onClick={async () => {
+                  try {
+                    const dirHandle = await (window as any).showDirectoryPicker?.({ mode: 'readwrite' })
+                    if (dirHandle) {
+                      handleChange('outputDir', dirHandle.name)
+                    }
+                  } catch (error) {
+                    if ((error as Error)?.name !== 'AbortError') {
+                      console.error('Error selecting directory:', error)
+                    }
                   }
                 }}
                 disabled={isLoading}
-                className="hidden"
-              />
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => document.getElementById('output_dir_picker')?.click()}
-                  disabled={isLoading}
-                  className="px-4 py-2 bg-black text-white rounded-lg font-semibold text-sm hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-                >
-                  Browse Folder
-                </button>
-                <span className="text-sm text-gray-600 font-mono">
-                  {config.outputDir || 'No folder selected'}
-                </span>
-              </div>
+                className="px-4 py-2 bg-black text-white rounded-lg font-semibold text-sm hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              >
+                Browse Folder
+              </button>
+              <span className="text-sm text-gray-600 font-mono">
+                {config.outputDir || 'No folder selected'}
+              </span>
             </div>
           </div>
         </section>
