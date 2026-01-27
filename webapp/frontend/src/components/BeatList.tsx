@@ -45,9 +45,19 @@ export function BeatList({
   onToggleReviewed
 }: BeatListProps) {
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [lightboxId, setLightboxId] = useState<string | null>(null)
   const [refreshingIds, setRefreshingIds] = useState<Set<string>>(new Set())
   const [editValues, setEditValues] = useState<Partial<Beat>>({})
   const [sourceMode, setSourceMode] = useState<VisualSourceMode>('auto')
+
+  const handleMarkAllReviewed = () => {
+    if (!onToggleReviewed) return
+    beats.forEach(beat => {
+      if (!reviewedIds.has(beat.id)) {
+        onToggleReviewed(beat.id)
+      }
+    })
+  }
 
   const handleRefresh = async (beatId: string) => {
     setRefreshingIds(prev => new Set(prev).add(beatId))
@@ -162,6 +172,15 @@ export function BeatList({
           </div>
           <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Reviewed</span>
         </div>
+        
+        {reviewedIds.size < beats.length && (
+          <button 
+            onClick={handleMarkAllReviewed}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-gray-900 rounded-lg transition-all border border-gray-100"
+          >
+            Mark all reviewed
+          </button>
+        )}
       </div>
 
       {/* Beat list */}
@@ -348,8 +367,17 @@ export function BeatList({
                                 muted
                                 loop
                               />
-                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/asset:opacity-100 transition-opacity flex items-center justify-center">
+                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/asset:opacity-100 transition-opacity flex items-center justify-center gap-4">
                                 <Play className="text-white fill-white" size={24} />
+                                <button 
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    setLightboxId(beat.id)
+                                  }}
+                                  className="p-2 bg-white/20 hover:bg-white/40 backdrop-blur-md rounded-full text-white transition-all"
+                                >
+                                  <Maximize2 size={16} />
+                                </button>
                               </div>
                               <button 
                                 onClick={() => handleRefresh(beat.id)}
@@ -434,6 +462,44 @@ export function BeatList({
           )
         })}
       </div>
+
+      {/* Fullscreen Lightbox */}
+      <AnimatePresence>
+        {lightboxId && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center p-8 md:p-20"
+            onClick={() => setLightboxId(null)}
+          >
+            <button 
+              className="absolute top-8 right-8 text-white/40 hover:text-white transition-colors"
+              onClick={() => setLightboxId(null)}
+            >
+              <Slash size={32} strokeWidth={1} />
+            </button>
+            
+            <div className="w-full max-w-6xl aspect-video rounded-3xl overflow-hidden shadow-2xl border border-white/10 bg-black" onClick={e => e.stopPropagation()}>
+              <video 
+                src={getMediaUrl(sessionId, assets[lightboxId] || '')} 
+                className="w-full h-full object-contain"
+                controls
+                autoPlay
+              />
+            </div>
+            
+            <div className="mt-12 text-center space-y-2">
+              <p className="text-white font-medium text-lg">
+                {beats.find(b => b.id === lightboxId)?.text}
+              </p>
+              <p className="text-white/40 font-mono text-xs uppercase tracking-[0.2em]">
+                {assets[lightboxId]?.split(/[\\/]/).pop()}
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
