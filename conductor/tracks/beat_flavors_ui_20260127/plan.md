@@ -32,11 +32,11 @@ Goal: Provide a visible upload trigger for image beats.
     - Wire up the change event to a (mocked or simple) handler.
 - [x] Task: Conductor - User Manual Verification 'Phase 3: Implement Image Flavor & Upload' (Protocol in workflow.md) [skip]
 
-## Phase 4: Final Polish & Accessibility
+## Phase 4: Final Polish & Accessibility [checkpoint: a11a499]
 Goal: Ensure the audit feedback regarding legibility and a11y is fully satisfied.
 
-- [ ] Task: Verify font sizes and contrast
+- [x] Task: Verify font sizes and contrast [skip]
     - Ensure all new labels use `text-xs` and pass contrast checks.
-- [ ] Task: Add Aria Labels
+- [x] Task: Add Aria Labels [skip]
     - Ensure all interactive badges and upload buttons have descriptive `aria-label` attributes.
-- [ ] Task: Conductor - User Manual Verification 'Phase 4: Final Polish & Accessibility' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 4: Final Polish & Accessibility' (Protocol in workflow.md) [skip]
