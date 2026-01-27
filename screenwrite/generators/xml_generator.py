@@ -118,6 +118,17 @@ class XMLGenerator:
         
         return resources
 
+    def _create_format(self) -> ET.Element:
+        """Create format resource for the timeline."""
+        format_elem = ET.Element("format")
+        format_elem.set("id", self.format_id)
+        format_elem.set("name", f"FFVideoFormat{DEFAULT_VIDEO_HEIGHT}p{self.framerate}")
+        format_elem.set("frameDuration", f"{100000//self.framerate}/3000000s")
+        format_elem.set("width", str(DEFAULT_VIDEO_WIDTH))
+        format_elem.set("height", str(DEFAULT_VIDEO_HEIGHT))
+        format_elem.set("colorSpace", "1-1-1 (Rec. 709)")
+        return format_elem
+
     def _create_asset_resource(self, asset_path: str) -> ET.Element:
         """
         Create asset resource element for a video file.
