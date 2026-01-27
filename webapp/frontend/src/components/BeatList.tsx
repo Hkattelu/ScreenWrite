@@ -4,7 +4,7 @@
  * Shows parsed beats from the script with editing capabilities
  */
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import type { Beat } from '../types/models'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
@@ -17,14 +17,11 @@ import {
   Edit3,
   Check,
   Film,
-  RefreshCcw,
-  Play,
-  Maximize2,
-  Tag,
   Quote,
   Type
 } from 'lucide-react'
 import { refreshBeatAsset, getMediaUrl } from '../services/api'
+import { BeatAsset } from './BeatAsset'
 
 interface BeatListProps {
   sessionId: string
@@ -66,11 +63,9 @@ export function BeatList({
     setRefreshingIds(prev => new Set(prev).add(beatId))
     try {
       await refreshBeatAsset(sessionId, beatId)
-      // The parent will poll for status/state updates
     } catch (err) {
       console.error("Failed to refresh beat", err)
     } finally {
-      // Keep refreshing state for a bit to show activity
       setTimeout(() => {
         setRefreshingIds(prev => {
           const next = new Set(prev)
@@ -225,7 +220,6 @@ export function BeatList({
 
               <AnimatePresence mode="wait">
                 {isEditing ? (
-                  // ... edit mode remains largely the same but with better styling ...
                   <motion.div 
                     key="edit"
                     initial={{ opacity: 0 }}
@@ -278,10 +272,11 @@ export function BeatList({
                                   <button
                                     key={m}
                                     onClick={() => setSourceMode(m)}
-                                    className={`flex flex-col items-center gap-1 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${sourceMode === m 
+                                    className={`flex flex-col items-center gap-1 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${
+                                      sourceMode === m 
                                         ? 'bg-white text-blue-600 shadow-sm' 
-                                        : 'text-gray-400 hover:text-gray-600'}
-                                    `}
+                                        : 'text-gray-400 hover:text-gray-600'
+                                    }`}
                                   >
                                     <Icon size={12} />
                                     {m}
@@ -389,68 +384,19 @@ export function BeatList({
                         {beat.text}
                       </p>
                       
-                      {/* Asset Preview Section */}
+                      {/* Asset Preview Section - Replaced with BeatAsset */}
                       {viewMode !== 'none' && (
                         <div className="relative rounded-xl overflow-hidden bg-gray-50 border border-gray-100 max-w-sm">
-                          {assets[beat.id] ? (
-                            <div className="relative group/asset">
-                              <video 
-                                src={getMediaUrl(sessionId, assets[beat.id])} 
-                                className="w-full aspect-video object-cover"
-                                preload="metadata"
-                                onMouseOver={(e) => e.currentTarget.play()}
-                                onMouseOut={(e) => {
-                                  e.currentTarget.pause()
-                                  e.currentTarget.currentTime = 0
-                                }}
-                                muted
-                                loop
-                              />
-                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/asset:opacity-100 transition-opacity flex items-center justify-center gap-4">
-                                <Play className="text-white fill-white" size={24} />
-                                <button 
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    setLightboxId(beat.id)
-                                  }}
-                                  aria-label="Maximize video preview"
-                                  className="p-2 bg-white/20 hover:bg-white/40 backdrop-blur-md rounded-full text-white transition-all"
-                                >
-                                  <Maximize2 size={16} />
-                                </button>
-                              </div>
-                              <button 
-                                onClick={() => handleRefresh(beat.id)}
-                                disabled={refreshingIds.has(beat.id)}
-                                aria-label="Refresh footage"
-                                className="absolute top-2 right-2 p-1.5 bg-white/90 backdrop-blur-md rounded-lg shadow-sm text-gray-600 hover:text-blue-600 transition-all active:scale-95 disabled:opacity-50"
-                                title="Refresh Footage"
-                              >
-                                <RefreshCcw size={12} className={refreshingIds.has(beat.id) ? 'animate-spin' : ''} />
-                              </button>
-                            </div>
-                          ) : (
-                            <div className="aspect-video flex flex-col items-center justify-center gap-2 p-6 text-center">
-                              <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
-                                {refreshingIds.has(beat.id) ? (
-                                  <RefreshCcw size={14} className="text-blue-500 animate-spin" />
-                                ) : (
-                                  <Film size={14} className="text-gray-300" />
-                                )}
-                              </div>
-                              <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">
-                                {refreshingIds.has(beat.id) ? 'Downloading...' : 'No Preview Yet'}
-                              </p>
-                              {!refreshingIds.has(beat.id) && (
-                                <button 
-                                  onClick={() => handleRefresh(beat.id)}
-                                  className="text-xs font-black text-blue-500 uppercase tracking-tighter hover:underline"
-                                >
-                                  Try fetching now
-                                </button>
-                              )}
-                            </div>
-                          )}
+                          <BeatAsset 
+                            sessionId={sessionId}
+                            beatId={beat.id}
+                            assetPath={assets[beat.id]}
+                            visualType={beat.visual_type}
+                            visualContent={beat.visual_content}
+                            isRefreshing={refreshingIds.has(beat.id)}
+                            onRefresh={handleRefresh}
+                            onMaximize={(id) => setLightboxId(id)}
+                          />
                         </div>
                       )}
                       
@@ -538,7 +484,7 @@ export function BeatList({
                 {beats.find(b => b.id === lightboxId)?.text}
               </p>
               <p className="text-white/40 font-mono text-xs uppercase tracking-[0.2em]">
-                {assets[lightboxId]?.split(/[\\/]/).pop()}
+                {assets[lightboxId]?.split(/[\/]/).pop()}
               </p>
             </div>
           </motion.div>
