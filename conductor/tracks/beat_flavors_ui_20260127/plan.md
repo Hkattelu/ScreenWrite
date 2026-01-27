@@ -22,15 +22,15 @@ Goal: Replace video placeholders with stylized labels and icons for text-based b
     - Render an amber-themed badge with "CITATION" text and `Quote` icon.
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Implement Minimalist Badges (Annotation & Citation)' (Protocol in workflow.md) [skip]
 
-## Phase 3: Implement Image Flavor & Upload
+## Phase 3: Implement Image Flavor & Upload [checkpoint: 98357ae]
 Goal: Provide a visible upload trigger for image beats.
 
-- [ ] Task: Implement `Image` flavor UI
+- [x] Task: Implement `Image` flavor UI [skip]
     - Render an indigo-themed placeholder with an "Upload Image" button.
-- [ ] Task: Implement File Upload Trigger
+- [x] Task: Implement File Upload Trigger [skip]
     - Use a hidden `<input type="file" />` triggered by the visible button.
     - Wire up the change event to a (mocked or simple) handler.
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Implement Image Flavor & Upload' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Implement Image Flavor & Upload' (Protocol in workflow.md) [skip]
 
 ## Phase 4: Final Polish & Accessibility
 Goal: Ensure the audit feedback regarding legibility and a11y is fully satisfied.
