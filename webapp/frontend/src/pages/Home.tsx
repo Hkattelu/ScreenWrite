@@ -11,109 +11,195 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 
 export function Home() {
+
   const navigate = useNavigate()
 
+
+
   const handleUploadSuccess = (data: UploadResponse) => {
+
     navigate('/workflow', { state: { initialStep: 'review', uploadData: data } })
+
   }
 
+
+
   return (
-    <div className="min-h-screen relative overflow-hidden flex flex-col items-center justify-center p-4" style={{ backgroundColor: 'var(--brand-surface)' }}>
-      {/* Immersive Animated Background */}
-      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-        {/* Shape 1: Deep Violet */}
+
+    <div className="min-h-screen relative overflow-hidden flex flex-col items-center justify-center p-4 bg-[#0a0a0a]">
+
+      {/* Editorial Filmic Background */}
+
+      <div className="fixed inset-0 z-0 pointer-events-none">
+
+        <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
+
+        
+
+        {/* Subtle Light Leak */}
+
         <motion.div 
+
           animate={{ 
-            scale: [1, 1.2, 1],
-            x: ['-10%', '10%', '-5%'],
-            y: ['-10%', '5%', '-10%']
+
+            opacity: [0.3, 0.5, 0.3],
+
+            x: ['-20%', '10%', '-20%'],
+
           }}
-          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-0 left-0 w-[80vw] h-[80vh] rounded-full filter blur-[60px]" 
-          style={{ backgroundColor: 'var(--brand-primary)', opacity: 0.5 }}
+
+          transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
+
+          className="absolute -top-[20%] -left-[10%] w-[100vw] h-[100vh] rounded-full filter blur-[120px] bg-blue-900/20" 
+
         />
-        {/* Shape 2: Vibrant Teal */}
-        <motion.div 
-          animate={{ 
-            scale: [1.1, 0.9, 1.2],
-            x: ['10%', '-15%', '10%'],
-            y: ['10%', '20%', '10%']
-          }}
-          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute bottom-0 right-0 w-[90vw] h-[90vh] rounded-full filter blur-[80px]" 
-          style={{ backgroundColor: 'var(--brand-highlight)', opacity: 0.4 }}
-        />
-        {/* Shape 3: Sunset Orange */}
-        <motion.div 
-          animate={{ 
-            scale: [0.9, 1.3, 1],
-            x: ['20%', '-10%', '20%'],
-            y: ['-20%', '10%', '-20%']
-          }}
-          transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-1/4 right-0 w-[50vw] h-[50vh] rounded-full filter blur-[50px]" 
-          style={{ backgroundColor: 'var(--brand-accent)', opacity: 0.45 }}
-        />
+
+        
+
+        <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-black to-transparent opacity-60" />
+
       </div>
 
+
+
       <motion.div 
-        initial={{ opacity: 0, scale: 0.98 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full max-w-2xl relative z-10"
+
+        initial={{ opacity: 0, y: 20 }}
+
+        animate={{ opacity: 1, y: 0 }}
+
+        transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+
+        className="w-full max-w-4xl relative z-10"
+
       >
-        <div className="bg-white/60 backdrop-blur-2xl border border-white/40 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] rounded-[40px] p-12 md:p-20 space-y-16">
-          {/* Minimal Header */}
-          <div className="text-center space-y-4">
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-            >
-              <h1 
-                className="text-8xl font-medium tracking-tight text-black leading-none"
-                style={{ fontFamily: "'Charter', 'Bitstream Charter', 'Sitka Text', Cambria, serif" }}
+
+        <div className="space-y-24">
+
+          {/* Editorial Header */}
+
+          <div className="space-y-8">
+
+            <div className="flex flex-col items-center">
+
+              <motion.div
+
+                initial={{ opacity: 0, scale: 0.9 }}
+
+                animate={{ opacity: 1, scale: 1 }}
+
+                transition={{ duration: 1, delay: 0.2 }}
+
+                className="mb-8"
+
               >
-                Screen<span className="text-brand-primary italic inline-block transform -rotate-2 hover:rotate-0 transition-transform duration-500">Write</span>
+
+                <div className="px-3 py-1 border border-white/10 rounded-full bg-white/5 backdrop-blur-sm">
+
+                  <span className="text-[10px] font-black text-white/40 uppercase tracking-[0.4em]">Director's Suite v1.0</span>
+
+                </div>
+
+              </motion.div>
+
+              
+
+              <h1 
+
+                className="text-7xl md:text-9xl font-medium tracking-tight text-white leading-[0.85] text-center"
+
+                style={{ fontFamily: "'Charter', 'Bitstream Charter', 'Sitka Text', Cambria, serif" }}
+
+              >
+
+                Screen<span className="italic font-normal text-blue-500 transform inline-block">Write</span>
+
               </h1>
-            </motion.div>
-            <motion.p 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 1, delay: 0.5 }}
-              className="text-xl text-gray-500 font-bold tracking-[0.2em] uppercase opacity-80"
-            >
-              B-roll made easy
-            </motion.p>
+
+              
+
+              <p className="mt-8 text-lg md:text-xl text-white/40 font-medium tracking-wide text-center max-w-lg mx-auto leading-relaxed">
+
+                Transform scripts into timelines. <br />
+
+                The professional way to manage B-roll.
+
+              </p>
+
+            </div>
+
           </div>
 
-          {/* Primary Action */}
+
+
+          {/* Primary Action Card */}
+
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+
+            initial={{ opacity: 0, y: 30 }}
+
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.7, ease: [0.16, 1, 0.3, 1] }}
-            className="relative"
+
+            transition={{ duration: 1, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
+
+            className="max-w-2xl mx-auto w-full"
+
           >
-            <ScriptUpload onUploadSuccess={handleUploadSuccess} />
+
+            <div className="bg-white/[0.02] backdrop-blur-3xl border border-white/5 shadow-[0_48px_96px_-24px_rgba(0,0,0,0.5)] rounded-[32px] overflow-hidden">
+
+               <div className="p-1">
+
+                 <div className="bg-[#111] rounded-[30px] p-8 md:p-12">
+
+                   <ScriptUpload onUploadSuccess={handleUploadSuccess} />
+
+                 </div>
+
+               </div>
+
+            </div>
+
           </motion.div>
 
-          {/* Footer Link */}
+
+
+          {/* Minimal Footer */}
+
           <motion.div 
+
             initial={{ opacity: 0 }}
+
             animate={{ opacity: 1 }}
+
             transition={{ duration: 1, delay: 1 }}
-            className="text-center pt-4"
+
+            className="flex flex-col items-center gap-8"
+
           >
+
             <Link 
+
               to="/syntax-guide" 
-              className="inline-flex items-center gap-3 px-8 py-4 bg-black text-white rounded-full text-xs font-black uppercase tracking-widest hover:bg-brand-primary transition-all duration-300 shadow-xl shadow-black/10"
+
+              className="group flex items-center gap-4 text-white/30 hover:text-white transition-colors duration-500"
+
             >
-              <span>Explore the syntax</span>
-              <span className="w-8 h-px bg-white/30" />
+
+              <span className="text-[10px] font-black uppercase tracking-[0.3em]">Explore the Syntax</span>
+
+              <div className="w-12 h-px bg-white/10 group-hover:w-24 group-hover:bg-blue-500 transition-all duration-700" />
+
             </Link>
+
           </motion.div>
+
         </div>
+
       </motion.div>
+
     </div>
+
   )
+
 }

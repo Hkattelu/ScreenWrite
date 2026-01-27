@@ -123,8 +123,8 @@ class XMLGenerator:
         format_elem = ET.Element("format")
         format_elem.set("id", self.format_id)
         format_elem.set("name", f"FFVideoFormat{DEFAULT_VIDEO_HEIGHT}p{self.framerate}")
-        # Standard FCPXML 30fps notation
-        format_elem.set("frameDuration", "100/3000s")
+        # Dynamic frame duration based on framerate
+        format_elem.set("frameDuration", f"1/{self.framerate}s")
         format_elem.set("width", str(DEFAULT_VIDEO_WIDTH))
         format_elem.set("height", str(DEFAULT_VIDEO_HEIGHT))
         format_elem.set("colorSpace", "1-1-1 (Rec. 709)")
@@ -153,8 +153,9 @@ class XMLGenerator:
         asset.set("id", resource_id)
         asset.set("name", filename)
         asset.set("uid", f"asset-{resource_id}")
-        asset.set("start", "0s")
-        # Removing placeholder duration - Resolve will probe the file
+        asset.set("start", "0/1s")
+        # Added duration for better FCPX/Resolve compatibility (10 hours)
+        asset.set("duration", "36000/1s")
         asset.set("hasVideo", "1")
         asset.set("format", self.format_id)
         asset.set("hasAudio", "1")
@@ -202,7 +203,7 @@ class XMLGenerator:
         sequence = ET.SubElement(project, "sequence")
         sequence.set("format", self.format_id)
         sequence.set("duration", f"{self._frames_to_timecode(self._calculate_total_frames(beats))}")
-        sequence.set("tcStart", "0s")
+        sequence.set("tcStart", "0/1s")
         sequence.set("tcFormat", "NDF")
         sequence.set("audioLayout", "stereo")
         sequence.set("audioRate", "48k")
@@ -225,25 +226,31 @@ class XMLGenerator:
             Spine XML element with clip/gap elements
         """
         spine = ET.Element("spine")
+        current_offset = 0.0
         
         for beat in beats:
             asset_path = asset_map.get(beat.id)
+            duration_tc = self._seconds_to_timecode(beat.duration)
+            offset_tc = self._seconds_to_timecode(current_offset)
             
             if asset_path:
                 # Primary asset-clip
-                # No offset needed in spine; elements are sequential
                 resource_id = self._get_resource_id_for_asset(asset_path)
                 clip = ET.SubElement(spine, "asset-clip")
                 clip.set("name", f"Clip - {beat.id}")
+                clip.set("offset", offset_tc)
                 clip.set("ref", resource_id)
-                clip.set("duration", self._seconds_to_timecode(beat.duration))
-                clip.set("start", "0s")
+                clip.set("duration", duration_tc)
+                clip.set("start", "0/1s")
             else:
                 # Placeholder gap if no asset
                 gap = ET.SubElement(spine, "gap")
                 gap.set("name", f"Gap - {beat.id}")
-                gap.set("duration", self._seconds_to_timecode(beat.duration))
-                gap.set("start", "0s")
+                gap.set("offset", offset_tc)
+                gap.set("duration", duration_tc)
+                gap.set("start", "0/1s")
+            
+            current_offset += beat.duration
         
         return spine
 
@@ -267,11 +274,11 @@ class XMLGenerator:
     def _seconds_to_timecode(self, seconds: float) -> str:
         """Convert seconds to FCPXML timecode format."""
         frames = int(seconds * self.framerate)
-        return f"{frames * 100}/3000s"
+        return f"{frames}/{self.framerate}s"
     
     def _frames_to_timecode(self, frames: int) -> str:
         """Convert frames to FCPXML timecode format."""
-        return f"{frames * 100}/3000s"
+        return f"{frames}/{self.framerate}s"
     
     def _validate_xml(self, root: ET.Element) -> bool:
         """

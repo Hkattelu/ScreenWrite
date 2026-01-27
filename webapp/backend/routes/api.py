@@ -6,7 +6,7 @@ Handles session configuration, beat updates, and status queries.
 
 import os
 import logging
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, send_from_directory
 from datetime import datetime
 from session_utils import get_session_path, session_exists, load_session_state, save_session_state
 
@@ -109,6 +109,25 @@ def get_status(session_id):
     except Exception as e:
         logger.error(f'Error getting status for {session_id}: {str(e)}')
         return {'error': 'Failed to get status'}, 500
+
+
+@api_bp.route('/session/<session_id>/media/<filename>', methods=['GET'])
+def get_media(session_id, filename):
+    """Serve a media file from the session assets directory."""
+    if not session_exists(session_id):
+        return {'error': 'Session not found'}, 404
+
+    try:
+        session_path = get_session_path(session_id)
+        assets_path = os.path.join(session_path, 'assets')
+        
+        if not os.path.exists(assets_path):
+            return {'error': 'Assets directory not found'}, 404
+
+        return send_from_directory(assets_path, filename)
+    except Exception as e:
+        logger.error(f'Error serving media {filename} for {session_id}: {str(e)}')
+        return {'error': 'Failed to serve media'}, 500
 
 
 @api_bp.route('/session/<session_id>/delete', methods=['DELETE'])

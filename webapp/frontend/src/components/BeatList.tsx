@@ -4,7 +4,7 @@
  * Shows parsed beats from the script with editing capabilities
  */
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { Beat } from '../types/models'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
@@ -16,11 +16,17 @@ import {
   CheckCircle2, 
   Edit3,
   Check,
-  Film
+  Film,
+  RefreshCcw,
+  Play,
+  Maximize2
 } from 'lucide-react'
+import { refreshBeatAsset, getMediaUrl } from '../services/api'
 
 interface BeatListProps {
+  sessionId: string
   beats: Beat[]
+  assets?: Record<string, string>
   onBeatsUpdate?: (beats: Beat[]) => void
   editable?: boolean
   reviewedIds?: Set<string>
@@ -30,15 +36,37 @@ interface BeatListProps {
 type VisualSourceMode = 'auto' | 'youtube' | 'stock' | 'none'
 
 export function BeatList({ 
+  sessionId,
   beats, 
+  assets = {},
   onBeatsUpdate, 
   editable = false,
   reviewedIds = new Set(),
   onToggleReviewed
 }: BeatListProps) {
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [refreshingIds, setRefreshingIds] = useState<Set<string>>(new Set())
   const [editValues, setEditValues] = useState<Partial<Beat>>({})
   const [sourceMode, setSourceMode] = useState<VisualSourceMode>('auto')
+
+  const handleRefresh = async (beatId: string) => {
+    setRefreshingIds(prev => new Set(prev).add(beatId))
+    try {
+      await refreshBeatAsset(sessionId, beatId)
+      // The parent will poll for status/state updates
+    } catch (err) {
+      console.error("Failed to refresh beat", err)
+    } finally {
+      // Keep refreshing state for a bit to show activity
+      setTimeout(() => {
+        setRefreshingIds(prev => {
+          const next = new Set(prev)
+          next.delete(beatId)
+          return next
+        })
+      }, 2000)
+    }
+  }
 
   const getModeFromBeat = (beat: Partial<Beat>): VisualSourceMode => {
     const hasStock = !!beat.stock_keyword?.trim()
@@ -152,11 +180,12 @@ export function BeatList({
               className={`
                 relative group rounded-2xl transition-all duration-300
                 ${isEditing ? 'bg-white ring-1 ring-gray-200 shadow-xl p-6 z-10' : 'bg-white p-4 border border-gray-100 hover:border-gray-200'}
-                ${isReviewed && !isEditing ? 'opacity-50' : ''}
+                ${isReviewed && !isEditing ? 'bg-gray-50/50' : ''}
               `}
             >
               <AnimatePresence mode="wait">
                 {isEditing ? (
+                  // ... edit mode remains largely the same but with better styling ...
                   <motion.div 
                     key="edit"
                     initial={{ opacity: 0 }}
@@ -173,7 +202,7 @@ export function BeatList({
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                        <div className="space-y-5">
                           <div>
-                            <label className="label">Script Content</label>
+                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 block">Script Content</label>
                             <textarea
                               value={editValues.text || ''}
                               onChange={(e) => setEditValues({ ...editValues, text: e.target.value })}
@@ -183,7 +212,7 @@ export function BeatList({
                           </div>
                           
                           <div>
-                            <label className="label">Duration (s)</label>
+                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 block">Duration (s)</label>
                             <div className="flex items-center gap-4">
                               <input
                                 type="range"
@@ -201,7 +230,7 @@ export function BeatList({
 
                        <div className="space-y-5">
                           <div>
-                            <label className="label">Visual Source</label>
+                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 block">Visual Source</label>
                             <div className="grid grid-cols-4 gap-1 bg-gray-100 p-1 rounded-xl">
                               {(['auto', 'youtube', 'stock', 'none'] as const).map((m) => {
                                 const Icon = m === 'youtube' ? Youtube : m === 'stock' ? Image : m === 'auto' ? Zap : Slash
@@ -226,7 +255,7 @@ export function BeatList({
                           <div className="space-y-3">
                             {(sourceMode === 'auto' || sourceMode === 'youtube') && (
                               <div>
-                                <label className="label">YouTube Phrase</label>
+                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 block">YouTube Phrase</label>
                                 <input
                                   type="text"
                                   value={editValues.youtube_phrase || ''}
@@ -239,7 +268,7 @@ export function BeatList({
 
                             {(sourceMode === 'auto' || sourceMode === 'stock') && (
                               <div>
-                                <label className="label">Stock Keywords</label>
+                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 block">Stock Keywords</label>
                                 <input
                                   type="text"
                                   value={editValues.stock_keyword || ''}
@@ -262,21 +291,21 @@ export function BeatList({
                     </div>
                   </motion.div>
                 ) : (
-                  <div className="flex items-start gap-4">
+                  <div className="flex items-stretch gap-6">
                     <button 
                       onClick={() => onToggleReviewed?.(beat.id)}
                       className={`
-                        w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 border
+                        w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 border flex-shrink-0 mt-1
                         ${isReviewed 
                           ? 'bg-blue-50 border-blue-100 text-blue-600' 
-                          : 'bg-white border-gray-100 text-gray-200 hover:border-gray-200'}
+                          : 'bg-white border-gray-100 text-gray-200 hover:border-gray-200 shadow-sm'}
                       `}
                     >
                       <CheckCircle2 size={18} strokeWidth={isReviewed ? 3 : 2} />
                     </button>
 
-                    <div className="flex-grow min-w-0">
-                      <div className="flex items-center gap-2 mb-1.5">
+                    <div className="flex-grow min-w-0 py-1">
+                      <div className="flex items-center gap-2 mb-2">
                         <span className="font-mono text-[10px] font-bold text-gray-300">#{String(index + 1).padStart(2, '0')}</span>
                         {beat.header && (
                           <span className="text-[9px] font-bold uppercase tracking-wider text-blue-500 bg-blue-50 px-2 py-0.5 rounded-full">
@@ -289,7 +318,7 @@ export function BeatList({
                         </span>
                         <div className={`
                           flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border
-                          ${viewMode === 'none' ? 'bg-red-50 text-red-400 border-red-100' :
+                          ${viewMode === 'none' ? 'bg-gray-50 text-gray-400 border-gray-100' :
                             viewMode === 'auto' ? 'bg-blue-50 text-blue-500 border-blue-100' :
                             viewMode === 'youtube' ? 'bg-red-50 text-red-500 border-red-100' :
                             'bg-emerald-50 text-emerald-600 border-emerald-100'}
@@ -298,21 +327,75 @@ export function BeatList({
                         </div>
                       </div>
 
-                      <p className={`text-sm leading-relaxed transition-all duration-300 ${isReviewed ? 'text-gray-400' : 'text-gray-900 font-medium'}`}>
+                      <p className={`text-sm leading-relaxed transition-all duration-300 mb-4 ${isReviewed ? 'text-gray-500' : 'text-gray-900 font-medium'}`}>
                         {beat.text}
                       </p>
                       
+                      {/* Asset Preview Section */}
+                      {viewMode !== 'none' && (
+                        <div className="relative rounded-xl overflow-hidden bg-gray-50 border border-gray-100 max-w-sm">
+                          {assets[beat.id] ? (
+                            <div className="relative group/asset">
+                              <video 
+                                src={getMediaUrl(sessionId, assets[beat.id])} 
+                                className="w-full aspect-video object-cover"
+                                preload="metadata"
+                                onMouseOver={(e) => e.currentTarget.play()}
+                                onMouseOut={(e) => {
+                                  e.currentTarget.pause()
+                                  e.currentTarget.currentTime = 0
+                                }}
+                                muted
+                                loop
+                              />
+                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/asset:opacity-100 transition-opacity flex items-center justify-center">
+                                <Play className="text-white fill-white" size={24} />
+                              </div>
+                              <button 
+                                onClick={() => handleRefresh(beat.id)}
+                                disabled={refreshingIds.has(beat.id)}
+                                className="absolute top-2 right-2 p-1.5 bg-white/90 backdrop-blur-md rounded-lg shadow-sm text-gray-600 hover:text-blue-600 transition-all active:scale-95 disabled:opacity-50"
+                                title="Refresh Footage"
+                              >
+                                <RefreshCcw size={12} className={refreshingIds.has(beat.id) ? 'animate-spin' : ''} />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="aspect-video flex flex-col items-center justify-center gap-2 p-6 text-center">
+                              <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+                                {refreshingIds.has(beat.id) ? (
+                                  <RefreshCcw size={14} className="text-blue-500 animate-spin" />
+                                ) : (
+                                  <Film size={14} className="text-gray-300" />
+                                )}
+                              </div>
+                              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                                {refreshingIds.has(beat.id) ? 'Downloading...' : 'No Preview Yet'}
+                              </p>
+                              {!refreshingIds.has(beat.id) && (
+                                <button 
+                                  onClick={() => handleRefresh(beat.id)}
+                                  className="text-[9px] font-black text-blue-500 uppercase tracking-tighter hover:underline"
+                                >
+                                  Try fetching now
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
                       {!isReviewed && viewMode !== 'none' && (
-                        <div className="flex flex-wrap gap-1.5 mt-2.5">
+                        <div className="flex flex-wrap gap-1.5 mt-4">
                           {beat.youtube_phrase && (viewMode === 'auto' || viewMode === 'youtube') && (
-                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-gray-50 text-[9px] font-mono font-semibold text-gray-500 border border-gray-100">
-                              <Youtube size={10} />
+                            <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-gray-100 text-[10px] font-mono font-semibold text-gray-500">
+                              <Youtube size={12} />
                               {beat.youtube_phrase}
                             </span>
                           )}
                           {beat.stock_keyword && (viewMode === 'auto' || viewMode === 'stock') && (
-                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-gray-50 text-[9px] font-mono font-semibold text-gray-500 border border-gray-100">
-                              <Image size={10} />
+                            <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-gray-100 text-[10px] font-mono font-semibold text-gray-500">
+                              <Image size={12} />
                               {beat.stock_keyword}
                             </span>
                           )}
@@ -321,7 +404,7 @@ export function BeatList({
                     </div>
 
                     {editable && (
-                      <div className="flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all duration-200">
+                      <div className="flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all duration-200 border-l border-gray-100 pl-4 py-1">
                         <button
                           onClick={() => handleEdit(beat)}
                           className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-all"

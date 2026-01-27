@@ -107,6 +107,26 @@ export async function fetchAssets(sessionId: string): Promise<{ success: boolean
 }
 
 /**
+ * Trigger single asset refresh
+ */
+export async function refreshBeatAsset(sessionId: string, beatId: string): Promise<{ success: boolean; message: string }> {
+  const response = await apiClient.post(`/session/${sessionId}/fetch/${beatId}`)
+  return response.data
+}
+
+/**
+ * Get media URL for a file
+ */
+export function getMediaUrl(sessionId: string, filename: string): string {
+  if (!filename) return ''
+  // If it's already a full URL, return it
+  if (filename.startsWith('http')) return filename
+  // Otherwise, construct the media API URL
+  const baseName = filename.split(/[\\/]/).pop() || filename
+  return `/api/session/${sessionId}/media/${baseName}`
+}
+
+/**
  * Handle API errors with user-friendly messages
  */
 export function getErrorMessage(error: unknown): string {

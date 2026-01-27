@@ -94,6 +94,7 @@ export function Workflow() {
   const [currentStep, setCurrentStep] = useState<WorkflowStep>('upload')
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [beats, setBeats] = useState<Beat[]>([])
+  const [assets, setAssets] = useState<Record<string, string>>({})
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -110,6 +111,8 @@ export function Workflow() {
     if (state?.uploadData) {
       setSessionId(state.uploadData.sessionId)
       setBeats(state.uploadData.beats)
+      // Assets might be empty initially
+      setAssets(state.uploadData.assets || {})
       setCurrentStep('review')
       // Update URL without reloading
       navigate(`/workflow?session=${state.uploadData.sessionId}`, { replace: true, state })
@@ -119,6 +122,24 @@ export function Workflow() {
     }
   }, [])
 
+  // Poll for session updates while in review/export steps to show previews
+  useEffect(() => {
+    if (!sessionId || (currentStep !== 'review' && currentStep !== 'export')) return
+
+    const pollSession = async () => {
+      try {
+        const data = await getSession(sessionId)
+        if (data.beats) setBeats(data.beats)
+        if (data.assets) setAssets(data.assets)
+      } catch (err) {
+        console.error("Polling error", err)
+      }
+    }
+
+    const interval = setInterval(pollSession, 5000)
+    return () => clearInterval(interval)
+  }, [sessionId, currentStep])
+
   const loadExistingSession = async (id: string) => {
     setIsLoading(true)
     setError(null)
@@ -126,6 +147,7 @@ export function Workflow() {
       const data = await getSession(id)
       setSessionId(data.sessionId)
       setBeats(data.beats)
+      setAssets(data.assets || {})
       
       // Restore reviewed state from beats
       const restoredReviewed = new Set(
@@ -337,7 +359,9 @@ export function Workflow() {
               exit={{ opacity: 0 }}
             >
               <BeatList 
+                sessionId={sessionId}
                 beats={beats} 
+                assets={assets}
                 onBeatsUpdate={handleBeatsUpdate} 
                 editable={true}
                 reviewedIds={reviewedIds}

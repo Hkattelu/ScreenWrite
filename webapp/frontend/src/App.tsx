@@ -19,17 +19,17 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         
-        {/* Gentle Ko-fi Link */}
-        <div className="fixed bottom-6 right-6 z-50">
+        {/* Editorial Support Link */}
+        <div className="fixed bottom-8 right-8 z-50">
           <a 
             href="https://ko-fi.com/glowstringman" 
             target="_blank" 
             rel="noopener noreferrer"
-            className="flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-md border border-gray-100 rounded-full shadow-sm hover:shadow-md hover:border-gray-200 transition-all group"
+            className="flex items-center gap-4 group"
           >
-            <span className="text-xl">☕</span>
-            <span className="text-sm font-medium text-gray-500 group-hover:text-black transition-colors">
-              Support on Ko-fi
+            <div className="h-px w-8 bg-gray-200 group-hover:w-12 group-hover:bg-blue-500 transition-all duration-500" />
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 group-hover:text-black transition-colors">
+              Support Development
             </span>
           </a>
         </div>

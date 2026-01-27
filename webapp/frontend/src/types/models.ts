@@ -32,7 +32,7 @@ export interface SessionState {
     output_dir?: string
   }
   beats: Beat[]
-  assets: Asset[]
+  assets: Record<string, string>
 }
 
 export interface Config {

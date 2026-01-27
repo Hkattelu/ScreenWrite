@@ -142,6 +142,72 @@ def background_fetch(app, session_id, app_config, session_folder):
             logger.removeHandler(file_handler)
 
 
+@fetch_bp.route('/session/<session_id>/fetch/<beat_id>', methods=['POST'])
+def refresh_beat_asset(session_id, beat_id):
+    """Re-fetch asset for a single beat."""
+    if not session_exists(session_id):
+        return {'error': 'Session not found'}, 404
+
+    try:
+        state = load_session_state(session_id)
+        config = state.get('config', {})
+        beats = state.get('beats', [])
+        
+        # Find the specific beat
+        beat = next((b for b in beats if b['id'] == beat_id), None)
+        if not beat:
+            return {'error': 'Beat not found'}, 404
+
+        session_dir = get_session_path(session_id)
+        assets_dir = os.path.join(session_dir, 'assets')
+        os.makedirs(assets_dir, exist_ok=True)
+
+        # Initialize Orchestrator
+        orchestrator = AssetOrchestrator(
+            pexels_api_key=config.get('pexels_api_key'),
+            output_dir=assets_dir,
+            youtube_enabled=config.get('youtube_enabled', True),
+            pexels_enabled=config.get('pexels_enabled', True)
+        )
+
+        # Prepare query
+        query = {
+            'id': beat['id'],
+            'youtube_query': beat.get('youtube_phrase', ''),
+            'stock_query': beat.get('stock_keyword', ''),
+            'duration': beat['duration']
+        }
+
+        # Fetch single asset
+        # We use a thread to not block, but for a single one it might be fast enough
+        # Actually, single fetch is better as a synchronous call for immediate feedback if possible,
+        # but the orchestrator might take time (YouTube DL).
+        # Let's run it in a thread and update state when done.
+        
+        def single_fetch():
+            try:
+                result = orchestrator.fetch_asset(query)
+                # Reload and update
+                current_state = load_session_state(session_id)
+                if not isinstance(current_state.get('assets'), dict):
+                    current_state['assets'] = {}
+                current_state['assets'][beat_id] = result
+                save_session_state(session_id, current_state)
+                logger.info(f"Refreshed asset for beat {beat_id} in session {session_id}")
+            except Exception as e:
+                logger.error(f"Failed to refresh beat {beat_id}: {e}")
+
+        thread = threading.Thread(target=single_fetch)
+        thread.daemon = True
+        thread.start()
+
+        return {'success': True, 'message': 'Started refresh'}, 200
+
+    except Exception as e:
+        logger.error(f"Error starting refresh for beat {beat_id}: {e}")
+        return {'error': f"Failed to start refresh: {str(e)}"}, 500
+
+
 @fetch_bp.route('/session/<session_id>/fetch', methods=['POST'])
 def start_fetch(session_id):
     """Start background asset fetching."""
