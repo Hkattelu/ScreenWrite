@@ -197,11 +197,28 @@ export function BeatList({
               animate={{ opacity: 1 }}
               key={beat.id} 
               className={`
-                relative group rounded-2xl transition-all duration-300
-                ${isEditing ? 'bg-white ring-1 ring-gray-200 shadow-xl p-6 z-10' : 'bg-white p-4 border border-gray-100 hover:border-gray-200'}
-                ${isReviewed && !isEditing ? 'bg-gray-50/50' : ''}
+                relative group rounded-2xl transition-all duration-500 overflow-hidden
+                ${isEditing ? 'bg-white ring-1 ring-gray-200 shadow-xl p-6 z-10' : 'bg-white p-5 border border-gray-100 hover:border-gray-300'}
+                ${isReviewed && !isEditing ? 'bg-gray-50/80 border-gray-200 scale-[0.99] shadow-inner' : 'shadow-sm'}
               `}
             >
+              {/* Cinematic Watermark for Reviewed Items */}
+              <AnimatePresence>
+                {isReviewed && !isEditing && (
+                  <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 0.03, x: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute -right-4 -bottom-6 pointer-events-none select-none"
+                    style={{ fontFamily: "'Charter', serif" }}
+                  >
+                    <span className="text-[120px] font-black italic tracking-tighter leading-none">
+                      FINAL
+                    </span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               <AnimatePresence mode="wait">
                 {isEditing ? (
                   // ... edit mode remains largely the same but with better styling ...
@@ -326,6 +343,11 @@ export function BeatList({
                     <div className="flex-grow min-w-0 py-1">
                       <div className="flex items-center gap-2 mb-2">
                         <span className="font-mono text-[10px] font-bold text-gray-300">#{String(index + 1).padStart(2, '0')}</span>
+                        {isReviewed && !isEditing && (
+                          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white bg-black px-2 py-0.5 rounded-sm">
+                            Approved
+                          </span>
+                        )}
                         {beat.header && (
                           <span className="text-[9px] font-bold uppercase tracking-wider text-blue-500 bg-blue-50 px-2 py-0.5 rounded-full">
                             {beat.header}
