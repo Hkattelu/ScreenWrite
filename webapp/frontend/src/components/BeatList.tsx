@@ -38,7 +38,7 @@ interface BeatListProps {
 
 type VisualSourceMode = 'auto' | 'youtube' | 'stock' | 'none'
 
-export function BeatList({ 
+export function BeatList({
   sessionId,
   beats, 
   assets = {},
@@ -159,27 +159,28 @@ export function BeatList({
             <span className="text-xl font-bold leading-none">{beats.length}</span>
             <Film size={14} className="text-gray-400" />
           </div>
-          <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Segments</span>
+          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Segments</span>
         </div>
         <div className="flex flex-col">
           <div className="flex items-center gap-1.5 text-gray-900">
             <span className="text-xl font-bold leading-none">{formatDuration(totalDuration)}</span>
             <Clock size={14} className="text-gray-400" />
           </div>
-          <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Duration</span>
+          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Duration</span>
         </div>
         <div className="flex flex-col ml-auto">
           <div className="flex items-center gap-1.5 text-blue-600">
             <span className="text-xl font-bold leading-none">{reviewedIds.size}/{beats.length}</span>
             <CheckCircle2 size={14} />
           </div>
-          <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Reviewed</span>
+          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Reviewed</span>
         </div>
         
         {reviewedIds.size < beats.length && (
           <button 
             onClick={handleMarkAllReviewed}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-gray-900 rounded-lg transition-all border border-gray-100"
+            aria-label="Mark all segments as reviewed"
+            className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 text-xs font-black uppercase tracking-widest text-gray-600 hover:text-gray-900 rounded-lg transition-all border border-gray-100 focus:ring-2 focus:ring-blue-500 focus:outline-none"
           >
             Mark all reviewed
           </button>
@@ -210,7 +211,7 @@ export function BeatList({
                 {isReviewed && !isEditing && (
                   <motion.div
                     initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 0.03, x: 0 }}
+                    animate={{ opacity: 0.05, x: 0 }}
                     exit={{ opacity: 0 }}
                     className="absolute -right-4 -bottom-6 pointer-events-none select-none"
                     style={{ fontFamily: "'Charter', serif" }}
@@ -241,7 +242,7 @@ export function BeatList({
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                        <div className="space-y-5">
                           <div>
-                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 block">Script Content</label>
+                            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5 block">Script Content</label>
                             <textarea
                               value={editValues.text || ''}
                               onChange={(e) => setEditValues({ ...editValues, text: e.target.value })}
@@ -251,7 +252,7 @@ export function BeatList({
                           </div>
                           
                           <div>
-                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 block">Duration (s)</label>
+                            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5 block">Duration (s)</label>
                             <div className="flex items-center gap-4">
                               <input
                                 type="range"
@@ -269,7 +270,7 @@ export function BeatList({
 
                        <div className="space-y-5">
                           <div>
-                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 block">Visual Source</label>
+                            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5 block">Visual Source</label>
                             <div className="grid grid-cols-4 gap-1 bg-gray-100 p-1 rounded-xl">
                               {(['auto', 'youtube', 'stock', 'none'] as const).map((m) => {
                                 const Icon = m === 'youtube' ? Youtube : m === 'stock' ? Image : m === 'auto' ? Zap : Slash
@@ -277,11 +278,10 @@ export function BeatList({
                                   <button
                                     key={m}
                                     onClick={() => setSourceMode(m)}
-                                    className={`flex flex-col items-center gap-1 py-2 text-[9px] font-bold uppercase tracking-wider rounded-lg transition-all ${
-                                      sourceMode === m 
+                                    className={`flex flex-col items-center gap-1 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${sourceMode === m 
                                         ? 'bg-white text-blue-600 shadow-sm' 
-                                        : 'text-gray-400 hover:text-gray-600'
-                                    }`}
+                                        : 'text-gray-400 hover:text-gray-600'}
+                                    `}
                                   >
                                     <Icon size={12} />
                                     {m}
@@ -294,7 +294,7 @@ export function BeatList({
                           <div className="space-y-3">
                             {(sourceMode === 'auto' || sourceMode === 'youtube') && (
                               <div>
-                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 block">YouTube Phrase</label>
+                                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5 block">YouTube Phrase</label>
                                 <input
                                   type="text"
                                   value={editValues.youtube_phrase || ''}
@@ -307,7 +307,7 @@ export function BeatList({
 
                             {(sourceMode === 'auto' || sourceMode === 'stock') && (
                               <div>
-                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 block">Stock Keywords</label>
+                                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5 block">Stock Keywords</label>
                                 <input
                                   type="text"
                                   value={editValues.stock_keyword || ''}
@@ -333,6 +333,7 @@ export function BeatList({
                   <div className="flex items-stretch gap-6">
                     <button 
                       onClick={() => onToggleReviewed?.(beat.id)}
+                      aria-label={`Mark beat ${index + 1} as ${isReviewed ? 'unreviewed' : 'reviewed'}`}
                       className={`
                         w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 border flex-shrink-0 mt-1
                         ${isReviewed 
@@ -345,24 +346,24 @@ export function BeatList({
 
                     <div className="flex-grow min-w-0 py-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="font-mono text-[10px] font-bold text-gray-300">#{String(index + 1).padStart(2, '0')}</span>
+                        <span className="font-mono text-xs font-bold text-gray-300">#{String(index + 1).padStart(2, '0')}</span>
                         {isReviewed && !isEditing && (
-                          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white bg-black px-2 py-0.5 rounded-sm">
+                          <span className="text-xs font-black uppercase tracking-[0.2em] text-white bg-black px-2 py-0.5 rounded-sm">
                             Approved
                           </span>
                         )}
                         {beat.header && (
-                          <span className="text-[9px] font-bold uppercase tracking-wider text-blue-500 bg-blue-50 px-2 py-0.5 rounded-full">
+                          <span className="text-xs font-bold uppercase tracking-wider text-blue-500 bg-blue-50 px-2 py-0.5 rounded-full">
                             {beat.header}
                           </span>
                         )}
-                        <span className="text-[9px] font-bold text-gray-400 flex items-center gap-1 px-2 py-0.5 bg-gray-50 rounded-full">
+                        <span className="text-xs font-bold text-gray-400 flex items-center gap-1 px-2 py-0.5 bg-gray-50 rounded-full">
                           <Clock size={10} />
                           {beat.duration.toFixed(1)}s
                         </span>
                         {beat.visual_type && beat.visual_type !== 'auto' && beat.visual_type !== 'b-roll' && (
                           <span className={`
-                            text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full flex items-center gap-1
+                            text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full flex items-center gap-1
                             ${beat.visual_type === 'annotation' ? 'bg-purple-50 text-purple-600' :
                               beat.visual_type === 'citation' ? 'bg-amber-50 text-amber-600' :
                               'bg-indigo-50 text-indigo-600'}
@@ -374,7 +375,7 @@ export function BeatList({
                           </span>
                         )}
                         <div className={`
-                          flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border
+                          flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider border
                           ${viewMode === 'none' ? 'bg-gray-50 text-gray-400 border-gray-100' :
                             viewMode === 'auto' ? 'bg-blue-50 text-blue-500 border-blue-100' :
                             viewMode === 'youtube' ? 'bg-red-50 text-red-500 border-red-100' :
@@ -412,6 +413,7 @@ export function BeatList({
                                     e.stopPropagation()
                                     setLightboxId(beat.id)
                                   }}
+                                  aria-label="Maximize video preview"
                                   className="p-2 bg-white/20 hover:bg-white/40 backdrop-blur-md rounded-full text-white transition-all"
                                 >
                                   <Maximize2 size={16} />
@@ -420,6 +422,7 @@ export function BeatList({
                               <button 
                                 onClick={() => handleRefresh(beat.id)}
                                 disabled={refreshingIds.has(beat.id)}
+                                aria-label="Refresh footage"
                                 className="absolute top-2 right-2 p-1.5 bg-white/90 backdrop-blur-md rounded-lg shadow-sm text-gray-600 hover:text-blue-600 transition-all active:scale-95 disabled:opacity-50"
                                 title="Refresh Footage"
                               >
@@ -435,13 +438,13 @@ export function BeatList({
                                   <Film size={14} className="text-gray-300" />
                                 )}
                               </div>
-                              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                              <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">
                                 {refreshingIds.has(beat.id) ? 'Downloading...' : 'No Preview Yet'}
                               </p>
                               {!refreshingIds.has(beat.id) && (
                                 <button 
                                   onClick={() => handleRefresh(beat.id)}
-                                  className="text-[9px] font-black text-blue-500 uppercase tracking-tighter hover:underline"
+                                  className="text-xs font-black text-blue-500 uppercase tracking-tighter hover:underline"
                                 >
                                   Try fetching now
                                 </button>
@@ -454,13 +457,13 @@ export function BeatList({
                       {!isReviewed && viewMode !== 'none' && (
                         <div className="flex flex-wrap gap-1.5 mt-4">
                           {beat.youtube_phrase && (viewMode === 'auto' || viewMode === 'youtube') && (
-                            <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-gray-100 text-[10px] font-mono font-semibold text-gray-500">
+                            <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-gray-100 text-xs font-mono font-semibold text-gray-500">
                               <Youtube size={12} />
                               {beat.youtube_phrase}
                             </span>
                           )}
                           {beat.stock_keyword && (viewMode === 'auto' || viewMode === 'stock') && (
-                            <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-gray-100 text-[10px] font-mono font-semibold text-gray-500">
+                            <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-gray-100 text-xs font-mono font-semibold text-gray-500">
                               <Image size={12} />
                               {beat.stock_keyword}
                             </span>
@@ -473,6 +476,7 @@ export function BeatList({
                       <div className="flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all duration-200 border-l border-gray-100 pl-4 py-1">
                         <button
                           onClick={() => handleEdit(beat)}
+                          aria-label="Edit beat"
                           className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-all"
                           title="Edit Segment"
                         >
@@ -485,6 +489,7 @@ export function BeatList({
                               e.stopPropagation()
                               handleSkip(beat)
                             }}
+                            aria-label="Disable visuals for this beat"
                             className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all"
                             title="Skip Visuals (None)"
                           >
@@ -514,6 +519,7 @@ export function BeatList({
             <button 
               className="absolute top-8 right-8 text-white/40 hover:text-white transition-colors"
               onClick={() => setLightboxId(null)}
+              aria-label="Close lightbox"
             >
               <Slash size={32} strokeWidth={1} />
             </button>
