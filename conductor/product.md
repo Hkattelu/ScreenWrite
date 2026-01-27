@@ -18,7 +18,7 @@ screenwrite aims to revolutionize the initial stages of video production by brid
 
 ## Key Features
 - **AI-Enhanced Beat Analysis:** (Planned) Leveraging Large Language Models (LLMs) to analyze script context and generate hyper-specific search queries for stock footage and YouTube assets.
-- **Lightweight Beat Preview:** (Planned) A minimalist web-based interface or interactive CLI mode to review, swap, or refine B-roll selections and timing before generating the final FCPXML.
+- **Lightweight Beat Preview:** A minimalist web-based interface to review and refine beats. Supports "Smart Beat Flavors" for distinct visualization of B-roll, Annotations, Citations, and Images.
 - **Advanced Timeline Scaffolding:** Robust FCPXML 1.8 generation with support for multiple asset lanes, intelligent gap management for voiceovers, and direct-to-Resolve project injection.
 
 ## Technical Constraints & Principles
