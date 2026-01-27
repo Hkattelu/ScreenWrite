@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { ScriptUpload } from '../components/ScriptUpload'
 import { BeatList } from '../components/BeatList'
 import { ConfigPanel } from '../components/ConfigPanel'
-import { exportFcpxml, updateBeats, updateConfig, getErrorMessage } from '../services/api'
+import { exportFcpxml, updateBeats, updateConfig, getErrorMessage, getSession } from '../services/api'
 import type { UploadResponse, Config, Beat } from '../types/models'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
@@ -12,13 +12,15 @@ import {
   ArrowLeft,
   ArrowRight,
   Info,
-  Save
+  Save,
+  Loader2
 } from 'lucide-react'
 
 type WorkflowStep = 'upload' | 'review' | 'configure' | 'export'
 
 export function Workflow() {
   const location = useLocation()
+  const navigate = useNavigate()
   const [currentStep, setCurrentStep] = useState<WorkflowStep>('upload')
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [beats, setBeats] = useState<Beat[]>([])
@@ -29,20 +31,56 @@ export function Workflow() {
   
   const [reviewedIds, setReviewedIds] = useState<Set<string>>(new Set())
 
+  // Handle initial load and session restoration
   useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    const urlSessionId = params.get('session')
     const state = location.state as any
+
     if (state?.uploadData) {
       setSessionId(state.uploadData.sessionId)
       setBeats(state.uploadData.beats)
       setCurrentStep('review')
+      // Update URL without reloading
+      navigate(`/workflow?session=${state.uploadData.sessionId}`, { replace: true, state })
+    } else if (urlSessionId) {
+      // Load existing session from API
+      loadExistingSession(urlSessionId)
     }
   }, [])
+
+  const loadExistingSession = async (id: string) => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const data = await getSession(id)
+      setSessionId(data.sessionId)
+      setBeats(data.beats)
+      
+      // Restore reviewed state from beats
+      const restoredReviewed = new Set(
+        data.beats
+          .filter(b => b.reviewed)
+          .map(b => b.id)
+      )
+      setReviewedIds(restoredReviewed)
+      
+      setCurrentStep('review')
+    } catch (err) {
+      setError("Could not find session. It might have expired or been deleted.")
+      setCurrentStep('upload')
+      navigate('/workflow', { replace: true })
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const handleUploadSuccess = (data: UploadResponse) => {
     setSessionId(data.sessionId)
     setBeats(data.beats)
     setError(null)
     setCurrentStep('review')
+    navigate(`/workflow?session=${data.sessionId}`, { replace: true })
   }
 
   const handleBeatsUpdate = async (updatedBeats: Beat[]) => {
@@ -152,6 +190,23 @@ export function Workflow() {
       </div>
 
       <div className="max-w-4xl mx-auto px-6 py-12">
+        {/* Loading Overlay */}
+        <AnimatePresence>
+          {isLoading && currentStep === 'upload' && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 bg-white/60 backdrop-blur-sm flex items-center justify-center"
+            >
+              <div className="flex flex-col items-center gap-4">
+                <Loader2 size={32} className="text-blue-600 animate-spin" />
+                <p className="text-sm font-bold text-gray-900 tracking-tight">Restoring Session...</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Error display */}
         <AnimatePresence>
           {error && (
@@ -198,9 +253,17 @@ export function Workflow() {
                 reviewedIds={reviewedIds}
                 onToggleReviewed={(id) => {
                   const next = new Set(reviewedIds)
+                  const isReviewed = !next.has(id)
+                  
                   if (next.has(id)) next.delete(id)
                   else next.add(id)
                   setReviewedIds(next)
+                  
+                  // Persist reviewed state to backend by updating the beat
+                  const updatedBeats = beats.map(b => 
+                    b.id === id ? { ...b, reviewed: isReviewed } : b
+                  )
+                  handleBeatsUpdate(updatedBeats)
                 }}
               />
               

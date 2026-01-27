@@ -97,8 +97,15 @@ def export_fcpxml(session_id):
             beats.append(beat)
 
         # Get assets if available
-        assets = state.get('assets', [])
-
+        assets_data = state.get('assets', [])
+        
+        # Prepare asset map
+        asset_map = {}
+        if isinstance(assets_data, dict):
+            asset_map = assets_data
+        # If assets_data is a list (e.g. metadata list), we might need to process it
+        # For now, we'll iterate through beats to find selected assets if stored there
+        
         # Generate FCPXML
         generator = XMLGenerator()
         output_filename = data.get('filename', 'timeline.fcpxml')
@@ -106,7 +113,7 @@ def export_fcpxml(session_id):
         output_path = os.path.join(session_path, output_filename)
 
         # Generate XML
-        generator.generate(beats, assets, output_path)
+        generator.generate(beats, asset_map, output_path)
 
         if not os.path.exists(output_path):
             return {'error': 'Failed to generate FCPXML'}, 500

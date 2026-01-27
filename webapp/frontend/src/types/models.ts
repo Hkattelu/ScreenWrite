@@ -9,6 +9,7 @@ export interface Beat {
   stock_keyword: string
   youtube_phrase: string
   header?: string
+  reviewed?: boolean
 }
 
 export interface UploadResponse {
