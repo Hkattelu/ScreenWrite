@@ -1,4 +1,4 @@
-import { Play, Maximize2, RefreshCcw, Film } from 'lucide-react'
+import { Play, Maximize2, RefreshCcw, Film, Type, Quote } from 'lucide-react'
 import { getMediaUrl } from '../services/api'
 import type { Beat } from '../types/models'
 
@@ -23,6 +23,34 @@ export function BeatAsset({
   onMaximize
 }: BeatAssetProps) {
   
+  if (visualType === 'annotation') {
+    return (
+      <div className="aspect-video flex flex-col items-center justify-center gap-3 bg-purple-50 border border-purple-100 rounded-xl p-6 text-center group">
+        <div className="w-10 h-10 rounded-full bg-white border border-purple-100 flex items-center justify-center text-purple-500 shadow-sm group-hover:scale-110 transition-transform">
+          <Type size={18} />
+        </div>
+        <div className="space-y-1">
+          <span className="text-[10px] font-black uppercase tracking-widest text-purple-400">Type</span>
+          <p className="text-sm font-bold text-purple-900 tracking-tight">ANNOTATION</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (visualType === 'citation') {
+    return (
+      <div className="aspect-video flex flex-col items-center justify-center gap-3 bg-amber-50 border border-amber-100 rounded-xl p-6 text-center group">
+        <div className="w-10 h-10 rounded-full bg-white border border-amber-100 flex items-center justify-center text-amber-500 shadow-sm group-hover:scale-110 transition-transform">
+          <Quote size={18} />
+        </div>
+        <div className="space-y-1">
+          <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">Source</span>
+          <p className="text-sm font-bold text-amber-900 tracking-tight">CITATION</p>
+        </div>
+      </div>
+    )
+  }
+
   // Default to video/b-roll behavior for now, until other types are implemented
   const showVideo = visualType === 'auto' || visualType === 'b-roll'
 
@@ -90,7 +118,7 @@ export function BeatAsset({
     )
   }
 
-  // Placeholder for other types (Phase 2 & 3)
+  // Placeholder for other types (Phase 3)
   return (
     <div className="aspect-video flex items-center justify-center bg-gray-50 border border-gray-100 rounded-xl">
       <p className="text-xs text-gray-400">Preview not available for {visualType}</p>
