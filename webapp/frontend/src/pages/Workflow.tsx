@@ -20,17 +20,36 @@ type WorkflowStep = 'upload' | 'review' | 'configure' | 'export'
 
 function FetchStatusPoller({ sessionId, onComplete }: { sessionId: string | null, onComplete: () => void }) {
   const [status, setStatus] = useState<any>(null)
+  const [shouldPoll, setShouldPoll] = useState(false)
 
+  // First, fetch initial status to see if we need to poll
   useEffect(() => {
     if (!sessionId) return
+
+    const fetchInitialStatus = async () => {
+      try {
+        const data = await getStatus(sessionId)
+        setStatus(data)
+        // Only start polling if status is 'fetching'
+        setShouldPoll(data.status === 'fetching')
+      } catch (e) {
+        console.error("Error fetching initial status", e)
+      }
+    }
+
+    fetchInitialStatus()
+  }, [sessionId])
+
+  // Poll only when fetching
+  useEffect(() => {
+    if (!sessionId || !shouldPoll) return
 
     const interval = setInterval(async () => {
       try {
         const data = await getStatus(sessionId)
         setStatus(data)
         if (data.status === 'complete' || data.status === 'error') {
-          // Stop polling if complete (but we keep showing the status)
-          // onComplete() 
+          setShouldPoll(false)
         }
       } catch (e) {
         console.error("Polling error", e)
@@ -38,7 +57,7 @@ function FetchStatusPoller({ sessionId, onComplete }: { sessionId: string | null
     }, 2000)
 
     return () => clearInterval(interval)
-  }, [sessionId])
+  }, [sessionId, shouldPoll])
 
   if (!status || status.status === 'initialized' || status.status === 'configured') return null
 
