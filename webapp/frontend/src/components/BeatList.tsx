@@ -394,6 +394,7 @@ export function BeatList({
                             visualType={beat.visual_type}
                             visualContent={beat.visual_content}
                             isRefreshing={refreshingIds.has(beat.id)}
+                            reviewed={isReviewed}
                             onRefresh={handleRefresh}
                             onMaximize={(id) => setLightboxId(id)}
                           />

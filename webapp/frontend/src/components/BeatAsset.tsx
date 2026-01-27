@@ -10,6 +10,7 @@ interface BeatAssetProps {
   visualType?: Beat['visual_type']
   visualContent?: string
   isRefreshing: boolean
+  reviewed?: boolean
   onRefresh: (id: string) => void
   onMaximize: (id: string) => void
 }
@@ -20,12 +21,16 @@ export function BeatAsset({
   assetPath,
   visualType = 'auto',
   isRefreshing,
+  reviewed = false,
   onRefresh,
   onMaximize
 }: BeatAssetProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const handleUploadClick = () => {
+  const handleUploadClick = (e: React.MouseEvent | React.KeyboardEvent) => {
+    // Prevent upload if reviewed (optional, but good UX)
+    if (reviewed) return
+    e.stopPropagation() // Prevent row click if any
     fileInputRef.current?.click()
   }
 
@@ -38,7 +43,7 @@ export function BeatAsset({
   
   if (visualType === 'annotation') {
     return (
-      <div className="aspect-video flex flex-col items-center justify-center gap-3 bg-purple-50 border border-purple-100 rounded-xl p-6 text-center group">
+      <div className={`aspect-video flex flex-col items-center justify-center gap-3 bg-purple-50 border border-purple-100 rounded-xl p-6 text-center group transition-all duration-500 ${reviewed ? 'opacity-40 grayscale blur-[1px]' : ''}`}>
         <div className="w-10 h-10 rounded-full bg-white border border-purple-100 flex items-center justify-center text-purple-500 shadow-sm group-hover:scale-110 transition-transform">
           <Type size={18} />
         </div>
@@ -52,7 +57,7 @@ export function BeatAsset({
 
   if (visualType === 'citation') {
     return (
-      <div className="aspect-video flex flex-col items-center justify-center gap-3 bg-amber-50 border border-amber-100 rounded-xl p-6 text-center group">
+      <div className={`aspect-video flex flex-col items-center justify-center gap-3 bg-amber-50 border border-amber-100 rounded-xl p-6 text-center group transition-all duration-500 ${reviewed ? 'opacity-40 grayscale blur-[1px]' : ''}`}>
         <div className="w-10 h-10 rounded-full bg-white border border-amber-100 flex items-center justify-center text-amber-500 shadow-sm group-hover:scale-110 transition-transform">
           <Quote size={18} />
         </div>
@@ -66,27 +71,35 @@ export function BeatAsset({
 
   if (visualType === 'image') {
     return (
-      <div className="aspect-video flex flex-col items-center justify-center gap-3 bg-indigo-50 border border-indigo-100 rounded-xl p-6 text-center group relative">
-        <div className="w-10 h-10 rounded-full bg-white border border-indigo-100 flex items-center justify-center text-indigo-500 shadow-sm group-hover:scale-110 transition-transform">
+      <div 
+        onClick={handleUploadClick}
+        className={`aspect-video flex flex-col items-center justify-center gap-3 bg-indigo-50/50 border-2 border-dashed border-indigo-200 rounded-xl p-6 text-center group relative cursor-pointer hover:bg-indigo-50 hover:border-indigo-300 transition-all duration-300 ${reviewed ? 'opacity-40 grayscale blur-[1px] pointer-events-none' : ''}`}
+        role="button"
+        aria-label="Upload image asset"
+        tabIndex={reviewed ? -1 : 0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            handleUploadClick(e)
+          }
+        }}
+      >
+        <div className="w-10 h-10 rounded-full bg-white border border-indigo-100 flex items-center justify-center text-indigo-500 shadow-sm group-hover:scale-110 group-hover:shadow-md transition-all duration-300">
           <ImageIcon size={18} />
         </div>
         <div className="space-y-3">
-          <p className="text-sm font-bold text-indigo-900 tracking-tight">Image Asset</p>
+          <p className="text-sm font-bold text-indigo-900 tracking-tight group-hover:text-indigo-700 transition-colors">Image Asset</p>
           <input
             type="file"
             ref={fileInputRef}
             className="hidden"
             accept="image/*"
             onChange={handleFileChange}
+            disabled={reviewed}
           />
-          <button 
-            onClick={handleUploadClick}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-indigo-100 rounded-lg shadow-sm text-xs font-bold text-indigo-600 hover:text-indigo-700 hover:border-indigo-200 transition-all active:scale-95"
-            aria-label="Upload image"
-          >
+          <div className="flex items-center gap-2 px-4 py-2 bg-white border border-indigo-100 rounded-lg shadow-sm text-xs font-bold text-indigo-600 group-hover:border-indigo-200 group-hover:text-indigo-700 transition-all">
             <Upload size={12} />
             Upload Image
-          </button>
+          </div>
         </div>
       </div>
     )
@@ -98,7 +111,7 @@ export function BeatAsset({
   if (showVideo) {
     if (assetPath) {
       return (
-        <div className="relative group/asset">
+        <div className={`relative group/asset transition-all duration-500 ${reviewed ? 'opacity-40 grayscale blur-[1px]' : ''}`}>
           <video 
             src={getMediaUrl(sessionId, assetPath)} 
             className="w-full aspect-video object-cover"
