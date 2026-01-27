@@ -150,6 +150,20 @@ def start_fetch(session_id):
     if session_id in active_tasks:
         return {'message': 'Fetch already in progress'}, 200
 
+    # Set status to fetching synchronously to prevent UI race condition
+    # where it polls before the thread has a chance to update the state
+    try:
+        state = load_session_state(session_id)
+        state['status'] = 'fetching'
+        # Reset assets to empty dict if it's a list or missing, to clear "0 assets" state
+        if not isinstance(state.get('assets'), dict):
+            state['assets'] = {}
+            
+        save_session_state(session_id, state)
+    except Exception as e:
+        logger.error(f"Failed to set initial fetch status: {e}")
+        return {'error': 'Failed to initialize fetch'}, 500
+
     # Start background thread
     # Pass necessary config paths since thread context is detached
     thread = threading.Thread(

@@ -111,31 +111,22 @@ class XMLGenerator:
         # Add media resources for each unique asset file
         unique_assets = set(path for path in asset_map.values() if path)
         for asset_path in unique_assets:
-            media_elem = self._create_media_resource(asset_path)
-            resources.append(media_elem)
+            # For Resolve compatibility, use 'asset' elements directly in resources
+            # instead of wrapping them in 'media'
+            asset_elem = self._create_asset_resource(asset_path)
+            resources.append(asset_elem)
         
         return resources
-    
-    def _create_format(self) -> ET.Element:
-        """Create format resource for the timeline."""
-        format_elem = ET.Element("format")
-        format_elem.set("id", self.format_id)
-        format_elem.set("name", f"FFVideoFormat{DEFAULT_VIDEO_HEIGHT}p{self.framerate}")
-        format_elem.set("frameDuration", f"{100000//self.framerate}/3000000s")
-        format_elem.set("width", str(DEFAULT_VIDEO_WIDTH))
-        format_elem.set("height", str(DEFAULT_VIDEO_HEIGHT))
-        format_elem.set("colorSpace", "1-1-1 (Rec. 709)")
-        return format_elem
-    
-    def _create_media_resource(self, asset_path: str) -> ET.Element:
+
+    def _create_asset_resource(self, asset_path: str) -> ET.Element:
         """
-        Create media resource element for a video file.
+        Create asset resource element for a video file.
         
         Args:
             asset_path: Path to the video file
             
         Returns:
-            Media XML element with unique resource ID
+            Asset XML element with unique resource ID
         """
         resource_id = f"r{self.next_resource_id}"
         self.asset_to_resource_id[asset_path] = resource_id
@@ -145,18 +136,13 @@ class XMLGenerator:
         file_path = Path(asset_path)
         filename = file_path.name
         
-        # Create media element
-        media = ET.Element("media")
-        media.set("id", resource_id)
-        media.set("name", filename)
-        media.set("uid", f"media-{resource_id}")
-        
-        # Add asset element with file reference
-        asset = ET.SubElement(media, "asset")
-        asset.set("id", f"asset-{resource_id}")
+        # Create asset element
+        asset = ET.Element("asset")
+        asset.set("id", resource_id)
         asset.set("name", filename)
         asset.set("uid", f"asset-{resource_id}")
         asset.set("start", "0s")
+        asset.set("duration", "3600s") # Placeholder large duration
         asset.set("hasVideo", "1")
         asset.set("format", self.format_id)
         asset.set("hasAudio", "1")
@@ -165,9 +151,14 @@ class XMLGenerator:
         media_rep = ET.SubElement(asset, "media-rep")
         media_rep.set("kind", "original-media")
         media_rep.set("sig", f"sig-{resource_id}")
-        media_rep.set("src", f"file://{os.path.abspath(asset_path)}")
         
-        return media
+        # Ensure path is absolute and uses forward slashes for URL
+        abs_path = os.path.abspath(asset_path).replace('\\', '/')
+        if not abs_path.startswith('/'):
+            abs_path = '/' + abs_path
+        media_rep.set("src", f"file://localhost{abs_path}")
+        
+        return asset
     
     def _create_library(self, beats: List[Beat], asset_map: Dict[str, str]) -> ET.Element:
         """
@@ -203,72 +194,50 @@ class XMLGenerator:
         sequence.set("audioLayout", "stereo")
         sequence.set("audioRate", "48k")
         
-        # Create spine with gaps
-        spine = self._create_spine(beats)
+        # Create spine with clips (Primary Storyline)
+        spine = self._create_spine(beats, asset_map)
         sequence.append(spine)
-        
-        # Create connected clips lane
-        if any(asset_map.get(beat.id) for beat in beats):
-            lane = self._create_connected_clips_lane(beats, asset_map)
-            sequence.append(lane)
         
         return library
     
-    def _create_spine(self, beats: List[Beat]) -> ET.Element:
+    def _create_spine(self, beats: List[Beat], asset_map: Dict[str, str]) -> ET.Element:
         """
-        Create spine track with gaps for each beat.
-        
-        Args:
-            beats: List of Beat objects
-            
-        Returns:
-            Spine XML element with gap elements
-        """
-        spine = ET.Element("spine")
-        
-        for beat in beats:
-            gap = ET.SubElement(spine, "gap")
-            gap.set("name", f"Gap - {beat.id}")
-            gap.set("offset", "0s")  # Offset handled by sequence positioning
-            gap.set("duration", self._seconds_to_timecode(beat.duration))
-            gap.set("start", "3600s")  # Standard gap start time
-        
-        return spine
-    
-    def _create_connected_clips_lane(self, beats: List[Beat], asset_map: Dict[str, str]) -> ET.Element:
-        """
-        Create Lane 1 with connected clips for B-roll ScreenWrite.
+        Create spine track with clips for each beat.
         
         Args:
             beats: List of Beat objects
             asset_map: Mapping of beat IDs to asset file paths
             
         Returns:
-            Lane XML element with connected clips
+            Spine XML element with clip/gap elements
         """
-        lane = ET.Element("lane")
-        lane.set("index", "1")
+        spine = ET.Element("spine")
         
         cumulative_offset = 0.0
-        
         for beat in beats:
             asset_path = asset_map.get(beat.id)
-            if asset_path:  # Create clip if asset path exists, regardless of file existence
-                # Find the resource ID for this asset
+            
+            if asset_path:
+                # Primary clip
                 resource_id = self._get_resource_id_for_asset(asset_path)
-                
-                # Create connected clip
-                clip = ET.SubElement(lane, "clip")
+                clip = ET.SubElement(spine, "clip")
                 clip.set("name", f"Clip - {beat.id}")
                 clip.set("ref", resource_id)
                 clip.set("offset", self._seconds_to_timecode(cumulative_offset))
                 clip.set("duration", self._seconds_to_timecode(beat.duration))
                 clip.set("start", "0s")
                 clip.set("tcFormat", "NDF")
+            else:
+                # Placeholder gap if no asset
+                gap = ET.SubElement(spine, "gap")
+                gap.set("name", f"Gap - {beat.id}")
+                gap.set("offset", self._seconds_to_timecode(cumulative_offset))
+                gap.set("duration", self._seconds_to_timecode(beat.duration))
+                gap.set("start", "3600s")
             
             cumulative_offset += beat.duration
         
-        return lane
+        return spine
     
     def _get_resource_id_for_asset(self, asset_path: str) -> str:
         """
@@ -281,7 +250,7 @@ class XMLGenerator:
             Resource ID string (e.g., "r2")
         """
         return self.asset_to_resource_id.get(asset_path, "r2")  # Default fallback
-    
+
     def _calculate_total_frames(self, beats: List[Beat]) -> int:
         """Calculate total timeline duration in frames."""
         total_seconds = sum(beat.duration for beat in beats)
