@@ -42,95 +42,58 @@ export function ConfigPanel({ onConfigChange, isLoading = false }: ConfigPanelPr
 
                       {/* YouTube Section */}
 
-                      <div 
-
-                        className={`flex items-start gap-6 p-6 rounded-2xl border transition-all duration-300 ${config.youtubeEnabled ? 'bg-white border-blue-100 shadow-sm' : 'bg-gray-50/50 border-gray-100 opacity-60'}`}
-
+                      <button 
+                        type="button"
+                        role="switch"
+                        aria-checked={config.youtubeEnabled}
+                        className={`w-full flex items-start gap-6 p-6 rounded-2xl border text-left transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-blue-500/10 ${config.youtubeEnabled ? 'bg-white border-blue-100 shadow-sm' : 'bg-gray-50/50 border-gray-100 opacity-60'}`}
                         onClick={() => handleChange('youtubeEnabled', !config.youtubeEnabled)}
-
                       >
-
                         <div className="pt-1">
-
                           <div className={`w-12 h-6 rounded-full relative transition-colors duration-300 ${config.youtubeEnabled ? 'bg-blue-600' : 'bg-gray-200'}`}>
-
                             <motion.div 
-
                               animate={{ x: config.youtubeEnabled ? 24 : 0 }}
-
                               className="absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow-sm" 
-
                             />
-
                           </div>
-
                         </div>
-
-                        <div className="space-y-1 cursor-pointer">
-
-                          <label className="text-xl font-bold text-gray-900 block tracking-tight">
-
+                        <div className="space-y-1">
+                          <label className="text-xl font-bold text-gray-900 block tracking-tight cursor-pointer">
                             YouTube Downloads
-
                           </label>
-
                           <p className="text-sm text-gray-500 leading-relaxed">
-
                             Search and download specific clips from YouTube. No API key required.
-
                           </p>
-
                         </div>
-
-                      </div>
-
-          
+                      </button>
 
                       {/* Pexels Section */}
 
                       <div className="space-y-6">
-
-                        <div 
-
-                          className={`flex items-start gap-6 p-6 rounded-2xl border transition-all duration-300 ${config.pexelsEnabled ? 'bg-white border-blue-100 shadow-sm' : 'bg-gray-50/50 border-gray-100 opacity-60'}`}
-
+                        <button 
+                          type="button"
+                          role="switch"
+                          aria-checked={config.pexelsEnabled}
+                          className={`w-full flex items-start gap-6 p-6 rounded-2xl border text-left transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-blue-500/10 ${config.pexelsEnabled ? 'bg-white border-blue-100 shadow-sm' : 'bg-gray-50/50 border-gray-100 opacity-60'}`}
                           onClick={() => handleChange('pexelsEnabled', !config.pexelsEnabled)}
-
                         >
-
                           <div className="pt-1">
-
                             <div className={`w-12 h-6 rounded-full relative transition-colors duration-300 ${config.pexelsEnabled ? 'bg-blue-600' : 'bg-gray-200'}`}>
-
                               <motion.div 
-
                                 animate={{ x: config.pexelsEnabled ? 24 : 0 }}
-
                                 className="absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow-sm" 
-
                               />
-
                             </div>
-
                           </div>
-
-                          <div className="space-y-1 cursor-pointer">
-
-                            <label className="text-xl font-bold text-gray-900 block tracking-tight">
-
+                          <div className="space-y-1">
+                            <label className="text-xl font-bold text-gray-900 block tracking-tight cursor-pointer">
                               Pexels Fallback
-
                             </label>
-
                             <p className="text-sm text-gray-500 leading-relaxed">
-
                               Use high-quality stock footage when specific YouTube clips aren't available.
-
                             </p>
-
                           </div>
-
-                        </div>
+                        </button>
 
           
 

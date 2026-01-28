@@ -79,15 +79,24 @@ export function ScriptUpload({ onUploadSuccess }: ScriptUploadProps) {
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            fileInputRef.current?.click()
+          }
+        }}
+        tabIndex={isLoading ? -1 : 0}
+        role="button"
+        aria-label="Upload script file"
         className={`
           group relative cursor-pointer
           border border-dashed rounded-2xl p-12
           flex flex-col items-center justify-center
-          transition-all duration-300
+          transition-all duration-300 outline-none
           ${
             isDragging
               ? 'border-blue-500 bg-blue-50/30 shadow-sm'
-              : 'border-gray-200 hover:border-gray-300 bg-white'
+              : 'border-gray-200 hover:border-gray-300 focus:border-blue-400 focus:ring-4 focus:ring-blue-500/5 bg-white'
           }
         `}
       >
@@ -157,7 +166,7 @@ export function ScriptUpload({ onUploadSuccess }: ScriptUploadProps) {
             handleTrySample()
           }}
           disabled={isLoading}
-          className="group flex items-center gap-3 px-6 py-3 rounded-xl border border-blue-100 bg-blue-50/30 text-blue-600 hover:bg-blue-50 hover:border-blue-200 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+          className="group flex items-center gap-3 px-6 py-3 rounded-xl border border-blue-100 bg-blue-50/30 text-blue-600 hover:bg-blue-50 hover:border-blue-200 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-4 focus:ring-blue-500/10"
         >
           <Wand2 size={16} className="group-hover:rotate-12 transition-transform" />
           <span className="text-xs text-white/90 font-bold uppercase tracking-wider">Try with an Example</span>

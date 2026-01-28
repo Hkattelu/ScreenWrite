@@ -200,18 +200,18 @@ class TestEndToEndIntegration(unittest.TestCase):
             self.assertIsNotNone(format_elem, "Format resource missing")
             self.assertEqual(format_elem.get("id"), "r1", "Format should have ID 'r1'")
             
-            # Check media resources (Requirement 3.4) - should have resources when assets are mocked
-            media_elements = resources.findall("media")
-            self.assertGreater(len(media_elements), 0, "No media resources found")
+            # Check asset resources (Requirement 3.4) - should have resources when assets are mocked
+            asset_elements = resources.findall("asset")
+            self.assertGreater(len(asset_elements), 0, "No asset resources found")
             
-            # Validate each media resource has required attributes
-            for media in media_elements:
-                self.assertTrue(media.get("id"), "Media resource missing ID")
-                self.assertTrue(media.get("name"), "Media resource missing name")
+            # Validate each asset resource has required attributes
+            for asset in asset_elements:
+                self.assertTrue(asset.get("id"), "Asset resource missing ID")
+                self.assertTrue(asset.get("name"), "Asset resource missing name")
                 
-                # Check asset sub-element
-                asset = media.find("asset")
-                self.assertIsNotNone(asset, "Media resource missing asset element")
+                # Check media-rep sub-element
+                media_rep = asset.find("media-rep")
+                self.assertIsNotNone(media_rep, "Asset resource missing media-rep element")
             
             # Validate library structure
             library = root.find("library")
@@ -226,48 +226,33 @@ class TestEndToEndIntegration(unittest.TestCase):
             sequence = project.find("sequence")
             self.assertIsNotNone(sequence, "Sequence missing")
             
-            # Validate spine with gaps (Requirement 3.2)
+            # Validate spine with clips or gaps (Requirement 3.2)
             spine = sequence.find("spine")
             self.assertIsNotNone(spine, "Spine missing")
             
+            # Spine should have either asset-clip (if asset found) or gap (if no asset)
+            clips = spine.findall("asset-clip")
             gaps = spine.findall("gap")
-            self.assertGreater(len(gaps), 0, "No gaps found in spine")
-            self.assertEqual(len(gaps), result['beats_count'], "Gap count doesn't match beat count")
+            total_segments = len(clips) + len(gaps)
             
-            # Validate each gap has required attributes
-            for gap in gaps:
-                self.assertTrue(gap.get("name"), "Gap missing name")
-                self.assertTrue(gap.get("duration"), "Gap missing duration")
+            self.assertGreater(total_segments, 0, "No clips or gaps found in spine")
+            self.assertEqual(total_segments, result['beats_count'], "Segment count doesn't match beat count")
+            
+            # Validate each segment has required attributes
+            for segment in clips + gaps:
+                self.assertTrue(segment.get("name"), "Segment missing name")
+                self.assertTrue(segment.get("duration"), "Segment missing duration")
                 
                 # Validate duration format
-                duration = gap.get("duration")
+                duration = segment.get("duration")
                 self.assertRegex(duration, r'^\d+/\d+s$', f"Invalid duration format: {duration}")
-            
-            # Validate connected clips lane (Requirement 3.3)
-            lanes = sequence.findall("lane")
-            if lanes:  # Only check if there are lanes (assets were fetched)
-                lane1 = None
-                for lane in lanes:
-                    if lane.get("index") == "1":
-                        lane1 = lane
-                        break
                 
-                self.assertIsNotNone(lane1, "Lane 1 missing for connected clips")
-                
-                clips = lane1.findall("clip")
-                self.assertGreater(len(clips), 0, "No connected clips found")
-                
-                # Validate clip alignment and references
-                for clip in clips:
-                    self.assertTrue(clip.get("name"), "Clip missing name")
-                    self.assertTrue(clip.get("ref"), "Clip missing resource reference")
-                    self.assertTrue(clip.get("offset"), "Clip missing offset")
-                    self.assertTrue(clip.get("duration"), "Clip missing duration")
-                    
+                if segment.tag == "asset-clip":
+                    self.assertTrue(segment.get("ref"), "Clip missing resource reference")
                     # Validate resource reference exists (Requirement 3.4)
-                    ref_id = clip.get("ref")
-                    referenced_media = resources.find(f"media[@id='{ref_id}']")
-                    self.assertIsNotNone(referenced_media, f"Referenced resource {ref_id} not found")
+                    ref_id = segment.get("ref")
+                    referenced_asset = resources.find(f"asset[@id='{ref_id}']")
+                    self.assertIsNotNone(referenced_asset, f"Referenced resource {ref_id} not found")
     
     def test_workflow_with_no_assets(self):
         """

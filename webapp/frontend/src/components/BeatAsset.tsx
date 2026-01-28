@@ -20,6 +20,7 @@ export function BeatAsset({
   beatId,
   assetPath,
   visualType = 'auto',
+  visualContent,
   isRefreshing,
   reviewed = false,
   onRefresh,
@@ -50,6 +51,11 @@ export function BeatAsset({
         <div className="space-y-1">
           <span className="text-xs font-black uppercase tracking-widest text-purple-600">Type</span>
           <p className="text-sm font-bold text-purple-900 tracking-tight">ANNOTATION</p>
+          {visualContent && (
+            <p className="text-xs text-purple-600/80 font-medium mt-1 leading-relaxed max-w-[200px] mx-auto">
+              {visualContent}
+            </p>
+          )}
         </div>
       </div>
     )
@@ -64,6 +70,11 @@ export function BeatAsset({
         <div className="space-y-1">
           <span className="text-xs font-black uppercase tracking-widest text-amber-600">Source</span>
           <p className="text-sm font-bold text-amber-900 tracking-tight">CITATION</p>
+          {visualContent && (
+            <p className="text-xs text-amber-600/80 font-medium mt-1 leading-relaxed max-w-[200px] mx-auto">
+              {visualContent}
+            </p>
+          )}
         </div>
       </div>
     )
@@ -73,7 +84,7 @@ export function BeatAsset({
     return (
       <div 
         onClick={handleUploadClick}
-        className={`aspect-video flex flex-col items-center justify-center gap-3 bg-indigo-50/50 border-2 border-dashed border-indigo-200 rounded-xl p-6 text-center group relative cursor-pointer hover:bg-indigo-50 hover:border-indigo-300 transition-all duration-300 ${reviewed ? 'opacity-40 grayscale blur-[1px] pointer-events-none' : ''}`}
+        className={`aspect-video flex flex-col items-center justify-center gap-3 bg-indigo-50/50 border-2 border-dashed border-indigo-200 rounded-xl p-6 text-center group relative cursor-pointer hover:bg-indigo-50 hover:border-indigo-300 focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all duration-300 ${reviewed ? 'opacity-40 grayscale blur-[1px] pointer-events-none' : ''}`}
         role="button"
         aria-label="Upload image asset"
         tabIndex={reviewed ? -1 : 0}
@@ -124,14 +135,14 @@ export function BeatAsset({
             muted
             loop
           />
-          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/asset:opacity-100 transition-opacity flex items-center justify-center gap-4">
+          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/asset:opacity-100 group-focus-within/asset:opacity-100 transition-opacity flex items-center justify-center gap-4">
             <Play className="text-white fill-white" size={24} />
             <button 
               onClick={(e) => {
                 e.stopPropagation()
                 onMaximize(beatId)
               }}
-              className="p-2 bg-white/20 hover:bg-white/40 backdrop-blur-md rounded-full text-white transition-all"
+              className="p-2 bg-white/20 hover:bg-white/40 focus:bg-white/40 backdrop-blur-md rounded-full text-white transition-all focus:outline-none focus:ring-2 focus:ring-white"
               aria-label="Maximize video preview"
             >
               <Maximize2 size={16} />
@@ -140,7 +151,7 @@ export function BeatAsset({
           <button 
             onClick={() => onRefresh(beatId)}
             disabled={isRefreshing}
-            className="absolute top-2 right-2 p-1.5 bg-white/90 backdrop-blur-md rounded-lg shadow-sm text-gray-600 hover:text-blue-600 transition-all active:scale-95 disabled:opacity-50"
+            className="absolute top-2 right-2 p-1.5 bg-white/90 backdrop-blur-md rounded-lg shadow-sm text-gray-600 hover:text-blue-600 focus:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all active:scale-95 disabled:opacity-50"
             title="Refresh Footage"
             aria-label="Refresh footage"
           >
@@ -165,7 +176,7 @@ export function BeatAsset({
         {!isRefreshing && (
           <button 
             onClick={() => onRefresh(beatId)}
-            className="text-xs font-black text-blue-500 uppercase tracking-tighter hover:underline"
+            className="text-xs font-black text-blue-500 uppercase tracking-tighter hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-1"
           >
             Try fetching now
           </button>

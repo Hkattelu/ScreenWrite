@@ -195,14 +195,33 @@ class ScriptParser:
                             visual_type = 'b-roll'
                             
                         visual_content = broll_instruction.content
+                        
+                        # Strip wrapping quotes from visual_content if present
+                        if visual_content and len(visual_content) >= 2:
+                            if (visual_content.startswith('"') and visual_content.endswith('"')) or \
+                               (visual_content.startswith("'") and visual_content.endswith("'")):
+                                visual_content = visual_content[1:-1].strip()
                     else:
                         # Auto-generate queries
                         stock_keyword = self._generate_stock_keyword(chunk, full_context)
                         youtube_phrase = self._generate_youtube_phrase(chunk, full_context)
                     
+                    # Strip all [@...] tags from the displayed text to keep the script clean
+                    # Use a regex that matches the same pattern as _extract_broll_instructions
+                    clean_text = re.sub(r'\[\s*@([A-Z][a-zA-Z]*):\s*([^\]]+)\]', '', chunk).strip()
+                    
+                    # Fallback: if stripping left us with empty text (instruction-only beat),
+                    # use the visual content as text so duration is > 0 and validation passes
+                    if not clean_text and visual_content:
+                        clean_text = visual_content
+                    
+                    # Ultimate fallback for safety
+                    if not clean_text:
+                        clean_text = chunk.strip()
+                    
                     beat = Beat(
                         id=beat_id,
-                        text=chunk.strip(),
+                        text=clean_text,
                         stock_keyword=stock_keyword,
                         youtube_search_phrase=youtube_phrase,
                         visual_type=visual_type,
@@ -279,12 +298,13 @@ class ScriptParser:
                 continue
             
             # Extract metadata (key: value format) at start of file
-            if in_metadata and ':' in line and not line.startswith('#'):
+            if in_metadata and ':' in line and not line.startswith('#') and not line.startswith('['):
                 parts = line.split(':', 1)
                 if len(parts) == 2:
                     key = parts[0].strip().lower()
                     value = parts[1].strip()
                     
+                    is_metadata = True
                     if key == 'title':
                         metadata.title = value
                     elif key == 'hook':
@@ -297,8 +317,11 @@ class ScriptParser:
                         metadata.thumbnail = value
                     elif key == 'tags':
                         metadata.tags = [t.strip() for t in value.split(',')]
+                    else:
+                        is_metadata = False
                     
-                    continue  # Skip metadata lines from body
+                    if is_metadata:
+                        continue  # Skip metadata lines from body
             
             in_metadata = False  # Stop looking for metadata after first non-metadata line
             
