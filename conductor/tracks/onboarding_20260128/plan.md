@@ -11,13 +11,13 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md)
 
 ## Phase 2: Unified Setup Scripts
-- [ ] Task: Implement `setup.sh` for Unix-like systems
-    - [ ] Script should handle venv creation, dependency installation (pip & npm), and call the Python validation/onboarding module
-- [ ] Task: Implement `setup.ps1` for Windows systems
-    - [ ] Script should mirror the `setup.sh` logic using PowerShell idioms
-- [ ] Task: Integrate interactive onboarding into the setup flow
-    - [ ] Ensure the Python utility runs after dependencies are installed to finalize configuration
-- [ ] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md)
+- [x] Task: Implement `setup.sh` for Unix-like systems
+    - [x] Script should handle venv creation, dependency installation (pip & npm), and call the Python validation/onboarding module
+- [x] Task: Implement `setup.ps1` for Windows systems
+    - [x] Script should mirror the `setup.sh` logic using PowerShell idioms
+- [x] Task: Integrate interactive onboarding into the setup flow
+    - [x] Ensure the Python utility runs after dependencies are installed to finalize configuration
+- [x] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md)
 
 ## Phase 3: Documentation & Verification
 - [ ] Task: Update `README.md` with the new "Quick Start" instructions
