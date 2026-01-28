@@ -3,85 +3,223 @@
 @tailwind utilities;
 
 :root {
+
   --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
   
-  /* Refined Minimalist Palette */
-  --brand-primary: #3b82f6;    /* blue-500 (softer than 600) */
-  --brand-surface: #ffffff;
-  --brand-muted: #f9fafb;      /* gray-50 */
-  --brand-border: #f3f4f6;     /* gray-100 */
+
+  /* Refined OKLCH Palette - Meticulously Tunted */
+
+  /* Neutrals: Tinted with a hint of blue/slate for professional look */
+
+  --color-neutral-0: oklch(1 0 0);
+
+  --color-neutral-50: oklch(0.98 0.005 250);
+
+  --color-neutral-100: oklch(0.96 0.01 250);
+
+  --color-neutral-200: oklch(0.92 0.01 250);
+
+  --color-neutral-300: oklch(0.87 0.015 250);
+
+  --color-neutral-400: oklch(0.7 0.02 250);
+
+  --color-neutral-500: oklch(0.55 0.025 250);
+
+  --color-neutral-600: oklch(0.4 0.03 250);
+
+  --color-neutral-700: oklch(0.3 0.03 250);
+
+  --color-neutral-800: oklch(0.2 0.03 250);
+
+  --color-neutral-900: oklch(0.15 0.04 250);
+
+
+
+  /* Brand Colors */
+
+  --brand-primary: oklch(0.6 0.18 250);      /* Vibrant but professional blue */
+
+  --brand-primary-hover: oklch(0.55 0.2 250);
+
+  --brand-primary-muted: oklch(0.95 0.02 250);
+
+  
+
+  --brand-success: oklch(0.65 0.15 150);
+
+  --brand-error: oklch(0.6 0.18 25);
+
+  --brand-warning: oklch(0.85 0.15 80);
+
 }
+
+
 
 body {
+
   font-family: var(--font-display);
+
   -webkit-font-smoothing: antialiased;
+
   -moz-osx-font-smoothing: grayscale;
-  color: #111827;
-  background-color: var(--brand-surface);
+
+  color: var(--color-neutral-900);
+
+  background-color: var(--color-neutral-0);
+
 }
+
+
 
 /* Custom Typography */
+
 @layer base {
+
   h1, h2, h3, h4 {
-    @apply tracking-tight font-semibold;
+
+    @apply tracking-tight font-bold text-slate-900;
+
   }
+
 }
+
+
 
 /* Refined Utility classes */
+
 .btn {
-  @apply px-6 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 active:scale-[0.98] flex items-center justify-center gap-2;
+
+  @apply px-6 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 active:scale-[0.96] flex items-center justify-center gap-2 focus:outline-none focus:ring-4 focus:ring-blue-500/10;
+
 }
+
+
 
 .btn-primary {
-  @apply btn text-white bg-blue-600 hover:bg-blue-700 shadow-sm;
+
+  @apply btn text-white bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-500/10 hover:shadow-lg hover:shadow-blue-500/20 border border-blue-500/20;
+
 }
+
+
 
 .btn-secondary {
-  @apply btn bg-white text-gray-600 border border-gray-200 hover:bg-gray-50;
+
+  @apply btn bg-white text-slate-600 border border-slate-200 hover:border-slate-300 hover:bg-slate-50 shadow-sm;
+
 }
+
+
+
+.btn-ghost {
+
+  @apply btn bg-transparent text-slate-500 hover:text-slate-900 hover:bg-slate-100/80;
+
+}
+
+
 
 .btn-black {
-  @apply btn bg-gray-900 text-white hover:bg-black;
+
+  @apply btn bg-slate-900 text-white hover:bg-black shadow-lg shadow-black/10;
+
 }
+
+
 
 .btn-success {
-  @apply btn bg-emerald-600 text-white hover:bg-emerald-700;
+
+  @apply btn bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg shadow-emerald-500/10;
+
 }
+
+
 
 .input {
-  @apply px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500/40 transition-all;
+
+  @apply px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/40 focus:bg-white transition-all;
+
 }
+
+
 
 .label {
-  @apply block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-2;
+
+  @apply block text-[11px] font-black text-slate-500 uppercase tracking-widest mb-2;
+
 }
+
+
 
 /* Subtle Cinematic Effects */
+
 .film-grain {
+
   position: relative;
-}
-.film-grain::after {
-  content: "";
-  position: fixed;
-  top: 0; left: 0; width: 100%; height: 100%;
-  background-image: url("https://grainy-gradients.vercel.app/noise.svg");
-  opacity: 0.02; /* Even subtler */
-  pointer-events: none;
-  z-index: 100;
+
 }
 
+.film-grain::after {
+
+  content: "";
+
+  position: fixed;
+
+  top: 0; left: 0; width: 100%; height: 100%;
+
+  background-image: url("https://grainy-gradients.vercel.app/noise.svg");
+
+  opacity: 0.015;
+
+  pointer-events: none;
+
+  z-index: 100;
+
+}
+
+
+
 /* Custom Scrollbar */
+
 ::-webkit-scrollbar {
-  width: 5px;
+
+  width: 6px;
+
 }
+
 ::-webkit-scrollbar-track {
+
   background: transparent;
+
 }
+
 ::-webkit-scrollbar-thumb {
-  background: #f1f5f9;
-  border-radius: 10px;
+
+  @apply bg-slate-200 rounded-full hover:bg-slate-300 transition-colors;
+
 }
-::-webkit-scrollbar-thumb:hover {
-  background: #e2e8f0;
+
+
+
+/* Custom Animation Classes */
+
+@keyframes pulse-subtle {
+
+  0%, 100% { opacity: 1; transform: scale(1); }
+
+  50% { opacity: 0.8; transform: scale(0.98); }
+
 }
+
+
+
+.animate-pulse-subtle {
+
+  animation: pulse-subtle 3s ease-in-out infinite;
+
+}
+
+

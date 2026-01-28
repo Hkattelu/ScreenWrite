@@ -28,17 +28,17 @@ export function ConfigPanel({ onConfigChange, isLoading = false }: ConfigPanelPr
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto py-6">
-      <div className="space-y-16">
+    <div className="w-full max-w-2xl mx-auto py-8">
+      <div className="space-y-20">
         
         {/* Group 1: Sources */}
-        <section className="space-y-10">
-          <div className="space-y-1">
-            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest">Visual Sources</h3>
-            <p className="text-xs text-gray-400">Select where ScreenWrite should look for footage.</p>
+        <section className="space-y-12">
+          <div className="space-y-2">
+            <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em]">Cinematic Sources</h3>
+            <p className="text-sm font-medium text-slate-500">Choose your preferred acquisition channels for footage.</p>
           </div>
 
-                    <div className="space-y-12">
+                    <div className="space-y-14">
 
                       {/* YouTube Section */}
 
@@ -46,51 +46,53 @@ export function ConfigPanel({ onConfigChange, isLoading = false }: ConfigPanelPr
                         type="button"
                         role="switch"
                         aria-checked={config.youtubeEnabled}
-                        className={`w-full flex items-start gap-6 p-6 rounded-2xl border text-left transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-blue-500/10 ${config.youtubeEnabled ? 'bg-white border-blue-100 shadow-sm' : 'bg-gray-50/50 border-gray-100 opacity-60'}`}
+                        className={`w-full flex items-start gap-8 p-8 rounded-[32px] border-2 text-left transition-all duration-500 focus:outline-none focus:ring-8 focus:ring-blue-500/5 ${config.youtubeEnabled ? 'bg-white border-blue-500 shadow-xl shadow-blue-500/5 scale-[1.02]' : 'bg-slate-50/50 border-slate-100 opacity-60'}`}
                         onClick={() => handleChange('youtubeEnabled', !config.youtubeEnabled)}
                       >
-                        <div className="pt-1">
-                          <div className={`w-12 h-6 rounded-full relative transition-colors duration-300 ${config.youtubeEnabled ? 'bg-blue-600' : 'bg-gray-200'}`}>
+                        <div className="pt-2">
+                          <div className={`w-14 h-7 rounded-full relative transition-all duration-500 ${config.youtubeEnabled ? 'bg-blue-600 shadow-inner' : 'bg-slate-200'}`}>
                             <motion.div 
-                              animate={{ x: config.youtubeEnabled ? 24 : 0 }}
-                              className="absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow-sm" 
+                              animate={{ x: config.youtubeEnabled ? 28 : 0 }}
+                              transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                              className="absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow-lg" 
                             />
                           </div>
                         </div>
-                        <div className="space-y-1">
-                          <label className="text-xl font-bold text-gray-900 block tracking-tight cursor-pointer">
+                        <div className="space-y-2">
+                          <label className="text-2xl font-black text-slate-900 block tracking-tight cursor-pointer">
                             YouTube Downloads
                           </label>
-                          <p className="text-sm text-gray-500 leading-relaxed">
-                            Search and download specific clips from YouTube. No API key required.
+                          <p className={`text-sm leading-relaxed font-medium transition-colors duration-500 ${config.youtubeEnabled ? 'text-slate-600' : 'text-slate-400'}`}>
+                            Acquire specific cinematic clips directly from the source. No API key required.
                           </p>
                         </div>
                       </button>
 
                       {/* Pexels Section */}
 
-                      <div className="space-y-6">
+                      <div className="space-y-8">
                         <button 
                           type="button"
                           role="switch"
                           aria-checked={config.pexelsEnabled}
-                          className={`w-full flex items-start gap-6 p-6 rounded-2xl border text-left transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-blue-500/10 ${config.pexelsEnabled ? 'bg-white border-blue-100 shadow-sm' : 'bg-gray-50/50 border-gray-100 opacity-60'}`}
+                          className={`w-full flex items-start gap-8 p-8 rounded-[32px] border-2 text-left transition-all duration-500 focus:outline-none focus:ring-8 focus:ring-blue-500/5 ${config.pexelsEnabled ? 'bg-white border-blue-500 shadow-xl shadow-blue-500/5 scale-[1.02]' : 'bg-slate-50/50 border-slate-100 opacity-60'}`}
                           onClick={() => handleChange('pexelsEnabled', !config.pexelsEnabled)}
                         >
-                          <div className="pt-1">
-                            <div className={`w-12 h-6 rounded-full relative transition-colors duration-300 ${config.pexelsEnabled ? 'bg-blue-600' : 'bg-gray-200'}`}>
+                          <div className="pt-2">
+                            <div className={`w-14 h-7 rounded-full relative transition-all duration-500 ${config.pexelsEnabled ? 'bg-blue-600 shadow-inner' : 'bg-slate-200'}`}>
                               <motion.div 
-                                animate={{ x: config.pexelsEnabled ? 24 : 0 }}
-                                className="absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow-sm" 
+                                animate={{ x: config.pexelsEnabled ? 28 : 0 }}
+                                transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                                className="absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow-lg" 
                               />
                             </div>
                           </div>
-                          <div className="space-y-1">
-                            <label className="text-xl font-bold text-gray-900 block tracking-tight cursor-pointer">
-                              Pexels Fallback
+                          <div className="space-y-2">
+                            <label className="text-2xl font-black text-slate-900 block tracking-tight cursor-pointer">
+                              Stock Fallback
                             </label>
-                            <p className="text-sm text-gray-500 leading-relaxed">
-                              Use high-quality stock footage when specific YouTube clips aren't available.
+                            <p className={`text-sm leading-relaxed font-medium transition-colors duration-500 ${config.pexelsEnabled ? 'text-slate-600' : 'text-slate-400'}`}>
+                              Leverage Pexels for high-quality atmospheric footage when specific clips are unavailable.
                             </p>
                           </div>
                         </button>
@@ -101,15 +103,15 @@ export function ConfigPanel({ onConfigChange, isLoading = false }: ConfigPanelPr
 
                           <motion.div 
 
-                            initial={{ opacity: 0, y: -10 }}
+                            initial={{ opacity: 0, y: -20 }}
 
                             animate={{ opacity: 1, y: 0 }}
 
-                            className="pl-6"
+                            className="pl-8 space-y-4"
 
                           >
 
-                            <label htmlFor="pexels_key" className="block text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-3 ml-1">
+                            <label htmlFor="pexels_key" className="block text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] ml-2">
 
                               Pexels API Key
 
@@ -129,9 +131,9 @@ export function ConfigPanel({ onConfigChange, isLoading = false }: ConfigPanelPr
 
                               disabled={isLoading}
 
-                              placeholder="Enter your free API key..."
+                              placeholder="Paste your Pexels token here..."
 
-                              className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-500/10 focus:bg-white focus:border-blue-200 font-mono text-sm placeholder:text-gray-300 transition-all outline-none"
+                              className="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-2xl text-slate-900 focus:ring-8 focus:ring-blue-500/5 focus:bg-white focus:border-blue-500/40 font-mono text-sm placeholder:text-slate-300 transition-all outline-none"
 
                             />
 
@@ -146,11 +148,12 @@ export function ConfigPanel({ onConfigChange, isLoading = false }: ConfigPanelPr
           
         </section>
 
-        <hr className="border-gray-100" />
+        <hr className="border-slate-100" />
 
 
       </div>
     </div>
+
   )
 }
 

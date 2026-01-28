@@ -64,11 +64,13 @@ function FetchStatusPoller({ sessionId, onComplete }: { sessionId: string | null
 
   if (status.status === 'fetching') {
     return (
-      <div className="mb-8 p-6 bg-blue-50 border border-blue-100 rounded-2xl flex items-center gap-4">
-        <Loader2 size={24} className="text-blue-600 animate-spin" />
+      <div className="mb-10 p-8 bg-blue-50/50 border border-blue-100 rounded-3xl flex items-center gap-6 shadow-sm">
+        <div className="w-12 h-12 rounded-2xl bg-white border border-blue-100 flex items-center justify-center shadow-sm">
+          <Loader2 size={24} className="text-blue-600 animate-spin" strokeWidth={3} />
+        </div>
         <div>
-          <h4 className="text-sm font-bold text-blue-900">Downloading Assets...</h4>
-          <p className="text-xs text-blue-600 mt-1">Found {status.assetCount} assets so far. This usually takes 1-2 minutes.</p>
+          <h4 className="text-base font-black text-blue-900 tracking-tight">Acquiring Assets</h4>
+          <p className="text-xs text-blue-600/80 font-bold mt-1 uppercase tracking-wider">Found {status.assetCount} assets • Processing...</p>
         </div>
       </div>
     )
@@ -76,11 +78,13 @@ function FetchStatusPoller({ sessionId, onComplete }: { sessionId: string | null
 
   if (status.status === 'complete' || status.status === 'exported') {
     return (
-      <div className="mb-8 p-6 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center gap-4">
-        <CheckCircle2 size={24} className="text-emerald-600" />
+      <div className="mb-10 p-8 bg-emerald-50/50 border border-emerald-100 rounded-3xl flex items-center gap-6 shadow-sm">
+        <div className="w-12 h-12 rounded-2xl bg-white border border-emerald-100 flex items-center justify-center shadow-sm">
+          <CheckCircle2 size={24} className="text-emerald-600" strokeWidth={3} />
+        </div>
         <div>
-          <h4 className="text-sm font-bold text-emerald-900">Downloads Complete</h4>
-          <p className="text-xs text-emerald-600 mt-1">{status.assetCount} assets are ready for your timeline.</p>
+          <h4 className="text-base font-black text-emerald-900 tracking-tight">Downloads Finished</h4>
+          <p className="text-xs text-emerald-600/80 font-bold mt-1 uppercase tracking-wider">{status.assetCount} high-quality assets prepared</p>
         </div>
       </div>
     )
@@ -257,15 +261,15 @@ export function Workflow() {
   return (
     <div className="min-h-screen bg-white">
       {/* Streamlined Header */}
-      <div className="border-b border-gray-100 sticky top-0 z-30 bg-white/80 backdrop-blur-md">
-        <div className="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <Link to="/" className="group flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center group-hover:bg-blue-600 transition-colors">
-                <Film size={14} className="text-white" />
+      <div className="border-b border-slate-100 sticky top-0 z-30 bg-white/90 backdrop-blur-md">
+        <div className="max-w-4xl mx-auto px-6 h-20 flex items-center justify-between">
+          <div className="flex items-center gap-8">
+            <Link to="/" className="group flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center group-hover:bg-blue-600 transition-all duration-500 shadow-lg shadow-slate-200 group-hover:shadow-blue-500/20 group-hover:scale-110 group-hover:rotate-3">
+                <Film size={18} className="text-white" />
               </div>
-              <span className="font-bold text-sm tracking-tight text-gray-900">
-                ScreenWrite
+              <span className="font-black text-base tracking-tighter text-slate-900 uppercase">
+                Screen<span className="text-blue-600 italic">Write</span>
               </span>
             </Link>
             
@@ -275,30 +279,30 @@ export function Workflow() {
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0 }}
-                  className="flex items-center gap-1.5 text-[10px] font-medium text-gray-400"
+                  className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100"
                 >
                   <Save size={12} className="animate-pulse" />
-                  Saving...
+                  Auto-Saving
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
           
-          <nav className="flex items-center gap-1">
+          <nav className="flex items-center gap-2">
             {steps.map((step, idx) => {
               const isPast = idx < currentStepIndex
               const isCurrent = idx === currentStepIndex
               
               return (
-                <div key={step.id} className="flex items-center">
+                <div key={step.id} className="flex items-center gap-2">
                   <div className={`
-                    text-[11px] font-semibold tracking-wide px-3 py-1 rounded-lg transition-all
-                    ${isCurrent ? 'text-blue-600 bg-blue-50' : isPast ? 'text-gray-900' : 'text-gray-400'}
+                    text-[10px] font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-xl transition-all duration-500
+                    ${isCurrent ? 'text-blue-600 bg-blue-50 shadow-sm ring-1 ring-blue-100' : isPast ? 'text-slate-900 bg-slate-50' : 'text-slate-300'}
                   `}>
                     {step.label}
                   </div>
                   {idx < steps.length - 1 && (
-                    <ChevronRight size={12} className="text-gray-200 mx-0.5" />
+                    <ChevronRight size={14} className="text-slate-200" />
                   )}
                 </div>
               )
@@ -307,7 +311,7 @@ export function Workflow() {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-6 py-12">
+      <div className="max-w-4xl mx-auto px-6 py-16">
         {/* Loading Overlay */}
         <AnimatePresence>
           {isLoading && currentStep === 'upload' && (
@@ -315,11 +319,13 @@ export function Workflow() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 bg-white/60 backdrop-blur-sm flex items-center justify-center"
+              className="fixed inset-0 z-50 bg-white/70 backdrop-blur-md flex items-center justify-center"
             >
-              <div className="flex flex-col items-center gap-4">
-                <Loader2 size={32} className="text-blue-600 animate-spin" />
-                <p className="text-sm font-bold text-gray-900 tracking-tight">Restoring Session...</p>
+              <div className="flex flex-col items-center gap-6">
+                <div className="w-16 h-16 rounded-3xl bg-blue-50 flex items-center justify-center shadow-inner">
+                  <Loader2 size={32} className="text-blue-600 animate-spin" strokeWidth={3} />
+                </div>
+                <p className="text-base font-black text-slate-900 tracking-tight uppercase tracking-[0.2em]">Restoring Session</p>
               </div>
             </motion.div>
           )}
@@ -329,12 +335,14 @@ export function Workflow() {
         <AnimatePresence>
           {error && (
             <motion.div 
-              initial={{ opacity: 0, y: -4 }}
+              initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="mb-8 p-3 bg-red-50 border border-red-100 rounded-xl text-red-600 text-xs font-medium flex items-center gap-2"
+              className="mb-10 p-5 bg-red-50 border border-red-100 rounded-2xl text-red-600 text-[11px] font-black uppercase tracking-widest flex items-center gap-3 shadow-lg shadow-red-500/5"
             >
-              <Info size={14} />
+              <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center shadow-sm">
+                <Info size={16} strokeWidth={3} />
+              </div>
               {error}
             </motion.div>
           )}
@@ -344,14 +352,14 @@ export function Workflow() {
           {currentStep === 'upload' && (
             <motion.div 
               key="upload"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 1.02 }}
               className="max-w-xl mx-auto py-12"
             >
-              <div className="mb-10 text-center">
-                <h2 className="text-2xl font-bold mb-2">Upload Script</h2>
-                <p className="text-gray-500 text-sm">Markdown files are parsed into editable segments.</p>
+              <div className="mb-14 text-center">
+                <h2 className="text-4xl font-black mb-4 tracking-tighter text-slate-900">Upload Script</h2>
+                <p className="text-slate-400 text-base font-medium max-w-sm mx-auto leading-relaxed">Your Markdown sequence will be parsed into cinematic beats.</p>
               </div>
               <ScriptUpload onUploadSuccess={handleUploadSuccess} />
             </motion.div>
@@ -387,34 +395,36 @@ export function Workflow() {
                 }}
               />
               
-              <div className="mt-12 pt-8 border-t border-gray-100 flex items-center justify-between">
+              <div className="mt-20 pt-10 border-t border-slate-100 flex items-center justify-between">
                 <button
                   onClick={() => setCurrentStep('upload')}
-                  className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-900"
+                  className="group flex items-center gap-3 text-xs font-black text-slate-400 hover:text-slate-900 transition-all uppercase tracking-widest"
                 >
-                  <ArrowLeft size={16} />
-                  Back to Upload
+                  <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center group-hover:bg-slate-100 transition-colors">
+                    <ArrowLeft size={16} strokeWidth={3} />
+                  </div>
+                  Cancel Session
                 </button>
                 
-                <div className="flex items-center gap-6">
+                <div className="flex items-center gap-8">
                   {!isReviewComplete && (
-                    <span className="text-[11px] font-medium text-amber-600 flex items-center gap-1.5">
-                      <Info size={14} />
-                      Review all segments to proceed
+                    <span className="text-[10px] font-black text-amber-500 flex items-center gap-2 uppercase tracking-widest bg-amber-50 px-4 py-2 rounded-xl border border-amber-100 shadow-sm">
+                      <Info size={14} strokeWidth={3} />
+                      Awaiting {beats.length - reviewedIds.size} approvals
                     </span>
                   )}
                   <button
                     disabled={!isReviewComplete}
                     onClick={() => setCurrentStep('configure')}
                     className={`
-                      px-8 py-3 rounded-xl text-sm font-semibold transition-all flex items-center gap-2
+                      px-10 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-3 shadow-xl active:scale-95
                       ${isReviewComplete 
-                        ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm' 
-                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'}
+                        ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-500/20' 
+                        : 'bg-slate-100 text-slate-300 cursor-not-allowed shadow-none'}
                     `}
                   >
-                    Configure Pipeline
-                    <ArrowRight size={16} />
+                    Set Pipeline
+                    <ArrowRight size={18} strokeWidth={3} />
                   </button>
                 </div>
               </div>
@@ -424,36 +434,38 @@ export function Workflow() {
           {currentStep === 'configure' && (
             <motion.div 
               key="configure"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
               className="max-w-2xl mx-auto"
             >
-              <div className="mb-10">
-                <h2 className="text-2xl font-bold mb-1">Configuration</h2>
-                <p className="text-gray-500 text-sm">Adjust search sources and output settings.</p>
+              <div className="mb-14">
+                <h2 className="text-4xl font-black mb-3 tracking-tighter text-slate-900">Configuration</h2>
+                <p className="text-slate-400 text-base font-medium">Fine-tune your acquisition sources and output settings.</p>
               </div>
 
-              <div className="bg-gray-50/50 p-8 rounded-2xl border border-gray-100">
+              <div className="bg-slate-50/30 p-10 rounded-[32px] border border-slate-100 shadow-inner">
                 <ConfigPanel onConfigChange={handleConfigChange} isLoading={isLoading} />
               </div>
 
-              <div className="mt-10 flex items-center justify-between">
+              <div className="mt-14 flex items-center justify-between">
                 <button
                   onClick={() => setCurrentStep('review')}
-                  className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-900"
+                  className="group flex items-center gap-3 text-xs font-black text-slate-400 hover:text-slate-900 transition-all uppercase tracking-widest"
                   disabled={isLoading}
                 >
-                  <ArrowLeft size={16} />
-                  Back to Review
+                  <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center group-hover:bg-slate-100 transition-colors">
+                    <ArrowLeft size={16} strokeWidth={3} />
+                  </div>
+                  Back
                 </button>
                 <button
                   onClick={handleFetchAssets}
-                  className="bg-gray-900 text-white px-8 py-3 rounded-xl text-sm font-semibold hover:bg-black transition-all flex items-center gap-2"
+                  className="bg-slate-900 text-white px-10 py-4 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-black transition-all flex items-center gap-3 shadow-2xl shadow-slate-200 active:scale-95 disabled:bg-slate-100 disabled:text-slate-300"
                   disabled={isLoading}
                 >
-                  {isLoading ? 'Starting Downloads...' : 'Fetch Assets & Continue'}
-                  <ArrowRight size={16} />
+                  {isLoading ? 'Initializing...' : 'Run Pipeline'}
+                  <ArrowRight size={18} strokeWidth={3} />
                 </button>
               </div>
             </motion.div>
@@ -462,42 +474,42 @@ export function Workflow() {
           {currentStep === 'export' && (
             <motion.div 
               key="export"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
               className="max-w-2xl mx-auto"
             >
-              <div className="text-center mb-10">
-                <h2 className="text-2xl font-bold mb-2">Ready for Export</h2>
-                <p className="text-gray-500 text-sm">Generate your FCPXML timeline.</p>
+              <div className="text-center mb-14">
+                <h2 className="text-4xl font-black mb-3 tracking-tighter text-slate-900">Timeline Ready</h2>
+                <p className="text-slate-400 text-base font-medium">Generate your FCPXML production bundle.</p>
               </div>
 
               {/* Status Polling for Fetching */}
               <FetchStatusPoller sessionId={sessionId} onComplete={() => {}} />
 
               {exportResult ? (
-                <div className="p-8 bg-gray-50 border border-gray-100 rounded-2xl">
-                  <div className="flex items-center gap-2 mb-8 text-emerald-600">
-                    <CheckCircle2 size={20} />
-                    <span className="font-bold text-sm">Generation Complete</span>
+                <div className="p-10 bg-white border border-slate-100 rounded-[32px] shadow-2xl shadow-slate-200">
+                  <div className="flex items-center gap-3 mb-10 text-emerald-600 bg-emerald-50 w-fit px-4 py-2 rounded-xl border border-emerald-100">
+                    <CheckCircle2 size={20} strokeWidth={3} />
+                    <span className="font-black text-[10px] uppercase tracking-[0.2em]">Generation Successful</span>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-8 mb-10">
-                    <div>
-                      <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Timeline</span>
-                      <p className="text-sm font-medium text-gray-900 truncate">{exportResult.filename}</p>
+                  <div className="grid grid-cols-2 gap-10 mb-12">
+                    <div className="space-y-2">
+                      <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Master File</span>
+                      <p className="text-sm font-black text-slate-900 truncate bg-slate-50 px-3 py-2 rounded-lg border border-slate-100">{exportResult.filename}</p>
                     </div>
-                    <div>
-                      <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Duration</span>
-                      <p className="text-sm font-medium text-gray-900">{exportResult.estimatedDuration.toFixed(1)}s</p>
+                    <div className="space-y-2">
+                      <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Length</span>
+                      <p className="text-sm font-black text-slate-900 bg-slate-50 px-3 py-2 rounded-lg border border-slate-100">{exportResult.estimatedDuration.toFixed(1)}s</p>
                     </div>
                   </div>
 
                   <a 
                     href={exportResult.downloadUrl} 
-                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-center py-3 rounded-xl font-bold text-sm block transition-all shadow-sm"
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-center py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] block transition-all shadow-xl shadow-emerald-500/20 active:scale-[0.98]"
                   >
-                    Download FCPXML
+                    Download FCPXML Bundle
                   </a>
 
                   <button
@@ -508,33 +520,36 @@ export function Workflow() {
                       setExportResult(null)
                       setReviewedIds(new Set())
                     }}
-                    className="w-full mt-6 text-xs font-semibold text-gray-400 hover:text-gray-900 transition-colors"
+                    className="w-full mt-8 text-[10px] font-black text-slate-300 hover:text-slate-900 uppercase tracking-widest transition-colors"
                   >
-                    Start a New Project
+                    Archive and Start New Project
                   </button>
                 </div>
               ) : (
-                <div className="space-y-8">
-                  <div className="bg-white p-8 border border-gray-100 rounded-2xl shadow-sm">
-                    <p className="text-gray-600 leading-relaxed">
-                      Final step: transform your <span className="font-bold text-gray-900">{beats.length} reviewed segments</span> into a high-quality timeline file.
+                <div className="space-y-10">
+                  <div className="bg-slate-50/50 p-10 border border-slate-100 rounded-[32px] shadow-inner">
+                    <p className="text-slate-600 text-lg font-medium leading-relaxed">
+                      Final step: merge your <span className="font-black text-slate-900 underline decoration-blue-500 decoration-2 underline-offset-4">{beats.length} cinematic beats</span> into a professional production timeline.
                     </p>
                   </div>
 
-                  <div className="flex items-center justify-between pt-4">
+                  <div className="flex items-center justify-between pt-6">
                     <button
                       onClick={() => setCurrentStep('configure')}
-                      className="text-sm font-medium text-gray-500 hover:text-gray-900"
+                      className="group flex items-center gap-3 text-xs font-black text-slate-400 hover:text-slate-900 transition-all uppercase tracking-widest"
                       disabled={isLoading}
                     >
+                      <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center group-hover:bg-slate-100 transition-colors">
+                        <ArrowLeft size={16} strokeWidth={3} />
+                      </div>
                       Back
                     </button>
                     <button
                       onClick={handleExport}
                       disabled={isLoading}
-                      className="bg-blue-600 text-white px-10 py-3 rounded-xl font-bold text-sm hover:bg-blue-700 transition-all shadow-sm disabled:bg-gray-100 disabled:text-gray-400"
+                      className="bg-blue-600 text-white px-12 py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-blue-700 transition-all shadow-xl shadow-blue-500/20 disabled:bg-slate-100 disabled:text-slate-300 disabled:shadow-none active:scale-95"
                     >
-                      {isLoading ? 'Generating...' : 'Generate FCPXML'}
+                      {isLoading ? 'Generating Bundle...' : 'Bake Timeline'}
                     </button>
                   </div>
                 </div>

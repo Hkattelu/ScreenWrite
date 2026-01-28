@@ -44,16 +44,16 @@ export function BeatAsset({
   
   if (visualType === 'annotation') {
     return (
-      <div className={`aspect-video flex flex-col items-center justify-center gap-3 bg-purple-50 border border-purple-100 rounded-xl p-6 text-center group transition-all duration-500 ${reviewed ? 'opacity-40 grayscale blur-[1px]' : ''}`}>
-        <div className="w-10 h-10 rounded-full bg-white border border-purple-100 flex items-center justify-center text-purple-500 shadow-sm group-hover:scale-110 transition-transform">
-          <Type size={18} />
+      <div className={`aspect-video flex flex-col items-center justify-center gap-4 bg-purple-50 border border-purple-100 rounded-2xl p-8 text-center group transition-all duration-700 ${reviewed ? 'opacity-30 grayscale blur-[2px]' : ''}`}>
+        <div className="w-12 h-12 rounded-2xl bg-white border border-purple-100 flex items-center justify-center text-purple-600 shadow-sm group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
+          <Type size={20} strokeWidth={2.5} />
         </div>
-        <div className="space-y-1">
-          <span className="text-xs font-black uppercase tracking-widest text-purple-600">Type</span>
-          <p className="text-sm font-bold text-purple-900 tracking-tight">ANNOTATION</p>
+        <div className="space-y-2">
+          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-purple-400">Layer Type</span>
+          <p className="text-sm font-black text-purple-900 tracking-tight uppercase">ANNOTATION</p>
           {visualContent && (
-            <p className="text-xs text-purple-600/80 font-medium mt-1 leading-relaxed max-w-[200px] mx-auto">
-              {visualContent}
+            <p className="text-xs text-purple-700 font-bold mt-2 leading-relaxed max-w-[240px] mx-auto bg-white/50 px-3 py-1.5 rounded-xl border border-purple-100/50">
+              "{visualContent}"
             </p>
           )}
         </div>
@@ -63,15 +63,15 @@ export function BeatAsset({
 
   if (visualType === 'citation') {
     return (
-      <div className={`aspect-video flex flex-col items-center justify-center gap-3 bg-amber-50 border border-amber-100 rounded-xl p-6 text-center group transition-all duration-500 ${reviewed ? 'opacity-40 grayscale blur-[1px]' : ''}`}>
-        <div className="w-10 h-10 rounded-full bg-white border border-amber-100 flex items-center justify-center text-amber-500 shadow-sm group-hover:scale-110 transition-transform">
-          <Quote size={18} />
+      <div className={`aspect-video flex flex-col items-center justify-center gap-4 bg-amber-50 border border-amber-100 rounded-2xl p-8 text-center group transition-all duration-700 ${reviewed ? 'opacity-30 grayscale blur-[2px]' : ''}`}>
+        <div className="w-12 h-12 rounded-2xl bg-white border border-amber-100 flex items-center justify-center text-amber-600 shadow-sm group-hover:scale-110 group-hover:-rotate-3 transition-all duration-500">
+          <Quote size={20} strokeWidth={2.5} />
         </div>
-        <div className="space-y-1">
-          <span className="text-xs font-black uppercase tracking-widest text-amber-600">Source</span>
-          <p className="text-sm font-bold text-amber-900 tracking-tight">CITATION</p>
+        <div className="space-y-2">
+          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-400">Reference</span>
+          <p className="text-sm font-black text-amber-900 tracking-tight uppercase">CITATION</p>
           {visualContent && (
-            <p className="text-xs text-amber-600/80 font-medium mt-1 leading-relaxed max-w-[200px] mx-auto">
+            <p className="text-xs text-amber-700 font-bold mt-2 leading-relaxed max-w-[240px] mx-auto bg-white/50 px-3 py-1.5 rounded-xl border border-amber-100/50">
               {visualContent}
             </p>
           )}
@@ -84,7 +84,7 @@ export function BeatAsset({
     return (
       <div 
         onClick={handleUploadClick}
-        className={`aspect-video flex flex-col items-center justify-center gap-3 bg-indigo-50/50 border-2 border-dashed border-indigo-200 rounded-xl p-6 text-center group relative cursor-pointer hover:bg-indigo-50 hover:border-indigo-300 focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all duration-300 ${reviewed ? 'opacity-40 grayscale blur-[1px] pointer-events-none' : ''}`}
+        className={`aspect-video flex flex-col items-center justify-center gap-4 bg-indigo-50/30 border-2 border-dashed border-indigo-200 rounded-2xl p-8 text-center group relative cursor-pointer hover:bg-indigo-50 hover:border-indigo-400 focus:outline-none focus:ring-8 focus:ring-indigo-500/5 focus:border-indigo-500/40 transition-all duration-500 ${reviewed ? 'opacity-30 grayscale blur-[2px] pointer-events-none' : ''}`}
         role="button"
         aria-label="Upload image asset"
         tabIndex={reviewed ? -1 : 0}
@@ -94,11 +94,14 @@ export function BeatAsset({
           }
         }}
       >
-        <div className="w-10 h-10 rounded-full bg-white border border-indigo-100 flex items-center justify-center text-indigo-500 shadow-sm group-hover:scale-110 group-hover:shadow-md transition-all duration-300">
-          <ImageIcon size={18} />
+        <div className="w-14 h-14 rounded-3xl bg-white border border-indigo-100 flex items-center justify-center text-indigo-500 shadow-md group-hover:scale-110 group-hover:shadow-xl group-hover:text-indigo-600 transition-all duration-500">
+          <ImageIcon size={24} strokeWidth={2.5} />
         </div>
-        <div className="space-y-3">
-          <p className="text-sm font-bold text-indigo-900 tracking-tight group-hover:text-indigo-700 transition-colors">Image Asset</p>
+        <div className="space-y-4">
+          <div className="space-y-1">
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400">Input Needed</span>
+            <p className="text-sm font-black text-indigo-900 tracking-tight uppercase group-hover:text-indigo-700 transition-colors">Static Image</p>
+          </div>
           <input
             type="file"
             ref={fileInputRef}
@@ -107,9 +110,9 @@ export function BeatAsset({
             onChange={handleFileChange}
             disabled={reviewed}
           />
-          <div className="flex items-center gap-2 px-4 py-2 bg-white border border-indigo-100 rounded-lg shadow-sm text-xs font-bold text-indigo-600 group-hover:border-indigo-200 group-hover:text-indigo-700 transition-all">
-            <Upload size={12} />
-            Upload Image
+          <div className="flex items-center gap-2.5 px-5 py-2.5 bg-indigo-600 rounded-xl shadow-lg shadow-indigo-500/20 text-xs font-black text-white group-hover:bg-indigo-700 transition-all active:scale-95">
+            <Upload size={14} strokeWidth={3} />
+            Upload Asset
           </div>
         </div>
       </div>
@@ -122,7 +125,7 @@ export function BeatAsset({
   if (showVideo) {
     if (assetPath) {
       return (
-        <div className={`relative group/asset transition-all duration-500 ${reviewed ? 'opacity-40 grayscale blur-[1px]' : ''}`}>
+        <div className={`relative group/asset transition-all duration-700 overflow-hidden ${reviewed ? 'opacity-30 grayscale blur-[2px]' : ''}`}>
           <video 
             src={getMediaUrl(sessionId, assetPath)} 
             className="w-full aspect-video object-cover"
@@ -135,50 +138,57 @@ export function BeatAsset({
             muted
             loop
           />
-          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/asset:opacity-100 group-focus-within/asset:opacity-100 transition-opacity flex items-center justify-center gap-4">
-            <Play className="text-white fill-white" size={24} />
+          <div className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover/asset:opacity-100 group-focus-within/asset:opacity-100 transition-all duration-500 flex items-center justify-center gap-6 backdrop-blur-[2px]">
+            <div className="w-16 h-16 rounded-full bg-white/10 border border-white/20 flex items-center justify-center backdrop-blur-md">
+              <Play className="text-white fill-white translate-x-0.5" size={32} />
+            </div>
             <button 
               onClick={(e) => {
                 e.stopPropagation()
                 onMaximize(beatId)
               }}
-              className="p-2 bg-white/20 hover:bg-white/40 focus:bg-white/40 backdrop-blur-md rounded-full text-white transition-all focus:outline-none focus:ring-2 focus:ring-white"
+              className="w-12 h-12 bg-white hover:bg-white/90 text-slate-900 rounded-full flex items-center justify-center shadow-xl transition-all hover:scale-110 active:scale-90 focus:outline-none focus:ring-4 focus:ring-white/20"
               aria-label="Maximize video preview"
             >
-              <Maximize2 size={16} />
+              <Maximize2 size={20} strokeWidth={2.5} />
             </button>
           </div>
           <button 
             onClick={() => onRefresh(beatId)}
             disabled={isRefreshing}
-            className="absolute top-2 right-2 p-1.5 bg-white/90 backdrop-blur-md rounded-lg shadow-sm text-gray-600 hover:text-blue-600 focus:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all active:scale-95 disabled:opacity-50"
+            className="absolute top-4 right-4 p-2 bg-white/95 backdrop-blur-xl rounded-xl shadow-xl text-slate-600 hover:text-blue-600 focus:text-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-500/20 transition-all active:scale-90 disabled:opacity-50"
             title="Refresh Footage"
             aria-label="Refresh footage"
           >
-            <RefreshCcw size={12} className={isRefreshing ? 'animate-spin' : ''} />
+            <RefreshCcw size={14} strokeWidth={2.5} className={isRefreshing ? 'animate-spin' : ''} />
           </button>
         </div>
       )
     }
 
     return (
-      <div className="aspect-video flex flex-col items-center justify-center gap-2 p-6 text-center">
-        <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+      <div className="aspect-video flex flex-col items-center justify-center gap-4 p-8 text-center bg-slate-50/50">
+        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 ${isRefreshing ? 'bg-blue-50 text-blue-500 shadow-inner' : 'bg-white border border-slate-100 text-slate-200 shadow-sm'}`}>
           {isRefreshing ? (
-            <RefreshCcw size={14} className="text-blue-500 animate-spin" />
+            <RefreshCcw size={20} strokeWidth={2.5} className="animate-spin" />
           ) : (
-            <Film size={14} className="text-gray-300" />
+            <Film size={20} strokeWidth={2.5} />
           )}
         </div>
-        <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">
-          {isRefreshing ? 'Downloading...' : 'No Preview Yet'}
-        </p>
+        <div className="space-y-1">
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+            {isRefreshing ? 'Processing' : 'Asset Status'}
+          </p>
+          <p className="text-xs font-black text-slate-800 uppercase tracking-widest">
+            {isRefreshing ? 'Downloading...' : 'No Preview Available'}
+          </p>
+        </div>
         {!isRefreshing && (
           <button 
             onClick={() => onRefresh(beatId)}
-            className="text-xs font-black text-blue-500 uppercase tracking-tighter hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-1"
+            className="mt-2 px-5 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-black text-blue-600 uppercase tracking-widest hover:border-blue-400 hover:bg-blue-50 transition-all active:scale-95 shadow-sm"
           >
-            Try fetching now
+            Fetch Asset
           </button>
         )}
       </div>
