@@ -20,36 +20,23 @@ ScreenWrite is an automated video production engine that transforms Markdown scr
 ## 🚀 Quick Start (GitHub)
 
 ### The One-Command Way
-If you are on **Windows**, run:
+Get up and running in seconds. This script will set up your virtual environment, install all dependencies, and guide you through the initial configuration (including your Gemini API key).
+
+**On Windows:**
 ```powershell
 ./setup.ps1
 ```
 
-If you are on **macOS** or **Linux**, run:
+**On macOS / Linux:**
 ```bash
 chmod +x setup.sh && ./setup.sh
 ```
 
-### The Manual Way
-
-**1. Backend Setup:**
-```bash
-cd webapp/backend
-python -m venv venv
-./venv/Scripts/activate # or source venv/bin/activate
-pip install -r requirements.txt
-python app.py
-```
-
-**2. Frontend Setup:**
-```bash
-cd webapp/frontend
-npm install
-npm run dev
-```
-
-Visit `http://localhost:3000`. 
-**💡 Pro Tip:** Don't have a script ready? Click **"Try with an Example"** on the upload screen to see ScreenWrite in action immediately.
+The script will:
+1. Verify **Python 3.7+** and **Node.js** are installed.
+2. Check for system dependencies (**ffmpeg**, **yt-dlp**).
+3. Create a local virtual environment and install requirements.
+4. Prompt you for your **Gemini API Key** to enable AI features.
 
 ---
 

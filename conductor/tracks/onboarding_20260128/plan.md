@@ -20,6 +20,6 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md)
 
 ## Phase 3: Documentation & Verification
-- [ ] Task: Update `README.md` with the new "Quick Start" instructions
-- [ ] Task: Verify the end-to-end flow on a clean environment simulation
-- [ ] Task: Conductor - User Manual Verification 'Phase 3' (Protocol in workflow.md)
+- [x] Task: Update `README.md` with the new "Quick Start" instructions
+- [x] Task: Verify the end-to-end flow on a clean environment simulation
+- [x] Task: Conductor - User Manual Verification 'Phase 3' (Protocol in workflow.md)
