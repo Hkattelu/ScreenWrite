@@ -105,48 +105,64 @@ class PexelsClient(AssetFetcher):
         Returns:
             Path to the downloaded video file, or None if failed
         """
+        results = self.fetch_multi(query, duration, count=1)
+        return results[0] if results else None
+
+    def fetch_multi(self, query: str, duration: float, count: int = 3) -> List[str]:
+        """
+        Fetch multiple videos from Pexels matching the query.
+        
+        Args:
+            query: Search query string
+            duration: Target duration in seconds
+            count: Number of candidates to fetch
+            
+        Returns:
+            List of paths to downloaded video files
+        """
         if not self._api_available:
             logger.error("Pexels API key not available, cannot fetch from Pexels")
-            return None
+            return []
             
         if not query.strip():
             logger.error("Empty query provided to Pexels fetcher")
-            return None
+            return []
             
         try:
-            # Search for video with retry logic
-            video_info = self._search_with_retry(query)
-            if not video_info:
+            # Search for videos with retry logic
+            videos_info = self._search_with_retry(query, count=count)
+            if not videos_info:
                 logger.warning(f"No Pexels results found for query: {query}")
-                return None
+                return []
             
-            # Download video with retry logic
-            downloaded_path = self._download_with_retry(video_info, query)
-            if not downloaded_path:
-                logger.error(f"Failed to download video from Pexels")
-                return None
+            downloaded_paths = []
+            for i, video_info in enumerate(videos_info):
+                # Download video with retry logic
+                # We use a unique suffix for candidates
+                downloaded_path = self._download_with_retry(video_info, f"{query}_{i}")
+                if downloaded_path:
+                    downloaded_paths.append(downloaded_path)
             
-            return downloaded_path
+            return downloaded_paths
                 
         except Exception as e:
             log_error_with_context(
                 logger, logging.ERROR,
-                "Unexpected error fetching from Pexels",
+                "Unexpected error fetching multiple from Pexels",
                 component="PexelsClient",
                 query=query,
-                duration=duration,
                 error=e
             )
-            return None
+            return []
     
     @retry_with_backoff(
         max_retries=2,
         base_delay=1.0,
         exceptions=(NetworkError, requests.exceptions.RequestException)
     )
-    def _search_with_retry(self, query: str) -> Optional[Dict[str, Any]]:
+    def _search_with_retry(self, query: str, count: int = 1) -> Optional[List[Dict[str, Any]]]:
         """Search Pexels with retry logic."""
-        return self._search(query)
+        return self._search(query, count=count)
     
     @retry_with_backoff(
         max_retries=2,
@@ -157,15 +173,16 @@ class PexelsClient(AssetFetcher):
         """Download video with retry logic."""
         return self._download(video_info, query)
     
-    def _search(self, query: str) -> Optional[Dict[str, Any]]:
+    def _search(self, query: str, count: int = 1) -> Optional[List[Dict[str, Any]]]:
         """
         Search Pexels for videos matching the query.
         
         Args:
             query: Search query string
+            count: Number of results to return
             
         Returns:
-            Video information dict with download URL, or None if no results
+            List of video information dicts, or None if no results
             
         Raises:
             NetworkError: If network-related errors occur
@@ -175,7 +192,7 @@ class PexelsClient(AssetFetcher):
             search_url = f"{self.base_url}/search"
             params = {
                 'query': query,
-                'per_page': 1,  # We only need the first result
+                'per_page': count,
                 'orientation': 'landscape',  # Prefer landscape videos
                 'size': 'medium'  # Medium quality for reasonable file size
             }
@@ -220,44 +237,39 @@ class PexelsClient(AssetFetcher):
                 logger.info(f"No Pexels videos found for query: {query}")
                 return None
             
-            # Get first video
-            video = data['videos'][0]
-            
-            # Extract video files (different quality options)
-            video_files = video.get('video_files', [])
-            if not video_files:
-                logger.warning("No video files found in Pexels result")
-                return None
-            
-            # Find best quality video file (prefer HD, fallback to SD)
-            best_file = None
-            for file_info in video_files:
-                quality = file_info.get('quality', '').lower()
-                file_type = file_info.get('file_type', '').lower()
+            results = []
+            for video in data['videos'][:count]:
+                # Extract video files (different quality options)
+                video_files = video.get('video_files', [])
+                if not video_files:
+                    continue
                 
-                # Prefer mp4 format
-                if file_type == 'video/mp4':
-                    if quality in ['hd', 'sd'] and (best_file is None or quality == 'hd'):
-                        best_file = file_info
+                # Find best quality video file (prefer HD, fallback to SD)
+                best_file = None
+                for file_info in video_files:
+                    quality = file_info.get('quality', '').lower()
+                    file_type = file_info.get('file_type', '').lower()
+                    
+                    # Prefer mp4 format
+                    if file_type == 'video/mp4':
+                        if quality in ['hd', 'sd'] and (best_file is None or quality == 'hd'):
+                            best_file = file_info
+                
+                # Fallback to any available file
+                if not best_file and video_files:
+                    best_file = video_files[0]
+                
+                if best_file and 'link' in best_file:
+                    results.append({
+                        'id': video.get('id'),
+                        'url': best_file['link'],
+                        'width': best_file.get('width'),
+                        'height': best_file.get('height'),
+                        'quality': best_file.get('quality'),
+                        'file_type': best_file.get('file_type')
+                    })
             
-            # Fallback to any available file
-            if not best_file and video_files:
-                best_file = video_files[0]
-            
-            if not best_file or 'link' not in best_file:
-                logger.warning("No suitable video file found in Pexels result")
-                return None
-            
-            logger.debug(f"Found Pexels video: {video.get('id')} - {best_file.get('quality')}")
-            
-            return {
-                'id': video.get('id'),
-                'url': best_file['link'],
-                'width': best_file.get('width'),
-                'height': best_file.get('height'),
-                'quality': best_file.get('quality'),
-                'file_type': best_file.get('file_type')
-            }
+            return results if results else None
                     
         except requests.exceptions.Timeout:
             raise NetworkError(f"Pexels API timeout for query: {query}")

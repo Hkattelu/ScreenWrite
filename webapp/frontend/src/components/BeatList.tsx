@@ -26,11 +26,13 @@ import { BeatAsset } from './BeatAsset'
 interface BeatListProps {
   sessionId: string
   beats: Beat[]
-  assets?: Record<string, string>
+  assets?: Record<string, string | string[]>
   onBeatsUpdate?: (beats: Beat[]) => void
+  onAssetsUpdate?: (assets: Record<string, string | string[]>) => void
   editable?: boolean
   reviewedIds?: Set<string>
   onToggleReviewed?: (id: string) => void
+  onToggleAllReviewed?: () => void
 }
 
 type VisualSourceMode = 'auto' | 'youtube' | 'stock' | 'none'
@@ -40,16 +42,20 @@ export function BeatList({
   beats, 
   assets = {},
   onBeatsUpdate, 
+  onAssetsUpdate,
   editable = false,
   reviewedIds = new Set(),
-  onToggleReviewed
+  onToggleReviewed,
+  onToggleAllReviewed
 }: BeatListProps) {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [lightboxId, setLightboxId] = useState<string | null>(null)
+  const [lightboxPath, setLightboxPath] = useState<string | null>(null)
   const [refreshingIds, setRefreshingIds] = useState<Set<string>>(new Set())
   const [editValues, setEditValues] = useState<Partial<Beat>>({})
   const [sourceMode, setSourceMode] = useState<VisualSourceMode>('auto')
   const listRef = useRef<HTMLDivElement>(null)
+
 
   // Keyboard navigation for ArrowUp/ArrowDown
   useEffect(() => {
@@ -84,12 +90,31 @@ export function BeatList({
   }, [beats.length, editingId])
 
   const handleMarkAllReviewed = () => {
-    if (!onToggleReviewed) return
-    beats.forEach(beat => {
-      if (!reviewedIds.has(beat.id)) {
-        onToggleReviewed(beat.id)
-      }
-    })
+    if (onToggleAllReviewed) {
+      onToggleAllReviewed()
+    } else if (onToggleReviewed) {
+      beats.forEach(beat => {
+        if (!reviewedIds.has(beat.id)) {
+          onToggleReviewed(beat.id)
+        }
+      })
+    }
+  }
+
+  const handleAssetSelect = (beatId: string, selectedPath: string) => {
+    if (!onAssetsUpdate) return
+    
+    const currentAssets = assets[beatId]
+    if (!currentAssets || !Array.isArray(currentAssets)) return
+
+    // Move selected path to the front of the array
+    const newPaths = [
+      selectedPath,
+      ...currentAssets.filter(p => p !== selectedPath)
+    ]
+
+    const updatedAssets = { ...assets, [beatId]: newPaths }
+    onAssetsUpdate(updatedAssets)
   }
 
   const handleRefresh = async (beatId: string) => {
@@ -180,43 +205,25 @@ export function BeatList({
 
   return (
     <div className="w-full relative">
-      {/* Refined Summary Header */}
+      {/* Simplified Summary Header */}
       <div className="flex items-center gap-10 py-6 border-b border-slate-100 mb-8 sticky top-16 bg-white/95 backdrop-blur-md z-20">
         <div className="flex flex-col">
-          <div className="flex items-center gap-1.5 text-slate-900">
-            <span className="text-2xl font-black leading-none tracking-tight">{beats.length}</span>
-            <Film size={16} className="text-slate-400" />
-          </div>
-          <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Segments</span>
+          <span className="text-xl font-bold text-slate-900 leading-none">{beats.length}</span>
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">Segments</span>
         </div>
         <div className="flex flex-col">
-          <div className="flex items-center gap-1.5 text-slate-900">
-            <span className="text-2xl font-black leading-none tracking-tight">{formatDuration(totalDuration)}</span>
-            <Clock size={16} className="text-slate-400" />
-          </div>
-          <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Duration</span>
+          <span className="text-xl font-bold text-slate-900 leading-none">{formatDuration(totalDuration)}</span>
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">Duration</span>
         </div>
         <div className="flex flex-col ml-auto">
-          <div className="flex items-center gap-1.5 text-blue-600">
-            <span className="text-2xl font-black leading-none tracking-tight">{reviewedIds.size}/{beats.length}</span>
-            <CheckCircle2 size={16} />
-          </div>
-          <span className="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em]">Reviewed</span>
+          <span className="text-xl font-bold text-blue-600 leading-none">{reviewedIds.size}/{beats.length}</span>
+          <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider mt-1">Reviewed</span>
         </div>
         
-        <div className="hidden md:flex items-center gap-4 px-5 py-2.5 bg-slate-50 rounded-2xl border border-slate-100">
-          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Controls</span>
-          <div className="flex gap-1.5">
-            <kbd className="px-2 py-1 rounded-lg border border-slate-200 bg-white text-[10px] font-black text-slate-500 shadow-sm">↑</kbd>
-            <kbd className="px-2 py-1 rounded-lg border border-slate-200 bg-white text-[10px] font-black text-slate-500 shadow-sm">↓</kbd>
-          </div>
-        </div>
-
         {reviewedIds.size < beats.length && (
           <button 
             onClick={handleMarkAllReviewed}
-            aria-label="Mark all segments as reviewed"
-            className="flex items-center gap-2 px-6 py-2.5 bg-slate-900 hover:bg-black text-[11px] font-black uppercase tracking-widest text-white rounded-xl transition-all shadow-lg shadow-slate-200 hover:shadow-slate-300 focus:ring-4 focus:ring-slate-500/10 active:scale-95"
+            className="flex items-center gap-2 px-6 py-2 bg-slate-900 hover:bg-black text-[11px] font-bold uppercase tracking-wider text-white rounded-xl transition-all active:scale-95 ml-4"
           >
             Approve All
           </button>
@@ -320,27 +327,10 @@ export function BeatList({
                   data-beat-container={index}
                   className={`
                     relative group rounded-3xl transition-all duration-500 overflow-hidden
-                    ${isEditing ? 'bg-white ring-1 ring-slate-200 shadow-2xl p-8 z-10 scale-[1.02]' : 'bg-white p-6 border border-slate-100 hover:border-slate-200 focus-within:border-blue-300 focus-within:ring-8 focus-within:ring-blue-500/5'}
-                    ${isReviewed && !isEditing ? 'bg-slate-50/60 border-slate-100 scale-[0.98] opacity-80' : 'shadow-sm hover:shadow-md'}
+                    ${isEditing ? 'bg-white ring-1 ring-slate-200 shadow-2xl p-8 z-10 scale-[1.02]' : 'bg-white p-6 border border-slate-100 hover:border-slate-200 focus-within:border-blue-300'}
+                    ${isReviewed && !isEditing ? 'bg-slate-50/40 border-slate-100 opacity-80' : 'shadow-sm hover:shadow-md'}
                   `}
                 >
-                  {/* Cinematic Watermark for Reviewed Items */}
-                  <AnimatePresence>
-                    {isReviewed && !isEditing && (
-                      <motion.div
-                        initial={{ opacity: 0, scale: 1.1 }}
-                        animate={{ opacity: 0.03, scale: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="absolute right-0 bottom-0 pointer-events-none select-none overflow-hidden h-full flex items-end"
-                        style={{ fontFamily: "'Inter', sans-serif" }}
-                      >
-                        <span className="text-[160px] font-black italic tracking-tighter leading-[0.8] translate-y-12 translate-x-12 uppercase">
-                          Done
-                        </span>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-
                   <AnimatePresence mode="wait">
                     {isEditing ? (
                       <motion.div 
@@ -350,60 +340,56 @@ export function BeatList({
                         className="space-y-8"
                       >
                         <div className="flex items-center justify-between">
-                          <h3 className="text-base font-black text-slate-900 flex items-center gap-3">
-                            <Edit3 size={20} className="text-blue-500" />
-                            Refine Segment #{index + 1}
+                          <h3 className="text-base font-bold text-slate-900 flex items-center gap-3">
+                            <Edit3 size={18} className="text-blue-500" />
+                            Edit Segment {index + 1}
                           </h3>
                         </div>
 
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                           <div className="space-y-6">
                             <div>
-                              <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 block">Script Narrative</label>
+                              <label className="text-xs font-bold text-slate-400 mb-3 block">Narrative</label>
                               <textarea
                                 value={editValues.text || ''}
                                 onChange={(e) => setEditValues({ ...editValues, text: e.target.value })}
-                                className="w-full p-5 bg-slate-50 border border-slate-100 rounded-2xl text-sm leading-relaxed text-slate-900 focus:outline-none focus:ring-4 focus:ring-blue-500/5 focus:bg-white focus:border-blue-500/20 transition-all resize-none font-medium"
+                                className="w-full p-5 bg-slate-50 border border-slate-200 rounded-2xl text-sm leading-relaxed text-slate-900 focus:outline-none focus:ring-4 focus:ring-blue-500/5 focus:bg-white transition-all resize-none font-medium"
                                 rows={4}
                               />
                             </div>
                             
                             <div>
                               <div className="flex items-center justify-between mb-3">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] block">Target Duration</label>
-                                <span className="font-mono text-sm font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded-lg">{editValues.duration}s</span>
+                                <label className="text-xs font-bold text-slate-400 block">Duration</label>
+                                <span className="text-sm font-bold text-blue-600">{editValues.duration}s</span>
                               </div>
-                              <div className="flex items-center gap-4">
-                                <input
-                                  type="range"
-                                  min="0.5"
-                                  max="30"
-                                  step="0.5"
-                                  value={editValues.duration || 0}
-                                  onChange={(e) => setEditValues({ ...editValues, duration: parseFloat(e.target.value) })}
-                                  className="flex-grow accent-blue-600 h-1.5 bg-slate-100 rounded-full cursor-pointer"
-                                />
-                              </div>
+                              <input
+                                type="range"
+                                min="0.5"
+                                max="30"
+                                step="0.5"
+                                value={editValues.duration || 0}
+                                onChange={(e) => setEditValues({ ...editValues, duration: parseFloat(e.target.value) })}
+                                className="w-full accent-blue-600 h-1.5 bg-slate-100 rounded-full cursor-pointer"
+                              />
                             </div>
                           </div>
 
                           <div className="space-y-6">
                             <div>
-                              <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 block">Visual Strategy</label>
-                              <div className="grid grid-cols-4 gap-1.5 bg-slate-100 p-1.5 rounded-2xl">
+                              <label className="text-xs font-bold text-slate-400 mb-3 block">Source</label>
+                              <div className="grid grid-cols-4 gap-1.5 bg-slate-100 p-1 rounded-2xl">
                                 {(['auto', 'youtube', 'stock', 'none'] as const).map((m) => {
-                                  const Icon = m === 'youtube' ? Youtube : m === 'stock' ? Image : m === 'auto' ? Zap : Slash
                                   return (
                                     <button
                                       key={m}
                                       onClick={() => setSourceMode(m)}
-                                      className={`flex flex-col items-center gap-2 py-3 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all ${
+                                      className={`py-2.5 text-[10px] font-bold uppercase tracking-wider rounded-xl transition-all ${
                                         sourceMode === m 
-                                          ? 'bg-white text-blue-600 shadow-md ring-1 ring-slate-200' 
-                                          : 'text-slate-400 hover:text-slate-600 hover:bg-slate-200/50'
+                                          ? 'bg-white text-blue-600 shadow-sm' 
+                                          : 'text-slate-400 hover:text-slate-600'
                                       }`}
                                     >
-                                      <Icon size={14} />
                                       {m}
                                     </button>
                                   )
@@ -413,105 +399,72 @@ export function BeatList({
 
                             <div className="space-y-4">
                               {(sourceMode === 'auto' || sourceMode === 'youtube') && (
-                                <div>
-                                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">YouTube Search</label>
-                                  <input
-                                    type="text"
-                                    value={editValues.youtube_phrase || ''}
-                                    onChange={(e) => setEditValues({ ...editValues, youtube_phrase: e.target.value })}
-                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-mono font-bold text-slate-700 focus:bg-white focus:border-blue-500/20 focus:ring-4 focus:ring-blue-500/5 outline-none transition-all"
-                                    placeholder="High-energy cinematic..."
-                                  />
-                                </div>
+                                <input
+                                  type="text"
+                                  value={editValues.youtube_phrase || ''}
+                                  onChange={(e) => setEditValues({ ...editValues, youtube_phrase: e.target.value })}
+                                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:bg-white outline-none transition-all"
+                                  placeholder="YouTube Search..."
+                                />
                               )}
 
                               {(sourceMode === 'auto' || sourceMode === 'stock') && (
-                                <div>
-                                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">Stock Keywords</label>
-                                  <input
-                                    type="text"
-                                    value={editValues.stock_keyword || ''}
-                                    onChange={(e) => setEditValues({ ...editValues, stock_keyword: e.target.value })}
-                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-mono font-bold text-slate-700 focus:bg-white focus:border-blue-500/20 focus:ring-4 focus:ring-blue-500/5 outline-none transition-all"
-                                    placeholder="aerial, drone, city..."
-                                  />
-                                </div>
+                                <input
+                                  type="text"
+                                  value={editValues.stock_keyword || ''}
+                                  onChange={(e) => setEditValues({ ...editValues, stock_keyword: e.target.value })}
+                                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:bg-white outline-none transition-all"
+                                  placeholder="Stock Keywords..."
+                                />
                               )}
                             </div>
                           </div>
                         </div>
 
-                        <div className="flex justify-end gap-4 pt-4">
-                          <button onClick={handleCancel} className="px-6 py-2.5 text-[11px] font-black text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest">Discard</button>
-                          <button onClick={handleSave} className="bg-blue-600 text-white py-3 px-8 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-blue-700 transition-all flex items-center gap-2 shadow-lg shadow-blue-500/20 active:scale-95">
-                            Save Segment
-                            <Check size={16} strokeWidth={3} />
+                        <div className="flex justify-end gap-3 pt-4">
+                          <button onClick={handleCancel} className="px-6 py-2.5 text-xs font-bold text-slate-400 hover:text-slate-600">Cancel</button>
+                          <button onClick={handleSave} className="bg-blue-600 text-white py-2.5 px-8 rounded-xl text-xs font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20 active:scale-95">
+                            Save Changes
                           </button>
                         </div>
                       </motion.div>
                     ) : (
-                      <div className="flex items-stretch gap-8">
+                      <div className="flex items-start gap-8">
                         <button 
                           onClick={() => onToggleReviewed?.(beat.id)}
-                          aria-label={`Mark beat ${index + 1} as ${isReviewed ? 'unreviewed' : 'reviewed'}`}
+                          aria-label={isReviewed ? "Unapprove" : "Approve"}
                           className={`
-                            w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 border-2 flex-shrink-0 mt-1 focus:outline-none focus:ring-4 focus:ring-blue-500/10 active:scale-90
+                            w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 border-2 flex-shrink-0 mt-1
                             ${isReviewed 
-                              ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/30' 
-                              : 'bg-white border-slate-200 text-slate-400 hover:border-blue-400 hover:text-blue-500 shadow-sm'}
+                              ? 'bg-blue-600 border-blue-600 text-white' 
+                              : 'bg-white border-slate-200 text-slate-300 hover:border-blue-400 hover:text-blue-500'}
                           `}
                         >
-                          <CheckCircle2 size={24} strokeWidth={isReviewed ? 3 : 2} />
+                          <CheckCircle2 size={20} strokeWidth={isReviewed ? 3 : 2} />
                         </button>
 
-                        <div className="flex-grow min-w-0 py-1">
-                          <div className="flex flex-wrap items-center gap-3 mb-4">
-                            <span className="font-mono text-xs font-black text-slate-300">#{String(index + 1).padStart(2, '0')}</span>
-                            {isReviewed && !isEditing && (
-                              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white bg-blue-600 px-3 py-1 rounded-lg shadow-sm shadow-blue-500/20">
-                                Approved
-                              </span>
-                            )}
+                        <div className="flex-grow min-w-0">
+                          <div className="flex flex-wrap items-center gap-2 mb-3">
+                            <span className="text-[11px] font-bold text-slate-300">#{index + 1}</span>
                             {beat.header && (
-                              <span className="text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
+                              <span className="text-[10px] font-bold text-blue-500 bg-blue-50 px-2 py-0.5 rounded-lg">
                                 {beat.header}
                               </span>
                             )}
-                            <span className="text-[10px] font-black text-slate-500 flex items-center gap-1.5 px-3 py-1 bg-slate-50 rounded-full border border-slate-100">
-                              <Clock size={11} />
+                            <span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2 py-0.5 rounded-lg">
                               {beat.duration.toFixed(1)}s
                             </span>
-                            {beat.visual_type && beat.visual_type !== 'auto' && beat.visual_type !== 'b-roll' && (
-                              <span className={`
-                                text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full flex items-center gap-1.5 border
-                                ${beat.visual_type === 'annotation' ? 'bg-purple-50 text-purple-600 border-purple-100' :
-                                  beat.visual_type === 'citation' ? 'bg-amber-50 text-amber-600 border-amber-100' :
-                                  'bg-indigo-50 text-indigo-600 border-indigo-100'}
-                              `}>
-                                {beat.visual_type === 'annotation' ? <Type size={11} /> :
-                                 beat.visual_type === 'citation' ? <Quote size={11} /> :
-                                 <Image size={11} />}
-                                {beat.visual_type}
-                              </span>
+                            {isReviewed && (
+                              <span className="text-[10px] font-bold text-blue-600 uppercase tracking-widest ml-auto">Approved</span>
                             )}
-                            <div className={`
-                              flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border
-                              ${viewMode === 'none' ? 'bg-slate-50 text-slate-400 border-slate-100' :
-                                viewMode === 'auto' ? 'bg-blue-50 text-blue-500 border-blue-100' :
-                                viewMode === 'youtube' ? 'bg-red-50 text-red-500 border-red-100' :
-                                'bg-emerald-50 text-emerald-600 border-emerald-100'}
-                            `}>
-                              {viewMode}
-                            </div>
                           </div>
 
-                          <p className={`text-base leading-relaxed transition-all duration-500 mb-6 max-w-2xl ${isReviewed ? 'text-slate-400 font-medium italic line-through decoration-slate-200 decoration-2' : 'text-slate-800 font-semibold'}`}>
+                          <p className={`text-base leading-relaxed transition-all duration-500 mb-6 ${isReviewed ? 'text-slate-300 line-through decoration-slate-200' : 'text-slate-800 font-medium'}`}>
                             {beat.text}
                           </p>
                           
-                          {/* Asset Preview Section - Replaced with BeatAsset */}
                           {viewMode !== 'none' && (
-                            <div className={`relative rounded-3xl overflow-hidden bg-slate-100 border border-slate-200 max-w-md shadow-inner transition-all duration-500 ${isReviewed ? 'grayscale opacity-60' : ''}`}>
+                            <div className={`transition-all duration-500 ${isReviewed ? 'grayscale opacity-50' : ''}`}>
                               <BeatAsset 
                                 sessionId={sessionId}
                                 beatId={beat.id}
@@ -521,53 +474,35 @@ export function BeatList({
                                 isRefreshing={refreshingIds.has(beat.id)}
                                 reviewed={isReviewed}
                                 onRefresh={handleRefresh}
-                                onMaximize={(id) => setLightboxId(id)}
+                                onMaximize={(id, path) => {
+                                  setLightboxId(id)
+                                  setLightboxPath(path || null)
+                                }}
+                                onSelect={handleAssetSelect}
                               />
-                            </div>
-                          )}
-                          
-                          {!isReviewed && viewMode !== 'none' && (
-                            <div className="flex flex-wrap gap-2 mt-6">
-                              {beat.youtube_phrase && (viewMode === 'auto' || viewMode === 'youtube') && (
-                                <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-100 text-[10px] font-mono font-black text-slate-500 uppercase tracking-tight">
-                                  <Youtube size={12} className="text-red-500" />
-                                  {beat.youtube_phrase}
-                                </span>
-                              )}
-                              {beat.stock_keyword && (viewMode === 'auto' || viewMode === 'stock') && (
-                                <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-100 text-[10px] font-mono font-black text-slate-500 uppercase tracking-tight">
-                                  <Image size={12} className="text-emerald-500" />
-                                  {beat.stock_keyword}
-                                </span>
-                              )}
                             </div>
                           )}
                         </div>
 
                         {editable && (
-                          <div className="flex flex-col gap-3 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all duration-300 border-l border-slate-100 pl-6 py-2">
+                          <div className="flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 pt-1">
                             <button
                               onClick={() => handleEdit(beat)}
-                              aria-label="Edit beat"
-                              className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-blue-50 focus:bg-blue-50 focus:text-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-500/10 transition-all"
-                              title="Edit Segment"
+                              className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-blue-600 hover:bg-blue-50"
+                              title="Edit"
                             >
-                              <Edit3 size={18} />
+                              <Edit3 size={16} />
                             </button>
-                            
-                            {viewMode !== 'none' && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  handleSkip(beat)
-                                }}
-                                aria-label="Disable visuals for this beat"
-                                className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 focus:bg-red-50 focus:text-red-500 focus:outline-none focus:ring-4 focus:ring-red-500/10 transition-all"
-                                title="Skip Visuals (None)"
-                              >
-                                <Slash size={18} />
-                              </button>
-                            )}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleSkip(beat)
+                              }}
+                              className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50"
+                              title="Skip"
+                            >
+                              <Slash size={16} />
+                            </button>
                           </div>
                         )}
                       </div>
@@ -600,7 +535,7 @@ export function BeatList({
             
             <div className="w-full max-w-6xl aspect-video rounded-3xl overflow-hidden shadow-2xl border border-white/10 bg-black" onClick={e => e.stopPropagation()}>
               <video 
-                src={getMediaUrl(sessionId, assets[lightboxId] || '')} 
+                src={getMediaUrl(sessionId, lightboxPath || '')} 
                 className="w-full h-full object-contain"
                 controls
                 autoPlay
@@ -612,7 +547,7 @@ export function BeatList({
                 {beats.find(b => b.id === lightboxId)?.text}
               </p>
               <p className="text-white/40 font-mono text-xs uppercase tracking-[0.2em]">
-                {assets[lightboxId]?.split(/[\/]/).pop()}
+                {(lightboxPath || '').split(/[\/]/).pop()}
               </p>
             </div>
           </motion.div>

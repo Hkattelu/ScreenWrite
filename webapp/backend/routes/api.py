@@ -83,6 +83,30 @@ def update_beats(session_id):
         return {'error': 'Failed to update beats'}, 500
 
 
+@api_bp.route('/session/<session_id>/assets', methods=['PUT'])
+def update_assets(session_id):
+    """Update asset mappings for a session (e.g. candidate selection)."""
+    if not session_exists(session_id):
+        return {'error': 'Session not found'}, 404
+
+    try:
+        data = request.get_json()
+        state = load_session_state(session_id)
+
+        if 'assets' not in data:
+            return {'error': 'No assets provided'}, 400
+
+        state['assets'] = data['assets']
+        state['updatedAt'] = datetime.now().isoformat()
+
+        save_session_state(session_id, state)
+        return {'success': True}, 200
+
+    except Exception as e:
+        logger.error(f'Error updating assets for {session_id}: {str(e)}')
+        return {'error': 'Failed to update assets'}, 500
+
+
 @api_bp.route('/session/<session_id>/status', methods=['GET'])
 def get_status(session_id):
     """Get session processing status."""

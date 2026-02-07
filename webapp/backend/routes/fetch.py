@@ -108,16 +108,16 @@ def background_fetch(app, session_id, app_config, session_folder):
 
         # Execute batch fetch
         try:
-            logger.info("Starting batch fetch...")
-            results = orchestrator.fetch_assets_batch(queries, max_workers=4)
-            logger.info(f"Batch fetch returned {len(results)} results")
+            logger.info("Starting batch fetch with multiple candidates...")
+            results = orchestrator.fetch_assets_batch(queries, max_workers=4, candidates_per_beat=3)
+            logger.info(f"Batch fetch returned results for {len(results)} beats")
             
             # Reload state again to ensure we don't overwrite concurrent edits (basic optimism)
             with open(state_file, 'r') as f:
                 current_state = json.load(f)
                 
             # Update assets map
-            # results is {beat_id: path}
+            # results is {beat_id: [path1, path2, ...]}
             current_state['assets'] = results
             current_state['status'] = 'complete'
             current_state['completedAt'] = datetime.now().isoformat()
@@ -127,6 +127,7 @@ def background_fetch(app, session_id, app_config, session_folder):
             logger.info("Fetch completed and state saved.")
                 
         except Exception as e:
+
             logger.error(f"Batch fetch failed: {e}", exc_info=True)
             # Try to report error
             try:
@@ -186,14 +187,21 @@ def refresh_beat_asset(session_id, beat_id):
         
         def single_fetch():
             try:
-                result = orchestrator.fetch_asset(query)
+                # Fetch multiple candidates for this single beat
+                results = orchestrator.fetch_assets(
+                    query['youtube_query'], 
+                    query['stock_query'], 
+                    query['duration'], 
+                    count=3,
+                    beat_id=beat_id
+                )
                 # Reload and update
                 current_state = load_session_state(session_id)
                 if not isinstance(current_state.get('assets'), dict):
                     current_state['assets'] = {}
-                current_state['assets'][beat_id] = result
+                current_state['assets'][beat_id] = results
                 save_session_state(session_id, current_state)
-                logger.info(f"Refreshed asset for beat {beat_id} in session {session_id}")
+                logger.info(f"Refreshed {len(results)} assets for beat {beat_id} in session {session_id}")
             except Exception as e:
                 logger.error(f"Failed to refresh beat {beat_id}: {e}")
 

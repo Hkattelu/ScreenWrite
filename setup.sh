@@ -25,4 +25,4 @@ if [ -d "webapp/frontend" ]; then
 fi
 
 # 4. Run onboarding wizard
-python onboarding.py
+# python onboarding.py

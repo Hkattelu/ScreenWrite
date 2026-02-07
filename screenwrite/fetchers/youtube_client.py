@@ -77,9 +77,9 @@ class YouTubeClient(AssetFetcher):
         base_delay=1.0,
         exceptions=(NetworkError, Exception)
     )
-    def _search_with_retry(self, query: str) -> Optional[str]:
+    def _search_with_retry(self, query: str, count: int = 1) -> Optional[List[str]]:
         """Search YouTube with retry logic."""
-        return self._search(query)
+        return self._search(query, count=count)
     
     @retry_with_backoff(
         max_retries=2,
@@ -136,48 +136,73 @@ class YouTubeClient(AssetFetcher):
         Returns:
             Path to the downloaded and trimmed video file, or None if failed
         """
+        results = self.fetch_multi(query, duration, count=1)
+        return results[0] if results else None
+
+    def fetch_multi(self, query: str, duration: float, count: int = 3) -> List[str]:
+        """
+        Fetch multiple videos from YouTube matching the query and trim them.
+        
+        Args:
+            query: Search query string
+            duration: Target duration in seconds
+            count: Number of candidates to fetch
+            
+        Returns:
+            List of paths to downloaded and trimmed video files
+        """
         if not self._yt_dlp_available:
             logger.error("yt-dlp not available, cannot fetch from YouTube")
-            return None
+            return []
             
         if not query.strip():
             logger.error("Empty query provided to YouTube fetcher")
-            return None
+            return []
             
         try:
-            # Search for video with retry logic
-            video_url = self._search_with_retry(query)
-            if not video_url:
+            # Search for videos with retry logic
+            video_urls = self._search_with_retry(query, count=count)
+            if not video_urls:
                 logger.warning(f"No YouTube results found for query: {query}")
-                return None
+                return []
             
-            # Download video with retry logic
-            downloaded_path = self._download_with_retry(video_url, query)
-            if not downloaded_path:
-                logger.error(f"Failed to download video from: {video_url}")
-                return None
+            downloaded_paths = []
+            for i, video_url in enumerate(video_urls):
+                try:
+                    # Download video with retry logic
+                    downloaded_path = self._download_with_retry(video_url, f"{query}_{i}")
+                    if not downloaded_path:
+                        continue
+                    
+                    # Trim video to target duration if ffmpeg is available
+                    if self._ffmpeg_available:
+                        trimmed_path = self._trim_video_with_retry(downloaded_path, duration)
+                        if trimmed_path:
+                            try:
+                                os.remove(downloaded_path)
+                            except OSError:
+                                pass
+                            downloaded_paths.append(trimmed_path)
+                        else:
+                            downloaded_paths.append(downloaded_path)
+                    else:
+                        downloaded_paths.append(downloaded_path)
+                except Exception as e:
+                    logger.warning(f"Failed to fetch candidate {i} from YouTube: {e}")
+                    continue
             
-            # Trim video to target duration if ffmpeg is available
-            if self._ffmpeg_available:
-                trimmed_path = self._trim_video_with_retry(downloaded_path, duration)
-                if trimmed_path:
-                    # Remove original file to save space
-                    try:
-                        os.remove(downloaded_path)
-                        logger.debug(f"Removed original file after trimming: {downloaded_path}")
-                    except OSError as e:
-                        logger.warning(f"Could not remove original file: {e}")
-                    return trimmed_path
-                else:
-                    logger.warning("Video trimming failed, returning original file")
-                    return downloaded_path
-            else:
-                logger.info("ffmpeg unavailable, returning untrimmed video")
-                return downloaded_path
+            return downloaded_paths
                 
         except Exception as e:
             log_error_with_context(
                 logger, logging.ERROR,
+                "Unexpected error fetching multiple from YouTube",
+                component="YouTubeClient",
+                query=query,
+                error=e
+            )
+            return []
+
                 "Unexpected error fetching from YouTube",
                 component="YouTubeClient",
                 query=query,
@@ -186,15 +211,16 @@ class YouTubeClient(AssetFetcher):
             )
             return None
 
-    def _search(self, query: str) -> Optional[str]:
+    def _search(self, query: str, count: int = 1) -> Optional[List[str]]:
         """
         Search YouTube for videos matching the query.
         
         Args:
             query: Search query string
+            count: Number of results to return
             
         Returns:
-            URL of the first matching video, or None if no results
+            List of URLs of matching videos, or None if no results
             
         Raises:
             NetworkError: If network-related errors occur
@@ -205,13 +231,13 @@ class YouTubeClient(AssetFetcher):
                 'quiet': True,
                 'no_warnings': True,
                 'extract_flat': True,  # Don't download, just get metadata
-                'default_search': 'ytsearch1:',  # Search YouTube, return 1 result
+                'default_search': f'ytsearch{count}:',
                 'socket_timeout': 30,  # 30 second timeout
             }
             
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 # Search for videos
-                search_results = ydl.extract_info(f"ytsearch1:{query}", download=False)
+                search_results = ydl.extract_info(f"ytsearch{count}:{query}", download=False)
                 
                 if not search_results or 'entries' not in search_results:
                     return None
@@ -220,14 +246,14 @@ class YouTubeClient(AssetFetcher):
                 if not entries or len(entries) == 0:
                     return None
                 
-                # Return URL of first result
-                first_result = entries[0]
-                if 'url' in first_result:
-                    return first_result['url']
-                elif 'id' in first_result:
-                    return f"https://www.youtube.com/watch?v={first_result['id']}"
-                else:
-                    return None
+                urls = []
+                for entry in entries[:count]:
+                    if 'url' in entry:
+                        urls.append(entry['url'])
+                    elif 'id' in entry:
+                        urls.append(f"https://www.youtube.com/watch?v={entry['id']}")
+                
+                return urls if urls else None
                     
         except yt_dlp.utils.DownloadError as e:
             # Network or YouTube-specific errors

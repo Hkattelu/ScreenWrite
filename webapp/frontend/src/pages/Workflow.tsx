@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { ScriptUpload } from '../components/ScriptUpload'
 import { BeatList } from '../components/BeatList'
 import { ConfigPanel } from '../components/ConfigPanel'
-import { exportFcpxml, updateBeats, updateConfig, getErrorMessage, getSession, fetchAssets, getStatus } from '../services/api'
+import { exportFcpxml, updateBeats, updateConfig, getErrorMessage, getSession, fetchAssets, getStatus, updateAssets } from '../services/api'
 import type { UploadResponse, Config, Beat } from '../types/models'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
@@ -99,7 +99,7 @@ export function Workflow() {
   const [currentStep, setCurrentStep] = useState<WorkflowStep>('upload')
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [beats, setBeats] = useState<Beat[]>([])
-  const [assets, setAssets] = useState<Record<string, string>>({})
+  const [assets, setAssets] = useState<Record<string, string | string[]>>({})
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -194,6 +194,20 @@ export function Workflow() {
     }
   }
 
+  const handleAssetsUpdate = async (updatedAssets: Record<string, string | string[]>) => {
+    setAssets(updatedAssets)
+    if (sessionId) {
+      setIsSaving(true)
+      try {
+        await updateAssets(sessionId, updatedAssets)
+        setTimeout(() => setIsSaving(false), 800)
+      } catch (err) {
+        setError(getErrorMessage(err))
+        setIsSaving(false)
+      }
+    }
+  }
+
   const handleConfigChange = async (newConfig: Config) => {
     if (sessionId) {
       setIsSaving(true)
@@ -255,7 +269,9 @@ export function Workflow() {
   const currentStepIndex = steps.findIndex((s) => s.id === currentStep)
   
   const isReviewComplete = useMemo(() => {
-    return beats.length > 0 && reviewedIds.size === beats.length
+    // Relaxed: Require at least 5 approvals or 100% if total < 5
+    const minRequired = Math.min(beats.length, 5)
+    return beats.length > 0 && reviewedIds.size >= minRequired
   }, [reviewedIds, beats.length])
 
   return (
@@ -377,6 +393,7 @@ export function Workflow() {
                 beats={beats} 
                 assets={assets}
                 onBeatsUpdate={handleBeatsUpdate} 
+                onAssetsUpdate={handleAssetsUpdate}
                 editable={true}
                 reviewedIds={reviewedIds}
                 onToggleReviewed={(id) => {
@@ -391,6 +408,12 @@ export function Workflow() {
                   const updatedBeats = beats.map(b => 
                     b.id === id ? { ...b, reviewed: isReviewed } : b
                   )
+                  handleBeatsUpdate(updatedBeats)
+                }}
+                onToggleAllReviewed={() => {
+                  const next = new Set(beats.map(b => b.id))
+                  setReviewedIds(next)
+                  const updatedBeats = beats.map(b => ({ ...b, reviewed: true }))
                   handleBeatsUpdate(updatedBeats)
                 }}
               />
@@ -410,7 +433,13 @@ export function Workflow() {
                   {!isReviewComplete && (
                     <span className="text-[10px] font-black text-amber-500 flex items-center gap-2 uppercase tracking-widest bg-amber-50 px-4 py-2 rounded-xl border border-amber-100 shadow-sm">
                       <Info size={14} strokeWidth={3} />
-                      Awaiting {beats.length - reviewedIds.size} approvals
+                      Review {Math.max(0, Math.min(beats.length, 5) - reviewedIds.size)} more to proceed
+                    </span>
+                  )}
+                  {isReviewComplete && reviewedIds.size < beats.length && (
+                    <span className="text-[10px] font-black text-emerald-500 flex items-center gap-2 uppercase tracking-widest bg-emerald-50 px-4 py-2 rounded-xl border border-emerald-100 shadow-sm">
+                      <CheckCircle2 size={14} strokeWidth={3} />
+                      Minimum review met
                     </span>
                   )}
                   <button

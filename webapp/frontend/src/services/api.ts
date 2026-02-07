@@ -65,6 +65,14 @@ export async function updateBeats(sessionId: string, beats: Beat[]): Promise<{ s
 }
 
 /**
+ * Update assets for a session (e.g. selection)
+ */
+export async function updateAssets(sessionId: string, assets: Record<string, string | string[]>): Promise<{ success: boolean }> {
+  const response = await apiClient.put(`/session/${sessionId}/assets`, { assets })
+  return response.data
+}
+
+/**
  * Get session status
  */
 export async function getStatus(

@@ -6,7 +6,7 @@ B-roll ScreenWrite from various sources.
 """
 
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Optional, List
 
 
 class AssetFetcher(ABC):
@@ -33,6 +33,22 @@ class AssetFetcher(ABC):
             NotImplementedError: If not implemented by subclass
         """
         pass
+
+    def fetch_multi(self, query: str, duration: float, count: int = 3) -> List[str]:
+        """
+        Fetch multiple candidate video assets matching the given query and duration.
+        
+        Args:
+            query: Search query string
+            duration: Target duration in seconds
+            count: Number of candidates to fetch
+            
+        Returns:
+            List of paths to downloaded video files. May be fewer than count if failed.
+        """
+        # Default implementation just calls fetch once
+        result = self.fetch(query, duration)
+        return [result] if result else []
     
     @property
     @abstractmethod

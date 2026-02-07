@@ -1,18 +1,19 @@
 import { useRef } from 'react'
-import { Play, Maximize2, RefreshCcw, Film, Type, Quote, Image as ImageIcon, Upload } from 'lucide-react'
+import { Play, Maximize2, RefreshCcw, Film, Type, Quote, Image as ImageIcon, Upload, Check } from 'lucide-react'
 import { getMediaUrl } from '../services/api'
 import type { Beat } from '../types/models'
 
 interface BeatAssetProps {
   sessionId: string
   beatId: string
-  assetPath?: string
+  assetPath?: string | string[]
   visualType?: Beat['visual_type']
   visualContent?: string
   isRefreshing: boolean
   reviewed?: boolean
   onRefresh: (id: string) => void
-  onMaximize: (id: string) => void
+  onMaximize: (id: string, path?: string) => void
+  onSelect?: (id: string, path: string) => void
 }
 
 export function BeatAsset({
@@ -24,11 +25,16 @@ export function BeatAsset({
   isRefreshing,
   reviewed = false,
   onRefresh,
-  onMaximize
+  onMaximize,
+  onSelect
 }: BeatAssetProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
+  
+  const paths = Array.isArray(assetPath) ? assetPath : (assetPath ? [assetPath] : [])
+  const currentPath = paths[0] || undefined
 
   const handleUploadClick = (e: React.MouseEvent | React.KeyboardEvent) => {
+
     // Prevent upload if reviewed (optional, but good UX)
     if (reviewed) return
     e.stopPropagation() // Prevent row click if any
@@ -123,48 +129,73 @@ export function BeatAsset({
   const showVideo = visualType === 'auto' || visualType === 'b-roll'
 
   if (showVideo) {
-    if (assetPath) {
+    if (paths.length > 0) {
       return (
-        <div className={`relative group/asset transition-all duration-700 overflow-hidden ${reviewed ? 'opacity-30 grayscale blur-[2px]' : ''}`}>
-          <video 
-            src={getMediaUrl(sessionId, assetPath)} 
-            className="w-full aspect-video object-cover"
-            preload="metadata"
-            onMouseOver={(e) => e.currentTarget.play()}
-            onMouseOut={(e) => {
-              e.currentTarget.pause()
-              e.currentTarget.currentTime = 0
-            }}
-            muted
-            loop
-          />
-          <div className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover/asset:opacity-100 group-focus-within/asset:opacity-100 transition-all duration-500 flex items-center justify-center gap-6 backdrop-blur-[2px]">
-            <div className="w-16 h-16 rounded-full bg-white/10 border border-white/20 flex items-center justify-center backdrop-blur-md">
-              <Play className="text-white fill-white translate-x-0.5" size={32} />
+        <div className={`flex flex-col gap-4 transition-all duration-700 ${reviewed ? 'opacity-30 grayscale blur-[2px]' : ''}`}>
+          <div className="relative group/asset overflow-hidden rounded-2xl bg-black shadow-md">
+            <video 
+              key={currentPath}
+              src={getMediaUrl(sessionId, currentPath || '')} 
+              className="w-full aspect-video object-cover"
+              preload="metadata"
+              onMouseOver={(e) => e.currentTarget.play()}
+              onMouseOut={(e) => {
+                e.currentTarget.pause()
+                e.currentTarget.currentTime = 0
+              }}
+              muted
+              loop
+            />
+            <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover/asset:opacity-100 transition-all duration-300 flex items-center justify-center gap-4">
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onMaximize(beatId, currentPath)
+                }}
+                className="w-10 h-10 bg-white text-slate-900 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-all"
+                aria-label="Maximize"
+              >
+                <Maximize2 size={18} />
+              </button>
             </div>
             <button 
-              onClick={(e) => {
-                e.stopPropagation()
-                onMaximize(beatId)
-              }}
-              className="w-12 h-12 bg-white hover:bg-white/90 text-slate-900 rounded-full flex items-center justify-center shadow-xl transition-all hover:scale-110 active:scale-90 focus:outline-none focus:ring-4 focus:ring-white/20"
-              aria-label="Maximize video preview"
+              onClick={() => onRefresh(beatId)}
+              disabled={isRefreshing}
+              className="absolute top-3 right-3 p-1.5 bg-white/90 backdrop-blur-md rounded-lg shadow-sm text-slate-600 hover:text-blue-600 transition-all"
+              title="Refresh"
             >
-              <Maximize2 size={20} strokeWidth={2.5} />
+              <RefreshCcw size={14} className={isRefreshing ? 'animate-spin' : ''} />
             </button>
           </div>
-          <button 
-            onClick={() => onRefresh(beatId)}
-            disabled={isRefreshing}
-            className="absolute top-4 right-4 p-2 bg-white/95 backdrop-blur-xl rounded-xl shadow-xl text-slate-600 hover:text-blue-600 focus:text-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-500/20 transition-all active:scale-90 disabled:opacity-50"
-            title="Refresh Footage"
-            aria-label="Refresh footage"
-          >
-            <RefreshCcw size={14} strokeWidth={2.5} className={isRefreshing ? 'animate-spin' : ''} />
-          </button>
+
+          {/* Improved Candidate Gallery */}
+          {paths.length > 1 && (
+            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+              {paths.map((path, idx) => (
+                <button
+                  key={path}
+                  onClick={() => onSelect?.(beatId, path)}
+                  className={`relative flex-shrink-0 w-32 aspect-video rounded-xl overflow-hidden border-2 transition-all ${idx === 0 ? 'border-blue-500 ring-2 ring-blue-500/10' : 'border-slate-100 hover:border-slate-300 opacity-70 hover:opacity-100'}`}
+                >
+                  <video 
+                    src={getMediaUrl(sessionId, path)} 
+                    className="w-full h-full object-cover"
+                    preload="metadata"
+                  />
+                  {idx === 0 && (
+                    <div className="absolute top-1 right-1 bg-blue-500 text-white p-0.5 rounded-full">
+                      <Check size={8} strokeWidth={4} />
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )
     }
+
+
 
     return (
       <div className="aspect-video flex flex-col items-center justify-center gap-4 p-8 text-center bg-slate-50/50">

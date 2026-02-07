@@ -21,4 +21,4 @@ if (Test-Path "webapp\frontend") {
 }
 
 # 4. Run onboarding wizard
-& .\venv\Scripts\python onboarding.py
+# & .\venv\Scripts\python onboarding.py

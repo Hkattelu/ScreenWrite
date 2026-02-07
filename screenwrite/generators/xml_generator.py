@@ -92,12 +92,12 @@ class XMLGenerator:
         root.set("version", "1.8")
         return root
     
-    def _create_resources(self, asset_map: Dict[str, str]) -> ET.Element:
+    def _create_resources(self, asset_map: Dict[str, Any]) -> ET.Element:
         """
         Create resources section with format and media resources.
         
         Args:
-            asset_map: Mapping of beat IDs to asset file paths
+            asset_map: Mapping of beat IDs to asset file path or list of paths
             
         Returns:
             Resources XML element
@@ -108,8 +108,15 @@ class XMLGenerator:
         format_elem = self._create_format()
         resources.append(format_elem)
         
-        # Add media resources for each unique asset file
-        unique_assets = set(path for path in asset_map.values() if path)
+        # Collect all unique asset paths
+        unique_assets = set()
+        for val in asset_map.values():
+            if isinstance(val, list):
+                for path in val:
+                    if path: unique_assets.add(path)
+            elif val:
+                unique_assets.add(val)
+
         for asset_path in unique_assets:
             # For Resolve compatibility, use 'asset' elements directly in resources
             # instead of wrapping them in 'media'
@@ -214,13 +221,13 @@ class XMLGenerator:
         
         return library
     
-    def _create_spine(self, beats: List[Beat], asset_map: Dict[str, str]) -> ET.Element:
+    def _create_spine(self, beats: List[Beat], asset_map: Dict[str, Any]) -> ET.Element:
         """
         Create spine track with clips for each beat.
         
         Args:
             beats: List of Beat objects
-            asset_map: Mapping of beat IDs to asset file paths
+            asset_map: Mapping of beat IDs to asset file paths or lists
             
         Returns:
             Spine XML element with clip/gap elements
@@ -229,7 +236,10 @@ class XMLGenerator:
         current_offset = 0.0
         
         for beat in beats:
-            asset_path = asset_map.get(beat.id)
+            asset_val = asset_map.get(beat.id)
+            # Use the first asset if it's a list
+            asset_path = asset_val[0] if isinstance(asset_val, list) and asset_val else asset_val
+            
             duration_tc = self._seconds_to_timecode(beat.duration)
             offset_tc = self._seconds_to_timecode(current_offset)
             
@@ -242,6 +252,27 @@ class XMLGenerator:
                 clip.set("ref", resource_id)
                 clip.set("duration", duration_tc)
                 clip.set("start", "0/1s")
+
+                # Add Marker with script text
+                marker = ET.SubElement(clip, "marker")
+                marker.set("start", "0/1s")
+                marker.set("duration", "1/30s")
+                marker.set("value", beat.text)
+                marker.set("note", "Script Text")
+                
+                # Add Keywords for organization
+                keywords = ET.SubElement(clip, "keyword")
+                keywords.set("start", "0/1s")
+                keywords.set("duration", duration_tc)
+                
+                # Determine keyword from beat context or fetcher
+                kw_val = "ScreenWrite"
+                if "pexels" in asset_path.lower():
+                    kw_val += ", Stock"
+                elif "youtube" in asset_path.lower():
+                    kw_val += ", YouTube"
+                
+                keywords.set("value", kw_val)
             else:
                 # Placeholder gap if no asset
                 gap = ET.SubElement(spine, "gap")
