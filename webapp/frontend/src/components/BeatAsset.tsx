@@ -50,18 +50,11 @@ export function BeatAsset({
   
   if (visualType === 'annotation') {
     return (
-      <div className={`aspect-video flex flex-col items-center justify-center gap-4 bg-purple-50 border border-purple-100 rounded-2xl p-8 text-center group transition-all duration-700 ${reviewed ? 'opacity-30 grayscale blur-[2px]' : ''}`}>
-        <div className="w-12 h-12 rounded-2xl bg-white border border-purple-100 flex items-center justify-center text-purple-600 shadow-sm group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
-          <Type size={20} strokeWidth={2.5} />
-        </div>
-        <div className="space-y-2">
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-purple-400">Layer Type</span>
-          <p className="text-sm font-black text-purple-900 tracking-tight uppercase">ANNOTATION</p>
-          {visualContent && (
-            <p className="text-xs text-purple-700 font-bold mt-2 leading-relaxed max-w-[240px] mx-auto bg-white/50 px-3 py-1.5 rounded-xl border border-purple-100/50">
-              "{visualContent}"
-            </p>
-          )}
+      <div className={`flex items-center gap-3 px-4 py-3 bg-purple-50/50 border border-purple-100/50 rounded-xl transition-all ${reviewed ? 'opacity-30 grayscale' : ''}`}>
+        <Type size={14} className="text-purple-500" />
+        <div className="flex flex-col">
+          <span className="text-[10px] font-bold text-purple-400 uppercase tracking-wider">Annotation</span>
+          {visualContent && <p className="text-xs font-medium text-purple-700 italic">"{visualContent}"</p>}
         </div>
       </div>
     )
@@ -69,18 +62,11 @@ export function BeatAsset({
 
   if (visualType === 'citation') {
     return (
-      <div className={`aspect-video flex flex-col items-center justify-center gap-4 bg-amber-50 border border-amber-100 rounded-2xl p-8 text-center group transition-all duration-700 ${reviewed ? 'opacity-30 grayscale blur-[2px]' : ''}`}>
-        <div className="w-12 h-12 rounded-2xl bg-white border border-amber-100 flex items-center justify-center text-amber-600 shadow-sm group-hover:scale-110 group-hover:-rotate-3 transition-all duration-500">
-          <Quote size={20} strokeWidth={2.5} />
-        </div>
-        <div className="space-y-2">
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-400">Reference</span>
-          <p className="text-sm font-black text-amber-900 tracking-tight uppercase">CITATION</p>
-          {visualContent && (
-            <p className="text-xs text-amber-700 font-bold mt-2 leading-relaxed max-w-[240px] mx-auto bg-white/50 px-3 py-1.5 rounded-xl border border-amber-100/50">
-              {visualContent}
-            </p>
-          )}
+      <div className={`flex items-center gap-3 px-4 py-3 bg-amber-50/50 border border-amber-100/50 rounded-xl transition-all ${reviewed ? 'opacity-30 grayscale' : ''}`}>
+        <Quote size={14} className="text-amber-500" />
+        <div className="flex flex-col">
+          <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider">Citation</span>
+          {visualContent && <p className="text-xs font-medium text-amber-700">{visualContent}</p>}
         </div>
       </div>
     )
@@ -90,37 +76,21 @@ export function BeatAsset({
     return (
       <div 
         onClick={handleUploadClick}
-        className={`aspect-video flex flex-col items-center justify-center gap-4 bg-indigo-50/30 border-2 border-dashed border-indigo-200 rounded-2xl p-8 text-center group relative cursor-pointer hover:bg-indigo-50 hover:border-indigo-400 focus:outline-none focus:ring-8 focus:ring-indigo-500/5 focus:border-indigo-500/40 transition-all duration-500 ${reviewed ? 'opacity-30 grayscale blur-[2px] pointer-events-none' : ''}`}
+        className={`flex items-center gap-4 px-4 py-3 bg-slate-50 border border-dashed border-slate-200 rounded-xl group cursor-pointer hover:border-blue-400 transition-all ${reviewed ? 'opacity-30 grayscale pointer-events-none' : ''}`}
         role="button"
-        aria-label="Upload image asset"
+        aria-label="Upload image"
         tabIndex={reviewed ? -1 : 0}
         onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            handleUploadClick(e)
-          }
+          if (e.key === 'Enter' || e.key === ' ') handleUploadClick(e)
         }}
       >
-        <div className="w-14 h-14 rounded-3xl bg-white border border-indigo-100 flex items-center justify-center text-indigo-500 shadow-md group-hover:scale-110 group-hover:shadow-xl group-hover:text-indigo-600 transition-all duration-500">
-          <ImageIcon size={24} strokeWidth={2.5} />
+        <ImageIcon size={16} className="text-slate-400 group-hover:text-blue-500 transition-colors" />
+        <div className="flex-grow">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Static Image</span>
+          <p className="text-xs font-medium text-slate-600">Click to upload asset</p>
         </div>
-        <div className="space-y-4">
-          <div className="space-y-1">
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400">Input Needed</span>
-            <p className="text-sm font-black text-indigo-900 tracking-tight uppercase group-hover:text-indigo-700 transition-colors">Static Image</p>
-          </div>
-          <input
-            type="file"
-            ref={fileInputRef}
-            className="hidden"
-            accept="image/*"
-            onChange={handleFileChange}
-            disabled={reviewed}
-          />
-          <div className="flex items-center gap-2.5 px-5 py-2.5 bg-indigo-600 rounded-xl shadow-lg shadow-indigo-500/20 text-xs font-black text-white group-hover:bg-indigo-700 transition-all active:scale-95">
-            <Upload size={14} strokeWidth={3} />
-            Upload Asset
-          </div>
-        </div>
+        <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} disabled={reviewed} />
+        <Upload size={14} className="text-slate-300 group-hover:text-blue-500" />
       </div>
     )
   }
