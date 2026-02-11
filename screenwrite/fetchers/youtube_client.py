@@ -10,7 +10,7 @@ import os
 import subprocess
 import tempfile
 import logging
-from typing import Optional
+from typing import Optional, List
 from pathlib import Path
 
 try:
@@ -203,13 +203,6 @@ class YouTubeClient(AssetFetcher):
             )
             return []
 
-                "Unexpected error fetching from YouTube",
-                component="YouTubeClient",
-                query=query,
-                duration=duration,
-                error=e
-            )
-            return None
 
     def _search(self, query: str, count: int = 1) -> Optional[List[str]]:
         """
@@ -290,67 +283,128 @@ class YouTubeClient(AssetFetcher):
             output_template = str(self.output_dir / f"youtube_{safe_query}_%(id)s.%(ext)s")
             
             # Determine format based on ffmpeg availability
-            # If ffmpeg is missing, we must avoid formats that need merging (video+audio)
             if self._ffmpeg_available:
                 # Use a broader format selector if ffmpeg is available
-                # best[height<=720] might fail if no 720p is available, fallback to best
-                format_selector = 'bestvideo[height<=1080]+bestaudio/best[height<=1080]/best'
+                # Prioritize single file formats for better compatibility
+                format_selector = 'best[ext=mp4][height<=1080]/best[height<=1080]/bestvideo[height<=1080]+bestaudio/best'
             else:
                 # Select best format that has both video and audio (pre-merged)
                 format_selector = 'best[ext=mp4]/best'
 
-            # Configure yt-dlp for download
-            ydl_opts = {
+            base_opts = {
                 'format': format_selector,
                 'outtmpl': output_template,
                 'quiet': True,
                 'no_warnings': True,
-                'socket_timeout': 60,  # 60 second timeout
-                'retries': 3,  # Built-in yt-dlp retries
-                # Force ffmpeg location if available in path but check failed weirdly
-                # 'ffmpeg_location': 'ffmpeg' 
+                'socket_timeout': 60,
+                'retries': 3,
+                'cachedir': False,
+                'nocheckcertificate': True,
             }
+
+            # Common browser headers
+            browser_headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language': 'en-us,en;q=0.5',
+            }
+
+            # Strategies to try in order of likelihood to succeed
+            strategies = [
+                # Try Android Creator client (often bypasses main 403 blocks)
+                {'extractor_args': {'youtube': {'player_client': ['android_creator']}}},
+                
+                # Try Web Embedded client (often lenient)
+                {'extractor_args': {'youtube': {'player_client': ['web_embedded']}}, 'http_headers': browser_headers},
+                
+                # Try Android client proper
+                {'extractor_args': {'youtube': {'player_client': ['android']}}},
+                
+                # Try iOS client (might work for some videos)
+                {'extractor_args': {'youtube': {'player_client': ['ios']}}},
+                
+                # Try using browser cookies (as fallback if clients fail)
+                {'cookiesfrombrowser': ('chrome',), 'http_headers': browser_headers},
+                {'cookiesfrombrowser': ('edge',), 'http_headers': browser_headers},
+                {'cookiesfrombrowser': ('firefox',), 'http_headers': browser_headers},
+                
+                # Default fallback
+                {'http_headers': browser_headers}
+            ]
             
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                # Download the video
-                info = ydl.extract_info(video_url, download=True)
-                
-                if not info:
-                    return None
-                
-                # Find the downloaded file
-                filename = ydl.prepare_filename(info)
-                if os.path.exists(filename):
-                    logger.debug(f"Successfully downloaded: {filename}")
-                    return filename
-                else:
-                    # Sometimes the extension changes, try to find the file
-                    base_name = os.path.splitext(filename)[0]
-                    for ext in ['.mp4', '.webm', '.mkv', '.avi']:
-                        candidate = base_name + ext
-                        if os.path.exists(candidate):
-                            logger.debug(f"Found downloaded file with different extension: {candidate}")
-                            return candidate
-                    return None
-                    
-        except yt_dlp.utils.DownloadError as e:
-            # If "empty file" error occurs, it might be an ffmpeg merge failure
-            # Try falling back to a pre-merged format even if we thought we had ffmpeg
-            if "empty" in str(e).lower() and self._ffmpeg_available:
-                logger.warning("Download failed with empty file, trying fallback format without merge...")
+            last_error = None
+            
+            for strategy in strategies:
                 try:
-                    ydl_opts['format'] = 'best[ext=mp4]/best'
-                    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                    current_opts = base_opts.copy()
+                    current_opts.update(strategy)
+                    
+                    # Log strategy being attempted (debug only)
+                    strategy_name = list(strategy.keys())[0] if strategy else "default"
+                    logger.debug(f"Attempting download with strategy: {strategy_name}")
+
+                    with yt_dlp.YoutubeDL(current_opts) as ydl:
+                        # Download the video
+                        info = ydl.extract_info(video_url, download=True)
+                        
+                        if not info:
+                            continue
+                        
+                        # Find the downloaded file
+                        filename = ydl.prepare_filename(info)
+                        if os.path.exists(filename):
+                            logger.debug(f"Successfully downloaded: {filename}")
+                            return filename
+                        else:
+                            # Sometimes the extension changes, try to find the file
+                            base_name = os.path.splitext(filename)[0]
+                            for ext in ['.mp4', '.webm', '.mkv', '.avi']:
+                                candidate = base_name + ext
+                                if os.path.exists(candidate):
+                                    logger.debug(f"Found downloaded file with different extension: {candidate}")
+                                    return candidate
+                        
+                        # If we got here, download "succeeded" but file missing? 
+                        # This might happen if it was merged to mkv but we looked for mp4
+                        # We should have found it above.
+                        
+                except Exception as e:
+                    # Capture specific errors
+                    error_msg = str(e).lower()
+                    if "browser" in error_msg and "cookie" in error_msg:
+                        logger.debug(f"Strategy {strategy} failed (likely browser not found/locked): {e}")
+                    elif "403" in error_msg or "forbidden" in error_msg:
+                        logger.warning(f"Strategy {strategy} failed with 403 Forbidden: {e}")
+                    else:
+                        logger.warning(f"Strategy {strategy} failed: {e}")
+                    
+                    last_error = e
+                    continue
+            
+            # If all strategies failed
+            if last_error:
+                raise last_error
+            return None
+                    
+        except Exception as e:
+            # If "empty file" error occurs with ffmpeg available (handled partially above, but catching global fails here)
+            if "empty" in str(e).lower() and self._ffmpeg_available:
+                 # One last desperate try with simple format and no complex opts
+                 try:
+                    logger.warning("All strategies failed. Trying fallback 'best' format...")
+                    fallback_opts = {
+                        'format': 'best',
+                        'outtmpl': output_template,
+                         'quiet': True,
+                    }
+                    with yt_dlp.YoutubeDL(fallback_opts) as ydl:
                         info = ydl.extract_info(video_url, download=True)
                         filename = ydl.prepare_filename(info)
                         if os.path.exists(filename):
                              return filename
-                except Exception as retry_e:
-                    logger.error(f"Fallback download also failed: {retry_e}")
-            
-            # Network or YouTube-specific errors
-            raise NetworkError(f"YouTube download failed: {e}")
-        except Exception as e:
+                 except Exception:
+                     pass
+
             log_error_with_context(
                 logger, logging.ERROR,
                 "YouTube download failed",
@@ -359,7 +413,8 @@ class YouTubeClient(AssetFetcher):
                 query=query,
                 error=e
             )
-            raise NetworkError(f"YouTube download error: {e}")
+            # Re-raise as NetworkError for consistent handling
+            raise NetworkError(f"YouTube download failed: {e}")
     
     def _trim_video(self, input_path: str, duration: float) -> Optional[str]:
         """

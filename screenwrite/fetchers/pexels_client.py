@@ -10,7 +10,7 @@ import os
 import requests
 import tempfile
 import logging
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from pathlib import Path
 from urllib.parse import urlparse
 

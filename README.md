@@ -17,10 +17,10 @@ ScreenWrite is an automated video production engine that transforms Markdown scr
 
 ---
 
-## 🚀 Quick Start (GitHub)
+## 🚀 Quick Start
 
-### The One-Command Way
-Get up and running in seconds. This script will set up your virtual environment, install all dependencies, and guide you through the initial configuration (including your Gemini API key).
+### 1. Simple Setup
+Get up and running in one command. This script creates a virtual environment, installs **all** dependencies (Core, Backend, and Frontend), and runs the onboarding wizard.
 
 **On Windows:**
 ```powershell
@@ -29,16 +29,33 @@ Get up and running in seconds. This script will set up your virtual environment,
 
 **On macOS / Linux:**
 ```bash
-chmod +x setup.sh && ./setup.sh
+chmod +x *.sh && ./setup.sh
 ```
 
-The script will:
-1. Verify **Python 3.7+** and **Node.js** are installed.
-2. Check for system dependencies (**ffmpeg**, **yt-dlp**).
-3. Create a local virtual environment and install requirements.
-4. Prompt you for your **Gemini API Key** to enable AI features.
+### 2. Run in Development
+Once setup is complete, use the following command to start both the Python backend and the React frontend simultaneously:
+
+**On Windows:**
+```powershell
+./run_dev.ps1
+```
+
+**On macOS / Linux:**
+```bash
+./run_dev.sh
+```
+
+> **Note:** The backend runs on `http://localhost:5000` and the frontend on `http://localhost:3000`.
 
 ---
+
+## 📦 Dependencies Explained
+To clear up any confusion, here is why ScreenWrite needs these tools:
+- **Python 3.8+**: The core engine and backend server.
+- **Node.js**: Powers the modern editor UI.
+- **FFmpeg**: Required for processing video files.
+- **yt-dlp**: Used to fetch specific reference clips from YouTube.
+- **Gemini API**: Powers the intelligent script analysis and B-roll search.
 
 ## 📖 The Script Format
 

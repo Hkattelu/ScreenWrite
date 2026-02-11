@@ -7,7 +7,7 @@ connected clips for B-roll ScreenWrite.
 """
 
 import xml.etree.ElementTree as ET
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 from pathlib import Path
 import os
 

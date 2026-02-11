@@ -1,3 +1,12 @@
-yt-dlp
-requests
+# Core Engine
+yt-dlp>=2023.11.16
+requests>=2.28.0
+
+# Backend API
+Flask==3.0.0
+flask-cors==4.0.0
+python-dotenv==1.0.0
+Werkzeug==3.0.1
+
+# CLI / UI
 rich>=13.0.0
