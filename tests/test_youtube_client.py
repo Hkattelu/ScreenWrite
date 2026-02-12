@@ -87,8 +87,8 @@ class TestYouTubeClient(unittest.TestCase):
             'entries': [{'url': 'http://youtube.com/watch?v=123'}]
         }
 
-        url = client._search("test query")
-        self.assertEqual(url, 'http://youtube.com/watch?v=123')
+        urls = client._search("test query")
+        self.assertEqual(urls, ['http://youtube.com/watch?v=123'])
 
     def test_search_no_results(self):
         """Test search with no results."""
@@ -96,8 +96,8 @@ class TestYouTubeClient(unittest.TestCase):
         mock_ydl_instance = self.mock_yt_dlp.YoutubeDL.return_value.__enter__.return_value
         mock_ydl_instance.extract_info.return_value = {'entries': []}
 
-        url = client._search("test query")
-        self.assertIsNone(url)
+        urls = client._search("test query")
+        self.assertIsNone(urls)
 
     def test_search_network_error(self):
         """Test search handling network error."""
@@ -211,13 +211,16 @@ class TestYouTubeClient(unittest.TestCase):
         # Since the class wraps methods with @retry_with_backoff at definition time,
         # we can patch the methods on the instance.
 
-        with patch.object(client, '_search_with_retry', return_value="http://url") as mock_search,              patch.object(client, '_download_with_retry', return_value="video.mp4") as mock_download,              patch.object(client, '_trim_video_with_retry', return_value="trimmed.mp4") as mock_trim,              patch('os.remove') as mock_remove:
+        with patch.object(client, '_search_with_retry', return_value=["http://url"]) as mock_search, \
+             patch.object(client, '_download_with_retry', return_value="video.mp4") as mock_download, \
+             patch.object(client, '_trim_video_with_retry', return_value="trimmed.mp4") as mock_trim, \
+             patch('os.remove') as mock_remove:
 
             result = client.fetch("query", 10.0)
 
             self.assertEqual(result, "trimmed.mp4")
-            mock_search.assert_called_with("query")
-            mock_download.assert_called_with("http://url", "query")
+            mock_search.assert_called_with("query", count=1)
+            mock_download.assert_called_with("http://url", "query_0")
             mock_trim.assert_called_with("video.mp4", 10.0)
             # Should verify original file removal
             mock_remove.assert_called_with("video.mp4")
@@ -227,7 +230,9 @@ class TestYouTubeClient(unittest.TestCase):
         client = YouTubeClient()
         client._ffmpeg_available = False
 
-        with patch.object(client, '_search_with_retry', return_value="http://url"),              patch.object(client, '_download_with_retry', return_value="video.mp4"),              patch.object(client, '_trim_video_with_retry') as mock_trim:
+        with patch.object(client, '_search_with_retry', return_value=["http://url"]), \
+             patch.object(client, '_download_with_retry', return_value="video.mp4"), \
+             patch.object(client, '_trim_video_with_retry') as mock_trim:
 
             result = client.fetch("query", 10.0)
 
@@ -246,7 +251,8 @@ class TestYouTubeClient(unittest.TestCase):
         """Test fetch when download fails."""
         client = YouTubeClient()
 
-        with patch.object(client, '_search_with_retry', return_value="http://url"),              patch.object(client, '_download_with_retry', return_value=None):
+        with patch.object(client, '_search_with_retry', return_value=["http://url"]), \
+             patch.object(client, '_download_with_retry', return_value=None):
             result = client.fetch("query", 10.0)
             self.assertIsNone(result)
 

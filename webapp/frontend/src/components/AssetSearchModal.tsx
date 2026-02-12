@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Search, Loader2, AlertCircle, Film, Clock, Youtube, Image as ImageIcon } from 'lucide-react'
+import { X, Search, Loader2, AlertCircle, Film, Clock, Youtube, Image as ImageIcon, CheckCircle2, StopCircle } from 'lucide-react'
+import type { DownloadProgress } from '../types/models'
+import { cancelDownload } from '../services/api'
 
 export interface AssetCandidate {
   id: string
@@ -15,16 +17,18 @@ interface AssetSearchModalProps {
   sessionId: string
   beatId: string
   isOpen: boolean
+  downloadProgress?: DownloadProgress
   onClose: () => void
   onAssetSelected: (beatId: string, filePath: string) => void
   onSearch?: (sessionId: string, beatId: string, customQuery?: string) => Promise<AssetCandidate[]>
-  onDownload?: (sessionId: string, beatId: string, candidate: AssetCandidate) => Promise<string>
+  onDownload?: (sessionId: string, beatId: string, candidate: AssetCandidate, updateBeatQuery?: boolean) => Promise<string>
 }
 
 export function AssetSearchModal({
   sessionId,
   beatId,
   isOpen,
+  downloadProgress,
   onClose,
   onAssetSelected,
   onSearch,
@@ -32,10 +36,13 @@ export function AssetSearchModal({
 }: AssetSearchModalProps) {
   const [candidates, setCandidates] = useState<AssetCandidate[]>([])
   const [isSearching, setIsSearching] = useState(false)
-  const [isDownloading, setIsDownloading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [customQuery, setCustomQuery] = useState('')
+  const [updateBeatQuery, setUpdateBeatQuery] = useState(false)
   const [selectedCandidate, setSelectedCandidate] = useState<AssetCandidate | null>(null)
+
+  const isDownloading = downloadProgress && 
+    ['starting', 'downloading', 'processing'].includes(downloadProgress.status)
 
   // Auto-search when modal opens
   useEffect(() => {
@@ -43,6 +50,18 @@ export function AssetSearchModal({
       handleSearch()
     }
   }, [isOpen])
+
+  // Handle completion
+  useEffect(() => {
+    if (downloadProgress?.status === 'complete' && downloadProgress.file_path) {
+      onAssetSelected(beatId, downloadProgress.file_path)
+      // Delay closing slightly to show success state
+      const timer = setTimeout(() => {
+        onClose()
+      }, 1500)
+      return () => clearTimeout(timer)
+    }
+  }, [downloadProgress?.status])
 
   const handleSearch = async (query?: string) => {
     if (!onSearch) return
@@ -69,18 +88,24 @@ export function AssetSearchModal({
     if (!onDownload) return
     
     setSelectedCandidate(candidate)
-    setIsDownloading(true)
     setError(null)
     
     try {
-      const filePath = await onDownload(sessionId, beatId, candidate)
-      onAssetSelected(beatId, filePath)
-      onClose()
+      // Only update beat query if a custom query was actually used and checkbox is checked
+      const shouldUpdate = updateBeatQuery && !!customQuery.trim()
+      await onDownload(sessionId, beatId, candidate, shouldUpdate)
+      // Transition to downloading state (handled by props)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to download asset')
-    } finally {
-      setIsDownloading(false)
       setSelectedCandidate(null)
+    }
+  }
+
+  const handleCancel = async () => {
+    try {
+      await cancelDownload(sessionId, beatId)
+    } catch (err) {
+      console.error('Failed to cancel download', err)
     }
   }
 
@@ -129,7 +154,7 @@ export function AssetSearchModal({
           </div>
 
           {/* Custom Query Input */}
-          <div className="p-6 border-b border-slate-100">
+          <div className="p-6 border-b border-slate-100 space-y-3">
             <div className="flex gap-3">
               <input
                 type="text"
@@ -155,125 +180,239 @@ export function AssetSearchModal({
                 )}
               </button>
             </div>
+            
+            {customQuery.trim() && (
+              <label className="flex items-center gap-2 cursor-pointer w-fit">
+                <input 
+                  type="checkbox" 
+                  checked={updateBeatQuery}
+                  onChange={(e) => setUpdateBeatQuery(e.target.checked)}
+                  className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="text-xs text-slate-600 font-medium">Update beat with this search term on download</span>
+              </label>
+            )}
           </div>
 
           {/* Content Area */}
           <div className="flex-1 overflow-y-auto p-6">
-            {/* Loading State */}
-            {isSearching && (
-              <div className="flex flex-col items-center justify-center py-20">
-                <Loader2 size={40} className="text-blue-600 animate-spin mb-4" />
-                <p className="text-sm font-medium text-slate-600">Searching for assets...</p>
-                <p className="text-xs text-slate-400 mt-1">This may take a few seconds</p>
-              </div>
-            )}
-
-            {/* Error State */}
-            {error && !isSearching && (
-              <div className="flex flex-col items-center justify-center py-20">
-                <div className="w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center mb-4">
-                  <AlertCircle size={32} className="text-red-500" />
-                </div>
-                <p className="text-sm font-medium text-slate-900 mb-2">Search Failed</p>
-                <p className="text-xs text-slate-500 text-center max-w-md">{error}</p>
-                <button
-                  onClick={() => handleSearch(customQuery || undefined)}
-                  className="mt-6 px-6 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-black transition-all active:scale-95"
+            <AnimatePresence mode="wait">
+              {isSearching ? (
+                <motion.div 
+                  key="loading"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
                 >
-                  Try Again
-                </button>
-              </div>
-            )}
+                  {[...Array(6)].map((_, i) => (
+                    <div key={i} className="aspect-video bg-slate-100 animate-pulse rounded-2xl" />
+                  ))}
+                </motion.div>
+              ) : error && candidates.length === 0 ? (
+                <motion.div 
+                  key="error"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex flex-col items-center justify-center py-20"
+                >
+                  <div className="w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center mb-4">
+                    <AlertCircle size={32} className="text-red-500" />
+                  </div>
+                  <p className="text-sm font-medium text-slate-900 mb-2">Search Failed</p>
+                  <p className="text-xs text-slate-500 text-center max-w-md mb-6">{error}</p>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => handleSearch(customQuery || undefined)}
+                      className="px-6 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-black transition-all active:scale-95"
+                    >
+                      Retry Search
+                    </button>
+                    <button
+                      onClick={onClose}
+                      className="px-6 py-2 bg-slate-100 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-200 transition-all active:scale-95"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </motion.div>
+              ) : candidates.length === 0 ? (
+                <motion.div 
+                  key="empty"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex flex-col items-center justify-center py-20"
+                >
+                  <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
+                    <Film size={32} className="text-slate-400" />
+                  </div>
+                  <p className="text-sm font-medium text-slate-900 mb-2">No Results</p>
+                  <p className="text-xs text-slate-500 text-center max-w-md">
+                    Try searching with a custom query above
+                  </p>
+                </motion.div>
+              ) : (
+                <motion.div 
+                  key="results"
+                  initial="hidden"
+                  animate="show"
+                  variants={{
+                    hidden: { opacity: 0 },
+                    show: {
+                      opacity: 1,
+                      transition: {
+                        staggerChildren: 0.05
+                      }
+                    }
+                  }}
+                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+                >
+                  {candidates.map((candidate) => {
+                    const isSelected = (selectedCandidate?.id === candidate.id) || (downloadProgress?.candidate_id === candidate.id);
+                    const isComplete = isSelected && downloadProgress?.status === 'complete';
+                    
+                    return (
+                      <motion.button
+                        key={candidate.id}
+                        variants={{
+                          hidden: { opacity: 0, y: 20 },
+                          show: { opacity: 1, y: 0 }
+                        }}
+                        onClick={() => handleSelectCandidate(candidate)}
+                        disabled={isDownloading || isComplete}
+                        className={`
+                          group relative rounded-2xl overflow-hidden border-2 transition-all text-left
+                          ${isSelected 
+                            ? isComplete ? 'border-green-500 ring-4 ring-green-500/10' : 'border-blue-500 ring-4 ring-blue-500/20' 
+                            : 'border-slate-200 hover:border-blue-400 hover:shadow-lg'}
+                          ${isDownloading || isComplete ? 'cursor-default' : 'cursor-pointer'}
+                        `}
+                      >
+                        {/* Thumbnail */}
+                        <div className="aspect-video bg-slate-100 relative overflow-hidden">
+                          <img
+                            src={candidate.thumbnail_url}
+                            alt={candidate.title}
+                            className={`w-full h-full object-cover transition-transform duration-500 ${!isSelected && 'group-hover:scale-110'}`}
+                            loading="lazy"
+                          />
+                          
+                          {/* Duration Badge */}
+                          <div className="absolute bottom-2 right-2 px-2 py-1 bg-black/80 backdrop-blur-sm rounded-lg flex items-center gap-1">
+                            <Clock size={12} className="text-white" />
+                            <span className="text-xs font-bold text-white">
+                              {formatDuration(candidate.duration)}
+                            </span>
+                          </div>
 
-            {/* Empty State */}
-            {!isSearching && !error && candidates.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-20">
-                <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
-                  <Film size={32} className="text-slate-400" />
-                </div>
-                <p className="text-sm font-medium text-slate-900 mb-2">No Results</p>
-                <p className="text-xs text-slate-500 text-center max-w-md">
-                  Try searching with a custom query above
-                </p>
-              </div>
-            )}
+                          {/* Source Badge */}
+                          <div className="absolute top-2 left-2 px-2 py-1 bg-white/90 backdrop-blur-sm rounded-lg flex items-center gap-1">
+                            {candidate.source === 'youtube' ? (
+                              <Youtube size={12} className="text-red-600" />
+                            ) : (
+                              <ImageIcon size={12} className="text-green-600" />
+                            )}
+                            <span className="text-[10px] font-bold text-slate-700 uppercase">
+                              {candidate.source}
+                            </span>
+                          </div>
 
-            {/* Thumbnail Grid */}
-            {!isSearching && !error && candidates.length > 0 && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {candidates.map((candidate) => (
-                  <button
-                    key={candidate.id}
-                    onClick={() => handleSelectCandidate(candidate)}
-                    disabled={isDownloading}
-                    className={`
-                      group relative rounded-2xl overflow-hidden border-2 transition-all
-                      ${selectedCandidate?.id === candidate.id 
-                        ? 'border-blue-500 ring-4 ring-blue-500/20' 
-                        : 'border-slate-200 hover:border-blue-400 hover:shadow-lg'}
-                      ${isDownloading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                    `}
-                  >
-                    {/* Thumbnail */}
-                    <div className="aspect-video bg-slate-100 relative overflow-hidden">
-                      <img
-                        src={candidate.thumbnail_url}
-                        alt={candidate.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        loading="lazy"
-                      />
-                      
-                      {/* Duration Badge */}
-                      <div className="absolute bottom-2 right-2 px-2 py-1 bg-black/80 backdrop-blur-sm rounded-lg flex items-center gap-1">
-                        <Clock size={12} className="text-white" />
-                        <span className="text-xs font-bold text-white">
-                          {formatDuration(candidate.duration)}
-                        </span>
-                      </div>
-
-                      {/* Source Badge */}
-                      <div className="absolute top-2 left-2 px-2 py-1 bg-white/90 backdrop-blur-sm rounded-lg flex items-center gap-1">
-                        {candidate.source === 'youtube' ? (
-                          <Youtube size={12} className="text-red-600" />
-                        ) : (
-                          <ImageIcon size={12} className="text-green-600" />
-                        )}
-                        <span className="text-[10px] font-bold text-slate-700 uppercase">
-                          {candidate.source}
-                        </span>
-                      </div>
-
-                      {/* Downloading Overlay */}
-                      {selectedCandidate?.id === candidate.id && isDownloading && (
-                        <div className="absolute inset-0 bg-blue-600/90 backdrop-blur-sm flex items-center justify-center">
-                          <Loader2 size={32} className="text-white animate-spin" />
+                          {/* Downloading/Complete Overlay */}
+                          <AnimatePresence>
+                            {isSelected && (
+                              <motion.div 
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                className={`absolute inset-0 flex flex-col items-center justify-center gap-2 ${isComplete ? 'bg-green-600/90' : 'bg-blue-600/90'} backdrop-blur-sm`}
+                              >
+                                {isComplete ? (
+                                  <motion.div
+                                    initial={{ scale: 0.5, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    transition={{ type: 'spring', damping: 12 }}
+                                  >
+                                    <CheckCircle2 size={40} className="text-white" />
+                                  </motion.div>
+                                ) : (
+                                  <>
+                                    <Loader2 size={32} className="text-white animate-spin" />
+                                    {downloadProgress && (
+                                      <p className="text-white text-[10px] font-black uppercase tracking-widest">
+                                        {downloadProgress.status === 'processing' ? 'Processing' : `${Math.round(downloadProgress.percent)}%`}
+                                      </p>
+                                    )}
+                                  </>
+                                )}
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
                         </div>
-                      )}
-                    </div>
 
-                    {/* Info */}
-                    <div className="p-3 bg-white">
-                      <p className="text-xs font-medium text-slate-900 line-clamp-2 text-left">
-                        {candidate.title}
+                        {/* Info */}
+                        <div className="p-3 bg-white">
+                          <p className={`text-xs font-medium line-clamp-2 ${isSelected ? isComplete ? 'text-green-900' : 'text-blue-900' : 'text-slate-900'}`}>
+                            {candidate.title}
+                          </p>
+                        </div>
+                      </motion.button>
+                    )
+                  })}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Global Download Progress Bar (if modal content is scrolled) */}
+            <AnimatePresence>
+              {isDownloading && downloadProgress && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 20 }}
+                  className="mt-8 p-6 bg-slate-900 rounded-3xl shadow-2xl overflow-hidden relative"
+                >
+                  <div className="flex items-center gap-4 relative z-10">
+                    <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center">
+                      <Loader2 size={24} className="text-blue-400 animate-spin" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-sm font-bold text-white tracking-wide">
+                          {downloadProgress.status === 'processing' ? 'Processing video...' : 'Downloading asset...'}
+                        </p>
+                        <div className="flex items-center gap-3">
+                          <p className="text-xs font-mono text-blue-400 font-bold">
+                            {Math.round(downloadProgress.percent)}%
+                          </p>
+                          <button 
+                            onClick={handleCancel}
+                            className="p-1 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition-colors"
+                            title="Cancel Download"
+                          >
+                            <StopCircle size={16} />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                        <motion.div 
+                          className="h-full bg-blue-500"
+                          initial={{ width: 0 }}
+                          animate={{ width: `${downloadProgress.percent}%` }}
+                          transition={{ duration: 0.3 }}
+                        />
+                      </div>
+                      <p className="text-[10px] text-white/40 mt-2 truncate font-medium uppercase tracking-wider">
+                        {downloadProgress.title || 'Selected Candidate'}
                       </p>
                     </div>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Download Progress */}
-            {isDownloading && selectedCandidate && (
-              <div className="mt-6 p-4 bg-blue-50 border border-blue-100 rounded-xl">
-                <div className="flex items-center gap-3">
-                  <Loader2 size={20} className="text-blue-600 animate-spin" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-blue-900">Downloading asset...</p>
-                    <p className="text-xs text-blue-600 mt-0.5">{selectedCandidate.title}</p>
                   </div>
-                </div>
-              </div>
-            )}
+                  {/* Subtle progress background */}
+                  <div 
+                    className="absolute inset-0 bg-blue-500/5 transition-all duration-300"
+                    style={{ width: `${downloadProgress.percent}%` }}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </motion.div>
       </motion.div>

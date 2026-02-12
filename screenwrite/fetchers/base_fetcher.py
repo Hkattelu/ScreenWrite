@@ -60,3 +60,32 @@ class AssetFetcher(ABC):
             Human-readable name of the fetcher (e.g., "YouTube", "Pexels")
         """
         pass
+
+    @abstractmethod
+    def search(self, query: str, count: int = 5) -> List[dict]:
+        """
+        Search for assets without downloading them.
+        
+        Args:
+            query: Search query string
+            count: Number of results to return
+            
+        Returns:
+            List of asset metadata dictionaries
+        """
+        pass
+
+    @abstractmethod
+    def download_by_id(self, asset_id: str, metadata: dict, progress_callback=None) -> Optional[str]:
+        """
+        Download a specific asset by its ID and metadata.
+        
+        Args:
+            asset_id: Unique identifier for the asset
+            metadata: Metadata returned by the search method
+            progress_callback: Optional function(percent, status) to report progress
+            
+        Returns:
+            Path to the downloaded file, or None if failed
+        """
+        pass

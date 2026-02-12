@@ -221,13 +221,14 @@ class PexelsClient(AssetFetcher):
             logger.warning(f"Failed to get metadata for Pexels video {video_id}: {e}")
             return None
     
-    def download_by_id(self, video_id: str, metadata: Dict[str, Any]) -> Optional[str]:
+    def download_by_id(self, video_id: str, metadata: Dict[str, Any], progress_callback=None) -> Optional[str]:
         """
         Download a specific video by ID using metadata from search.
         
         Args:
             video_id: Pexels video ID
             metadata: Metadata dictionary from search containing download_url
+            progress_callback: Optional function(percent, status) to report progress
             
         Returns:
             Path to downloaded video file, or None if failed
@@ -252,7 +253,7 @@ class PexelsClient(AssetFetcher):
             }
             
             # Download using existing method
-            downloaded_path = self._download_with_retry(video_info, video_id)
+            downloaded_path = self._download_with_retry(video_info, video_id, progress_callback=progress_callback)
             
             return downloaded_path
             
@@ -321,9 +322,9 @@ class PexelsClient(AssetFetcher):
         base_delay=2.0,
         exceptions=(NetworkError, requests.exceptions.RequestException)
     )
-    def _download_with_retry(self, video_info: Dict[str, Any], query: str) -> Optional[str]:
+    def _download_with_retry(self, video_info: Dict[str, Any], query: str, progress_callback=None) -> Optional[str]:
         """Download video with retry logic."""
-        return self._download(video_info, query)
+        return self._download(video_info, query, progress_callback=progress_callback)
     
     def _search(self, query: str, count: int = 1) -> Optional[List[Dict[str, Any]]]:
         """
@@ -439,13 +440,14 @@ class PexelsClient(AssetFetcher):
             )
             raise NetworkError(f"Pexels search error: {e}")
     
-    def _download(self, video_info: Dict[str, Any], query: str) -> Optional[str]:
+    def _download(self, video_info: Dict[str, Any], query: str, progress_callback=None) -> Optional[str]:
         """
         Download video from Pexels URL.
         
         Args:
             video_info: Video information dict from search
             query: Original search query (for filename)
+            progress_callback: Optional function(percent, status) to report progress
             
         Returns:
             Path to downloaded video file, or None if failed
@@ -482,21 +484,30 @@ class PexelsClient(AssetFetcher):
             
             # Check content length for reasonable file size
             content_length = response.headers.get('content-length')
+            total_expected = int(content_length) if content_length else 0
+            
             if content_length:
-                file_size_mb = int(content_length) / (1024 * 1024)
+                file_size_mb = total_expected / (1024 * 1024)
                 if file_size_mb > 500:  # 500MB limit
                     logger.warning(f"Pexels video is very large ({file_size_mb:.1f}MB)")
                 elif file_size_mb < 0.1:  # Less than 100KB
                     logger.warning(f"Pexels video is very small ({file_size_mb:.1f}MB)")
             
             # Write file in chunks with progress tracking
-            total_size = 0
+            total_downloaded = 0
             with open(output_path, 'wb') as f:
                 for chunk in response.iter_content(chunk_size=8192):
                     if chunk:
                         f.write(chunk)
-                        total_size += len(chunk)
+                        total_downloaded += len(chunk)
+                        
+                        if progress_callback and total_expected > 0:
+                            percent = (total_downloaded / total_expected) * 100
+                            progress_callback(percent, 'downloading')
             
+            if progress_callback:
+                progress_callback(100, 'processing')
+
             # Verify file was downloaded successfully
             if output_path.exists() and output_path.stat().st_size > 0:
                 file_size_mb = output_path.stat().st_size / (1024 * 1024)

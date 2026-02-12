@@ -86,9 +86,9 @@ class YouTubeClient(AssetFetcher):
         base_delay=2.0,
         exceptions=(NetworkError, Exception)
     )
-    def _download_with_retry(self, video_url: str, query: str) -> Optional[str]:
+    def _download_with_retry(self, video_url: str, query: str, progress_callback=None) -> Optional[str]:
         """Download video with retry logic."""
-        return self._download(video_url, query)
+        return self._download(video_url, query, progress_callback=progress_callback)
     
     @retry_with_backoff(
         max_retries=1,
@@ -236,13 +236,14 @@ class YouTubeClient(AssetFetcher):
             logger.warning(f"Failed to get metadata for {video_url}: {e}")
             return None
     
-    def download_by_id(self, video_id: str, metadata: Dict[str, Any]) -> Optional[str]:
+    def download_by_id(self, video_id: str, metadata: Dict[str, Any], progress_callback=None) -> Optional[str]:
         """
         Download a specific video by ID using metadata from search.
         
         Args:
             video_id: YouTube video ID
             metadata: Metadata dictionary from search containing url
+            progress_callback: Optional function(percent, status) to report progress
             
         Returns:
             Path to downloaded video file, or None if failed
@@ -256,7 +257,7 @@ class YouTubeClient(AssetFetcher):
             video_url = metadata.get('url', f"https://www.youtube.com/watch?v={video_id}")
             
             # Download using existing method
-            downloaded_path = self._download_with_retry(video_url, video_id)
+            downloaded_path = self._download_with_retry(video_url, video_id, progress_callback=progress_callback)
             
             return downloaded_path
             
@@ -350,7 +351,7 @@ class YouTubeClient(AssetFetcher):
                 'no_warnings': True,
                 'extract_flat': True,  # Don't download, just get metadata
                 'default_search': f'ytsearch{count}:',
-                'socket_timeout': 30,  # 30 second timeout
+                'socket_timeout': 10,  # 10 second timeout
             }
             
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -386,13 +387,14 @@ class YouTubeClient(AssetFetcher):
             )
             raise NetworkError(f"YouTube search error: {e}")
 
-    def _download(self, video_url: str, query: str) -> Optional[str]:
+    def _download(self, video_url: str, query: str, progress_callback=None) -> Optional[str]:
         """
         Download video from YouTube URL.
         
         Args:
             video_url: YouTube video URL
             query: Original search query (for filename)
+            progress_callback: Optional function(percent, status) to report progress
             
         Returns:
             Path to downloaded video file, or None if failed
@@ -407,6 +409,20 @@ class YouTubeClient(AssetFetcher):
             
             output_template = str(self.output_dir / f"youtube_{safe_query}_%(id)s.%(ext)s")
             
+            # Progress hook for yt-dlp
+            def yt_dlp_hook(d):
+                if progress_callback:
+                    if d['status'] == 'downloading':
+                        try:
+                            # Extract percentage
+                            p = d.get('_percent_str', '0%').replace('%', '').strip()
+                            percent = float(p)
+                            progress_callback(percent, 'downloading')
+                        except:
+                            pass
+                    elif d['status'] == 'finished':
+                        progress_callback(100, 'processing')
+
             # Determine format based on ffmpeg availability
             if self._ffmpeg_available:
                 # Use a broader format selector if ffmpeg is available
@@ -425,6 +441,7 @@ class YouTubeClient(AssetFetcher):
                 'retries': 3,
                 'cachedir': False,
                 'nocheckcertificate': True,
+                'progress_hooks': [yt_dlp_hook] if progress_callback else [],
             }
 
             # Common browser headers

@@ -187,13 +187,15 @@ class AssetOrchestrator:
     
     def download_candidate(self,
                           candidate: AssetCandidate,
-                          beat_id: str = None) -> Optional[str]:
+                          beat_id: str = None,
+                          progress_callback=None) -> Optional[str]:
         """
         Download a specific asset candidate.
         
         Args:
             candidate: AssetCandidate object with metadata
             beat_id: Optional beat identifier for logging context
+            progress_callback: Optional function(percent, status) to report progress
             
         Returns:
             Path to downloaded file, or None if download failed
@@ -222,7 +224,8 @@ class AssetOrchestrator:
             # Download the specific asset using metadata
             file_path = fetcher.download_by_id(
                 candidate.id,
-                candidate.metadata
+                candidate.metadata,
+                progress_callback=progress_callback
             )
             
             if file_path and Path(file_path).exists():

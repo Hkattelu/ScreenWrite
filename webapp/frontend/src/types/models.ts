@@ -34,7 +34,18 @@ export interface SessionState {
     output_dir?: string
   }
   beats: Beat[]
-  assets: Record<string, string>
+  assets: Record<string, string | string[]>
+  download_progress?: Record<string, DownloadProgress>
+}
+
+export interface DownloadProgress {
+  status: 'starting' | 'downloading' | 'processing' | 'complete' | 'error'
+  percent: number
+  candidate_id?: string
+  title?: string
+  error?: string
+  file_path?: string
+  updated_at: string
 }
 
 export interface Config {

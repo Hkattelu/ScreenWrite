@@ -153,6 +153,8 @@ export async function searchAssets(
 ): Promise<AssetCandidate[]> {
   const response = await apiClient.post(`/session/${sessionId}/search/${beatId}`, {
     custom_query: customQuery,
+  }, {
+    timeout: 10000 // 10 second timeout for search operations
   })
   return response.data.candidates || []
 }
@@ -163,14 +165,27 @@ export async function searchAssets(
 export async function downloadAsset(
   sessionId: string,
   beatId: string,
-  candidate: AssetCandidate
+  candidate: AssetCandidate,
+  updateBeatQuery?: boolean
 ): Promise<string> {
   const response = await apiClient.post(`/session/${sessionId}/download/${beatId}`, {
     candidate_id: candidate.id,
     source: candidate.source,
     metadata: candidate.metadata,
+    update_beat_query: updateBeatQuery
   })
   return response.data.file_path
+}
+
+/**
+ * Cancel an ongoing download
+ */
+export async function cancelDownload(
+  sessionId: string,
+  beatId: string
+): Promise<{ success: boolean; message: string }> {
+  const response = await apiClient.post(`/session/${sessionId}/cancel/${beatId}`)
+  return response.data
 }
 
 /**

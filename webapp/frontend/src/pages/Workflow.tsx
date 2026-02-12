@@ -3,8 +3,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { ScriptUpload } from '../components/ScriptUpload'
 import { BeatList } from '../components/BeatList'
 import { ConfigPanel } from '../components/ConfigPanel'
-import { exportFcpxml, updateBeats, updateConfig, getErrorMessage, getSession, fetchAssets, getStatus, updateAssets } from '../services/api'
-import type { UploadResponse, Config, Beat } from '../types/models'
+import { exportFcpxml, updateBeats, updateConfig, getErrorMessage, getSession, fetchAssets, getStatus, updateAssets, downloadAsset, type AssetCandidate } from '../services/api'
+import type { UploadResponse, Config, Beat, DownloadProgress } from '../types/models'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   CheckCircle2, 
@@ -100,6 +100,7 @@ export function Workflow() {
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [beats, setBeats] = useState<Beat[]>([])
   const [assets, setAssets] = useState<Record<string, string | string[]>>({})
+  const [downloadProgress, setDownloadProgress] = useState<Record<string, DownloadProgress>>({})
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -118,6 +119,7 @@ export function Workflow() {
       setBeats(state.uploadData.beats)
       // Assets might be empty initially
       setAssets(state.uploadData.assets || {})
+      setDownloadProgress(state.uploadData.download_progress || {})
       setCurrentStep('review')
       // Update URL without reloading
       navigate(`/workflow?session=${state.uploadData.sessionId}`, { replace: true, state })
@@ -136,6 +138,20 @@ export function Workflow() {
         const data = await getSession(sessionId)
         if (data.beats) setBeats(data.beats)
         if (data.assets) setAssets(data.assets)
+        if (data.download_progress) {
+          // Merge with local state to preserve optimistic updates
+          setDownloadProgress(prev => {
+            const next = { ...prev }
+            // Only update if backend has newer info or we aren't in a transient state
+            Object.entries(data.download_progress || {}).forEach(([beatId, progress]) => {
+              // Always trust backend for error/complete
+              // For processing, trust backend
+              // For starting, maybe trust local?
+              next[beatId] = progress as DownloadProgress
+            })
+            return next
+          })
+        }
       } catch (err) {
         console.error("Polling error", err)
       }
@@ -153,6 +169,7 @@ export function Workflow() {
       setSessionId(data.sessionId)
       setBeats(data.beats)
       setAssets(data.assets || {})
+      setDownloadProgress(data.download_progress || {})
       
       // Restore reviewed state from beats
       const restoredReviewed = new Set(
@@ -218,6 +235,55 @@ export function Workflow() {
         setError(getErrorMessage(err))
         setIsSaving(false)
       }
+    }
+  }
+
+  const handleDownloadAsset = async (beatId: string, candidate: AssetCandidate, updateBeatQuery?: boolean) => {
+    if (!sessionId) return
+
+    // Optimistic update
+    setDownloadProgress(prev => ({
+      ...prev,
+      [beatId]: {
+        status: 'starting',
+        percent: 0,
+        candidate_id: candidate.id,
+        title: candidate.title,
+        updated_at: new Date().toISOString()
+      }
+    }))
+
+    try {
+      const filePath = await downloadAsset(sessionId, beatId, candidate, updateBeatQuery)
+      
+      // Update assets map immediately
+      setAssets(prev => ({ ...prev, [beatId]: filePath }))
+
+      // Update progress to complete
+      setDownloadProgress(prev => ({
+        ...prev,
+        [beatId]: {
+          status: 'complete',
+          percent: 100,
+          candidate_id: candidate.id,
+          title: candidate.title,
+          file_path: filePath,
+          updated_at: new Date().toISOString()
+        }
+      }))
+      
+    } catch (err) {
+      setDownloadProgress(prev => ({
+        ...prev,
+        [beatId]: {
+          status: 'error',
+          percent: 0,
+          candidate_id: candidate.id,
+          title: candidate.title,
+          error: getErrorMessage(err),
+          updated_at: new Date().toISOString()
+        }
+      }))
     }
   }
 
@@ -392,8 +458,10 @@ export function Workflow() {
                 sessionId={sessionId}
                 beats={beats} 
                 assets={assets}
+                downloadProgress={downloadProgress}
                 onBeatsUpdate={handleBeatsUpdate} 
                 onAssetsUpdate={handleAssetsUpdate}
+                onDownloadAsset={handleDownloadAsset}
                 editable={true}
                 reviewedIds={reviewedIds}
                 onToggleReviewed={(id) => {

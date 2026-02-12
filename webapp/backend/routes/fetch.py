@@ -23,6 +23,9 @@ logger = logging.getLogger(__name__)
 
 # Track active tasks
 active_tasks = {}
+# Track cancellation events for individual beat downloads
+# Key: (session_id, beat_id), Value: threading.Event
+cancellation_events = {}
 
 def background_fetch(app, session_id, app_config, session_folder):
     """Background task to fetch assets."""
@@ -257,7 +260,7 @@ def search_beat_assets(session_id, beat_id):
 
 @fetch_bp.route('/session/<session_id>/download/<beat_id>', methods=['POST'])
 def download_beat_asset(session_id, beat_id):
-    """Download a specific asset candidate."""
+    """Download a specific asset candidate asynchronously."""
     if not session_exists(session_id):
         return {'error': 'Session not found'}, 404
 
@@ -272,63 +275,205 @@ def download_beat_asset(session_id, beat_id):
         candidate_id = request_data.get('candidate_id')
         source = request_data.get('source')
         metadata = request_data.get('metadata', {})
+        update_beat_query = request_data.get('update_beat_query', False)
         
         if not candidate_id or not source:
             logger.error(f"Missing required parameters: candidate_id={candidate_id}, source={source}")
             return {'error': 'Missing required parameters: candidate_id and source'}, 400
+        
+        # Optionally update beat search terms
+        if update_beat_query and 'query_used' in metadata:
+            query_text = metadata['query_used']
+            beats = state.get('beats', [])
+            beat_index = next((i for i, b in enumerate(beats) if b['id'] == beat_id), -1)
+            
+            if beat_index != -1:
+                logger.info(f"Updating beat {beat_id} search terms to: '{query_text}'")
+                # Update appropriate field based on source
+                if source == 'youtube':
+                    beats[beat_index]['youtube_phrase'] = query_text
+                    # Also update backend field for consistency
+                    beats[beat_index]['youtube_search_phrase'] = query_text
+                elif source == 'pexels':
+                    beats[beat_index]['stock_keyword'] = query_text
+                
+                # Save updated beats immediately
+                save_session_state(session_id, state)
         
         # Setup output directory
         session_dir = get_session_path(session_id)
         assets_dir = os.path.join(session_dir, 'assets')
         os.makedirs(assets_dir, exist_ok=True)
         
-        # Initialize Orchestrator
-        orchestrator = AssetOrchestrator(
-            pexels_api_key=config.get('pexels_api_key'),
-            output_dir=assets_dir,
-            youtube_enabled=config.get('youtube_enabled', True),
-            pexels_enabled=config.get('pexels_enabled', True)
+        # Setup cancellation event
+        cancel_event = threading.Event()
+        cancellation_events[(session_id, beat_id)] = cancel_event
+        
+        # Capture app for thread
+        app = current_app._get_current_object()
+        
+        def background_download(app, session_id, beat_id, candidate_id, source, metadata, update_beat_query):
+            with app.app_context():
+                try:
+                    # Initialize Orchestrator
+                    # ... re-load config inside thread context
+                    state = load_session_state(session_id)
+                    config = state.get('config', {})
+                    
+                    orchestrator = AssetOrchestrator(
+                        pexels_api_key=config.get('pexels_api_key'),
+                        output_dir=assets_dir,
+                        youtube_enabled=config.get('youtube_enabled', True),
+                        pexels_enabled=config.get('pexels_enabled', True)
+                    )
+                    
+                    # Create AssetCandidate from request data
+                    from screenwrite.fetchers.asset_orchestrator import AssetCandidate
+                    candidate = AssetCandidate(
+                        id=candidate_id,
+                        title=metadata.get('title', 'Untitled'),
+                        thumbnail_url=metadata.get('thumbnail_url', ''),
+                        duration=metadata.get('duration', 0.0),
+                        source=source,
+                        metadata=metadata
+                    )
+                    
+                    def progress_callback(percent, status):
+                        # Check for cancellation
+                        if cancel_event.is_set():
+                            raise Exception("Download cancelled by user")
+                            
+                        try:
+                            # Reload state to avoid overwriting other updates
+                            current_state = load_session_state(session_id)
+                            if 'download_progress' not in current_state:
+                                current_state['download_progress'] = {}
+                            
+                            current_state['download_progress'][beat_id] = {
+                                'status': status,
+                                'percent': percent,
+                                'candidate_id': candidate_id,
+                                'title': candidate.title,
+                                'updated_at': datetime.now().isoformat()
+                            }
+                            save_session_state(session_id, current_state)
+                        except Exception as e:
+                            logger.error(f"Failed to update progress for beat {beat_id}: {e}")
+
+                    # Download the candidate
+                    logger.info(f"Downloading candidate {candidate_id} from {source} for beat {beat_id}")
+                    file_path = orchestrator.download_candidate(
+                        candidate, 
+                        beat_id=beat_id, 
+                        progress_callback=progress_callback
+                    )
+                    
+                    if not file_path:
+                        logger.error(f"Failed to download candidate {candidate_id}")
+                        # Update progress with error
+                        current_state = load_session_state(session_id)
+                        if 'download_progress' in current_state and beat_id in current_state['download_progress']:
+                            current_state['download_progress'][beat_id]['status'] = 'error'
+                            current_state['download_progress'][beat_id]['error'] = 'Download failed'
+                            save_session_state(session_id, current_state)
+                        return
+                    
+                    # Update session state with downloaded asset
+                    current_state = load_session_state(session_id)
+                    if not isinstance(current_state.get('assets'), dict):
+                        current_state['assets'] = {}
+                    
+                    # Store as single asset (replace any existing)
+                    current_state['assets'][beat_id] = file_path
+                    
+                    # Mark as complete in progress map
+                    if 'download_progress' not in current_state:
+                        current_state['download_progress'] = {}
+                    current_state['download_progress'][beat_id] = {
+                        'status': 'complete',
+                        'percent': 100,
+                        'file_path': file_path,
+                        'updated_at': datetime.now().isoformat()
+                    }
+                    
+                    # Optionally update beat search terms (in background thread too to ensure consistency)
+                    # We do it again here or rely on the initial synchronous update?
+                    # The synchronous update earlier was fine, but if we wanted to wait until success...
+                    # Requirement says "Update beat data only when user explicitly chooses to save" (done on download click)
+                    # But "Update asset preservation logic" -> "Only update asset when download completes" (covered by this background logic)
+                    
+                    save_session_state(session_id, current_state)
+                    logger.info(f"Successfully downloaded and saved asset for beat {beat_id}: {file_path}")
+                    
+                except Exception as e:
+                    status = 'error'
+                    if "cancelled" in str(e).lower():
+                        status = 'cancelled'
+                        logger.info(f"Download for beat {beat_id} was cancelled")
+                    else:
+                        logger.error(f"Background download failed for beat {beat_id}: {e}", exc_info=True)
+                    
+                    try:
+                        current_state = load_session_state(session_id)
+                        if 'download_progress' not in current_state:
+                            current_state['download_progress'] = {}
+                        current_state['download_progress'][beat_id] = {
+                            'status': status,
+                            'error': str(e),
+                            'updated_at': datetime.now().isoformat()
+                        }
+                        save_session_state(session_id, current_state)
+                    except:
+                        pass
+                finally:
+                    # Always remove from cancellation registry
+                    cancellation_events.pop((session_id, beat_id), None)
+
+        # Initial progress state
+        state = load_session_state(session_id)
+        if 'download_progress' not in state:
+            state['download_progress'] = {}
+        state['download_progress'][beat_id] = {
+            'status': 'starting',
+            'percent': 0,
+            'title': metadata.get('title', 'Untitled'),
+            'updated_at': datetime.now().isoformat()
+        }
+        save_session_state(session_id, state)
+
+        # Start background thread
+        thread = threading.Thread(
+            target=background_download,
+            args=(app, session_id, beat_id, candidate_id, source, metadata, update_beat_query)
         )
-        
-        # Create AssetCandidate from request data
-        from screenwrite.fetchers.asset_orchestrator import AssetCandidate
-        candidate = AssetCandidate(
-            id=candidate_id,
-            title=metadata.get('title', 'Untitled'),
-            thumbnail_url=metadata.get('thumbnail_url', ''),
-            duration=metadata.get('duration', 0.0),
-            source=source,
-            metadata=metadata
-        )
-        
-        # Download the candidate
-        logger.info(f"Downloading candidate {candidate_id} from {source} for beat {beat_id}")
-        file_path = orchestrator.download_candidate(candidate, beat_id=beat_id)
-        
-        if not file_path:
-            logger.error(f"Failed to download candidate {candidate_id}")
-            return {'error': 'Failed to download asset'}, 500
-        
-        # Update session state with downloaded asset
-        current_state = load_session_state(session_id)
-        if not isinstance(current_state.get('assets'), dict):
-            current_state['assets'] = {}
-        
-        # Store as single asset (replace any existing)
-        current_state['assets'][beat_id] = file_path
-        save_session_state(session_id, current_state)
-        
-        logger.info(f"Successfully downloaded and saved asset for beat {beat_id}: {file_path}")
-        
+        thread.daemon = True
+        thread.start()
+
         return {
             'success': True,
-            'file_path': file_path,
+            'message': 'Download started',
             'beat_id': beat_id
         }, 200
 
     except Exception as e:
+        logger.error(f"Error starting download for beat {beat_id}: {e}", exc_info=True)
+        return {'error': f"Failed to start download: {str(e)}"}, 500
+
+    except Exception as e:
         logger.error(f"Error downloading asset for beat {beat_id}: {e}", exc_info=True)
         return {'error': f"Failed to download asset: {str(e)}"}, 500
+
+
+@fetch_bp.route('/session/<session_id>/cancel/<beat_id>', methods=['POST'])
+def cancel_beat_download(session_id, beat_id):
+    """Cancel an ongoing beat asset download."""
+    key = (session_id, beat_id)
+    if key in cancellation_events:
+        cancellation_events[key].set()
+        logger.info(f"Set cancellation event for beat {beat_id} in session {session_id}")
+        return {'success': True, 'message': 'Cancellation requested'}, 200
+    else:
+        return {'error': 'No active download found for this beat'}, 404
 
 
 @fetch_bp.route('/session/<session_id>/fetch/<beat_id>', methods=['POST'])

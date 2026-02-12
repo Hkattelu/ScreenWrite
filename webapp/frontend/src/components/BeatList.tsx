@@ -20,15 +20,18 @@ import {
   Quote,
   Type
 } from 'lucide-react'
-import { refreshBeatAsset, getMediaUrl } from '../services/api'
+import { refreshBeatAsset, getMediaUrl, type AssetCandidate } from '../services/api'
 import { BeatAsset } from './BeatAsset'
+import type { DownloadProgress } from '../types/models'
 
 interface BeatListProps {
   sessionId: string
   beats: Beat[]
   assets?: Record<string, string | string[]>
+  downloadProgress?: Record<string, DownloadProgress>
   onBeatsUpdate?: (beats: Beat[]) => Promise<void> | void
   onAssetsUpdate?: (assets: Record<string, string | string[]>) => void
+  onDownloadAsset?: (beatId: string, candidate: AssetCandidate, updateBeatQuery?: boolean) => Promise<void>
   editable?: boolean
   reviewedIds?: Set<string>
   onToggleReviewed?: (id: string) => void
@@ -41,8 +44,10 @@ export function BeatList({
   sessionId,
   beats, 
   assets = {},
+  downloadProgress = {},
   onBeatsUpdate, 
   onAssetsUpdate,
+  onDownloadAsset,
   editable = false,
   reviewedIds = new Set(),
   onToggleReviewed,
@@ -494,6 +499,7 @@ export function BeatList({
                                 sessionId={sessionId}
                                 beatId={beat.id}
                                 assetPath={assets[beat.id]}
+                                downloadProgress={downloadProgress[beat.id]}
                                 visualType={beat.visual_type}
                                 visualContent={beat.visual_content}
                                 isRefreshing={refreshingIds.has(beat.id)}
@@ -505,6 +511,14 @@ export function BeatList({
                                   setLightboxPath(path || null)
                                 }}
                                 onSelect={handleAssetSelect}
+                                onDownloadAsset={onDownloadAsset}
+                                onAssetDownloaded={(beatId, filePath) => {
+                                  // Update assets state when a new asset is downloaded
+                                  if (onAssetsUpdate) {
+                                    const updatedAssets = { ...assets, [beatId]: filePath }
+                                    onAssetsUpdate(updatedAssets)
+                                  }
+                                }}
                               />
                             </div>
                           )}
