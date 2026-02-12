@@ -145,3 +145,46 @@ MIN_FCPXML_FILE_SIZE = 100
 # Length to truncate beat text in logs and string representations
 BEAT_TEXT_TRUNCATION_LENGTH = 50
 
+
+# ============================================================================
+# Keyword Generation Constants
+# ============================================================================
+
+# Stop words for generating stock keywords
+STOCK_KEYWORD_STOP_WORDS = {
+    'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
+    'of', 'with', 'by', 'is', 'are', 'was', 'were', 'be', 'been', 'being',
+    'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could',
+    'should', 'may', 'might', 'can', 'this', 'that', 'these', 'those',
+    'i', 'you', 'he', 'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them',
+    'your', 'first', 'then', 'now', 'here', 'there', 'when', 'where', 'how'
+}
+
+# Visual patterns for generating stock keywords
+# Keys are the strong search terms we want to use
+# Values are the trigger words found in text that map to these terms
+VISUAL_PATTERNS = {
+    'coding': ['coding', 'programming', 'developer', 'programmer', 'code', 'script'],
+    'computer': ['computer', 'laptop', 'keyboard', 'screen', 'monitor', 'desktop'],
+    'typing': ['typing', 'type', 'input', 'enter'],
+    'studying': ['tutorial', 'learning', 'education', 'student', 'study', 'reading'],
+    'office': ['office', 'meeting', 'presentation', 'team', 'work', 'business', 'colleague'],
+    'writing': ['writing', 'editor', 'file', 'document', 'text', 'paper', 'note'],
+    'technology': ['terminal', 'command', 'console', 'shell', 'data', 'database', 'server', 'system'],
+    'person': ['person', 'people', 'man', 'woman', 'user'],
+    'digital': ['software', 'application', 'program', 'digital', 'tech', 'app']
+}
+
+# Stop words for generating YouTube search phrases
+YOUTUBE_PHRASE_STOP_WORDS = {
+    'this', 'that', 'with', 'from', 'they', 'have', 'will', 'been',
+    'were', 'said', 'each', 'which', 'their', 'time', 'would', 'then',
+    'first', 'need', 'your', 'like', 'using', 'called', 'example'
+}
+
+# Technical patterns for generating YouTube search phrases
+TECHNICAL_PATTERNS = [
+    r'\b[A-Z][a-zA-Z]*\s+[A-Z][a-zA-Z]*\b',  # Product names (e.g., "Visual Studio")
+    r'\b\w+\.py\b',  # File names
+    r'\b\w+ing\b',  # Actions (e.g., "programming", "coding")
+]

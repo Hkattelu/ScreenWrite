@@ -1,4 +1,4 @@
-﻿"""Configuration and constants for screenwrite."""
+"""Configuration and constants for screenwrite."""
 
 from .constants import (
     # Beat generation constants
@@ -35,6 +35,12 @@ from .constants import (
     
     # Text truncation for logs
     BEAT_TEXT_TRUNCATION_LENGTH,
+
+    # Keyword Generation Constants
+    STOCK_KEYWORD_STOP_WORDS,
+    VISUAL_PATTERNS,
+    YOUTUBE_PHRASE_STOP_WORDS,
+    TECHNICAL_PATTERNS,
 )
 
 __all__ = [
@@ -55,5 +61,8 @@ __all__ = [
     'SUBPROCESS_TIMEOUT',
     'MIN_FCPXML_FILE_SIZE',
     'BEAT_TEXT_TRUNCATION_LENGTH',
+    'STOCK_KEYWORD_STOP_WORDS',
+    'VISUAL_PATTERNS',
+    'YOUTUBE_PHRASE_STOP_WORDS',
+    'TECHNICAL_PATTERNS',
 ]
-
