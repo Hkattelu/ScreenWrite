@@ -1,4 +1,4 @@
-﻿"""
+"""
 Export route handler.
 
 Handles FCPXML generation and file download.
@@ -9,6 +9,7 @@ import json
 import logging
 from flask import Blueprint, request, jsonify, current_app, send_file, send_from_directory
 from datetime import datetime
+from session_utils import get_session_path, session_exists, load_session_state
 
 # Import from parent screenwrite module
 import sys
@@ -19,25 +20,6 @@ from screenwrite.core.beat import Beat
 
 export_bp = Blueprint('export', __name__)
 logger = logging.getLogger(__name__)
-
-
-def get_session_path(session_id):
-    """Get the session directory path."""
-    return os.path.join(current_app.config['SESSION_FOLDER'], session_id)
-
-
-def session_exists(session_id):
-    """Check if session directory exists."""
-    return os.path.isdir(get_session_path(session_id))
-
-
-def load_session_state(session_id):
-    """Load session state from file."""
-    state_file = os.path.join(get_session_path(session_id), 'state.json')
-    if os.path.exists(state_file):
-        with open(state_file, 'r') as f:
-            return json.load(f)
-    return None
 
 
 @export_bp.route('/session/<session_id>/export', methods=['POST'])
@@ -65,9 +47,6 @@ def export_fcpxml(session_id):
     try:
         data = request.get_json() or {}
         state = load_session_state(session_id)
-
-        if not state:
-            return {'error': 'Failed to load session'}, 500
 
         # Get beats from state
         beats_data = state.get('beats', [])
@@ -175,4 +154,3 @@ def download_file(session_id, filename):
     except Exception as e:
         logger.error(f'Download error: {str(e)}')
         return {'error': 'Download failed'}, 500
-
