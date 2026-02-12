@@ -6,9 +6,11 @@
 
 import { Link } from 'react-router-dom'
 import { ScriptUpload } from '../components/ScriptUpload'
+import { RecentProjects } from '../components/RecentProjects'
 import type { UploadResponse } from '../types/models'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
+
 
 export function Home() {
 
@@ -34,7 +36,7 @@ export function Home() {
 
         <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
 
-        
+
 
         {/* Mesh Gradient 1: Deep Blue/Violet */}
         <motion.div
@@ -72,7 +74,7 @@ export function Home() {
           style={{ backgroundColor: '#7c3aed' }}
         />
 
-        
+
 
         <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-black to-transparent opacity-60" />
 
@@ -80,31 +82,31 @@ export function Home() {
 
 
 
-            <motion.div 
+      <motion.div
 
 
 
-              initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 20 }}
 
 
 
-              animate={{ opacity: 1, y: 0 }}
+        animate={{ opacity: 1, y: 0 }}
 
 
 
-              transition={{ duration: 1.6, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: 1.6, ease: [0.16, 1, 0.3, 1] }}
 
 
 
-              className="w-full max-w-4xl relative z-10"
+        className="w-full max-w-4xl relative z-10"
 
 
 
-            >
+      >
 
 
 
-      
+
 
         <div className="space-y-24">
 
@@ -134,9 +136,9 @@ export function Home() {
 
               </motion.div>
 
-              
 
-              <h1 
+
+              <h1
 
                 className="text-7xl md:text-9xl font-medium tracking-tight text-white leading-[0.85] text-center"
 
@@ -148,7 +150,7 @@ export function Home() {
 
               </h1>
 
-              
+
 
               <p className="mt-8 text-lg md:text-xl text-white/40 font-medium tracking-wide text-center max-w-lg mx-auto leading-relaxed">
 
@@ -178,27 +180,31 @@ export function Home() {
 
           >
 
-                        <div className="bg-white/[0.02] backdrop-blur-3xl border border-white/5 shadow-[0_48px_96px_-24px_rgba(0,0,0,0.5)] rounded-[32px] overflow-hidden">
+            <div className="bg-white/[0.02] backdrop-blur-3xl border border-white/5 shadow-[0_48px_96px_-24px_rgba(0,0,0,0.5)] rounded-[32px] overflow-hidden">
 
-                           <div className="p-1">
+              <div className="p-1">
 
-                             <div className="bg-black/40 rounded-[30px] p-8 md:p-12">
+                <div className="bg-black/40 rounded-[30px] p-8 md:p-12">
 
-                               <ScriptUpload onUploadSuccess={handleUploadSuccess} />
+                  <ScriptUpload onUploadSuccess={handleUploadSuccess} />
 
-                             </div>
+                </div>
 
-                           </div>
+              </div>
 
-                        </div>
+            </div>
 
           </motion.div>
 
 
+          {/* Recent Projects */}
+          <RecentProjects />
+
 
           {/* Minimal Footer */}
 
-          <motion.div 
+
+          <motion.div
 
             initial={{ opacity: 0 }}
 
@@ -210,9 +216,9 @@ export function Home() {
 
           >
 
-            <Link 
+            <Link
 
-              to="/syntax-guide" 
+              to="/syntax-guide"
 
               className="group flex items-center gap-4 text-white/30 hover:text-white transition-colors duration-500"
 

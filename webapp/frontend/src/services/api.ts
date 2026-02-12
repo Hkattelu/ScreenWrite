@@ -3,7 +3,8 @@
  */
 
 import axios, { AxiosError } from 'axios'
-import type { Beat, Config, ExportResponse, SessionState, UploadResponse } from '../types/models'
+import type { Beat, Config, ExportResponse, SessionState, UploadResponse, SessionListItem } from '../types/models'
+
 
 const API_BASE = '/api'
 
@@ -132,6 +133,14 @@ export function getMediaUrl(sessionId: string, filename: string): string {
   // Otherwise, construct the media API URL
   const baseName = filename.split(/[\\/]/).pop() || filename
   return `/api/session/${sessionId}/media/${baseName}`
+}
+
+/**
+ * List all sessions (recent projects)
+ */
+export async function listSessions(): Promise<SessionListItem[]> {
+  const response = await apiClient.get<{ sessions: SessionListItem[] }>('/sessions')
+  return response.data.sessions
 }
 
 /**

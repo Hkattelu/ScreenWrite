@@ -79,3 +79,12 @@ export interface ProgressUpdate {
   }
 }
 
+export interface SessionListItem {
+  sessionId: string
+  scriptName: string
+  beatCount: number
+  status: string
+  createdAt: string
+  updatedAt: string
+}
+

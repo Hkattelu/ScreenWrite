@@ -45,7 +45,6 @@ app.register_blueprint(api_bp, url_prefix='/api')
 app.register_blueprint(export_bp, url_prefix='/api')
 app.register_blueprint(fetch_bp, url_prefix='/api')
 
-
 @app.route('/api/health', methods=['GET'])
 def health_check():
     """Health check endpoint."""

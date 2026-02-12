@@ -81,13 +81,17 @@ def upload_sample():
         }
 
         # Persist initial state
+        from datetime import datetime
         initial_state = {
             'sessionId': session_id,
+            'scriptName': 'Sample Script',
             'status': 'initialized',
             'config': {},
             'beats': beats_data,
             'summary': response['summary'],
-            'assets': []
+            'assets': [],
+            'createdAt': datetime.now().isoformat(),
+            'updatedAt': datetime.now().isoformat()
         }
         save_session_state(session_id, initial_state)
 
@@ -184,13 +188,17 @@ def upload_script():
         }
 
         # Persist initial state
+        from datetime import datetime
         initial_state = {
             'sessionId': session_id,
+            'scriptName': filename,
             'status': 'initialized',
             'config': {},
             'beats': beats_data,
             'summary': response['summary'],
-            'assets': []
+            'assets': [],
+            'createdAt': datetime.now().isoformat(),
+            'updatedAt': datetime.now().isoformat()
         }
         save_session_state(session_id, initial_state)
 

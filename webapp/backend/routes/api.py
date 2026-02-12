@@ -154,6 +154,56 @@ def get_media(session_id, filename):
         return {'error': 'Failed to serve media'}, 500
 
 
+@api_bp.route('/sessions', methods=['GET'])
+def list_sessions():
+    """List all sessions with metadata, sorted by last modified time."""
+    try:
+        from flask import current_app
+        sessions_dir = current_app.config['SESSION_FOLDER']
+        
+        if not os.path.exists(sessions_dir):
+            return {'sessions': []}, 200
+        
+        sessions = []
+        for session_id in os.listdir(sessions_dir):
+            session_path = os.path.join(sessions_dir, session_id)
+            if not os.path.isdir(session_path):
+                continue
+            
+            try:
+                state = load_session_state(session_id)
+                state_file = os.path.join(session_path, 'state.json')
+                
+                # Get file modification time
+                mtime = os.path.getmtime(state_file) if os.path.exists(state_file) else 0
+                
+                sessions.append({
+                    'sessionId': session_id,
+                    'scriptName': state.get('scriptName', 'Untitled Script'),
+                    'beatCount': len(state.get('beats', [])),
+                    'status': state.get('status', 'unknown'),
+                    'createdAt': state.get('createdAt', datetime.fromtimestamp(mtime).isoformat()),
+                    'updatedAt': state.get('updatedAt', datetime.fromtimestamp(mtime).isoformat()),
+                    'lastModified': mtime
+                })
+            except Exception as e:
+                logger.warning(f'Error loading session {session_id}: {str(e)}')
+                continue
+        
+        # Sort by last modified (most recent first)
+        sessions.sort(key=lambda x: x['lastModified'], reverse=True)
+        
+        # Remove the lastModified timestamp from response (used only for sorting)
+        for session in sessions:
+            del session['lastModified']
+        
+        return {'sessions': sessions}, 200
+    
+    except Exception as e:
+        logger.error(f'Error listing sessions: {str(e)}')
+        return {'error': 'Failed to list sessions'}, 500
+
+
 @api_bp.route('/session/<session_id>/delete', methods=['DELETE'])
 def delete_session(session_id):
     """Delete a session and all associated data."""
