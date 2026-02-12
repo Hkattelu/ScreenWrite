@@ -26,6 +26,10 @@ from ..config import (
     WORDS_PER_SECOND,
     SUPPORTED_ENCODINGS,
     BEAT_TEXT_TRUNCATION_LENGTH,
+    STOCK_KEYWORD_STOP_WORDS,
+    VISUAL_PATTERNS,
+    YOUTUBE_PHRASE_STOP_WORDS,
+    TECHNICAL_PATTERNS,
 )
 from ..utils.error_handling import (
     validate_markdown_file,
@@ -591,14 +595,7 @@ class ScriptParser:
         
         # Extract key nouns and descriptive phrases
         # Remove common stop words and focus on visual elements
-        stop_words = {
-            'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 
-            'of', 'with', 'by', 'is', 'are', 'was', 'were', 'be', 'been', 'being',
-            'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could',
-            'should', 'may', 'might', 'can', 'this', 'that', 'these', 'those',
-            'i', 'you', 'he', 'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them',
-            'your', 'first', 'then', 'now', 'here', 'there', 'when', 'where', 'how'
-        }
+        stop_words = STOCK_KEYWORD_STOP_WORDS
         
         # Extract meaningful words
         words = re.findall(r'\b[a-zA-Z]+\b', full_text.lower())
@@ -610,17 +607,7 @@ class ScriptParser:
         # Common visual elements for stock ScreenWrite - prioritize beat-specific content
         # Keys are the strong search terms we want to use
         # Values are the trigger words found in text that map to these terms
-        visual_patterns = {
-            'coding': ['coding', 'programming', 'developer', 'programmer', 'code', 'script'],
-            'computer': ['computer', 'laptop', 'keyboard', 'screen', 'monitor', 'desktop'],
-            'typing': ['typing', 'type', 'input', 'enter'],
-            'studying': ['tutorial', 'learning', 'education', 'student', 'study', 'reading'],
-            'office': ['office', 'meeting', 'presentation', 'team', 'work', 'business', 'colleague'],
-            'writing': ['writing', 'editor', 'file', 'document', 'text', 'paper', 'note'],
-            'technology': ['terminal', 'command', 'console', 'shell', 'data', 'database', 'server', 'system'],
-            'person': ['person', 'people', 'man', 'woman', 'user'],
-            'digital': ['software', 'application', 'program', 'digital', 'tech', 'app']
-        }
+        visual_patterns = VISUAL_PATTERNS
         
         # Find matching visual categories from beat text
         meaningful_words_set = set(meaningful_words)
@@ -673,11 +660,7 @@ class ScriptParser:
         words = re.findall(r'\b[a-zA-Z]+\b', text.lower())  # Focus on beat text
         
         # Filter for meaningful terms (longer words, technical terms, actions)
-        stop_words = {
-            'this', 'that', 'with', 'from', 'they', 'have', 'will', 'been',
-            'were', 'said', 'each', 'which', 'their', 'time', 'would', 'then',
-            'first', 'need', 'your', 'like', 'using', 'called', 'example'
-        }
+        stop_words = YOUTUBE_PHRASE_STOP_WORDS
         
         meaningful_terms = []
         for word in words:
@@ -685,11 +668,7 @@ class ScriptParser:
                 meaningful_terms.append(word)
         
         # Look for specific technical patterns in the beat text
-        technical_patterns = [
-            r'\b[A-Z][a-zA-Z]*\s+[A-Z][a-zA-Z]*\b',  # Product names (e.g., "Visual Studio")
-            r'\b\w+\.py\b',  # File names
-            r'\b\w+ing\b',  # Actions (e.g., "programming", "coding")
-        ]
+        technical_patterns = TECHNICAL_PATTERNS
         
         for pattern in technical_patterns:
             matches = re.findall(pattern, text)
