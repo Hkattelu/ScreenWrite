@@ -10,3 +10,6 @@ Werkzeug==3.0.1
 
 # CLI / UI
 rich>=13.0.0
+
+# Testing
+hypothesis>=6.0.0

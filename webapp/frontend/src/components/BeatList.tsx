@@ -27,7 +27,7 @@ interface BeatListProps {
   sessionId: string
   beats: Beat[]
   assets?: Record<string, string | string[]>
-  onBeatsUpdate?: (beats: Beat[]) => void
+  onBeatsUpdate?: (beats: Beat[]) => Promise<void> | void
   onAssetsUpdate?: (assets: Record<string, string | string[]>) => void
   editable?: boolean
   reviewedIds?: Set<string>
@@ -52,6 +52,7 @@ export function BeatList({
   const [lightboxId, setLightboxId] = useState<string | null>(null)
   const [lightboxPath, setLightboxPath] = useState<string | null>(null)
   const [refreshingIds, setRefreshingIds] = useState<Set<string>>(new Set())
+  const [savingIds, setSavingIds] = useState<Set<string>>(new Set())
   const [editValues, setEditValues] = useState<Partial<Beat>>({})
   const [sourceMode, setSourceMode] = useState<VisualSourceMode>('auto')
   const listRef = useRef<HTMLDivElement>(null)
@@ -118,6 +119,12 @@ export function BeatList({
   }
 
   const handleRefresh = async (beatId: string) => {
+    // Check if beat is currently being saved
+    if (savingIds.has(beatId)) {
+      console.log(`Beat ${beatId} is being saved, waiting...`)
+      return
+    }
+    
     setRefreshingIds(prev => new Set(prev).add(beatId))
     try {
       await refreshBeatAsset(sessionId, beatId)
@@ -167,7 +174,7 @@ export function BeatList({
     setSourceMode(getModeFromBeat(beat))
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!editingId || !onBeatsUpdate) return
 
     const finalValues = { ...editValues }
@@ -182,12 +189,30 @@ export function BeatList({
 
     const updatedBeats = beats.map((b) => (b.id === editingId ? { ...b, ...finalValues } : b))
 
-    onBeatsUpdate(updatedBeats)
-    setEditingId(null)
-    setEditValues({})
+    // Mark beat as saving
+    setSavingIds(prev => new Set(prev).add(editingId))
     
-    if (onToggleReviewed && !reviewedIds.has(editingId)) {
-      onToggleReviewed(editingId)
+    try {
+      // Wait for the save to complete
+      await onBeatsUpdate(updatedBeats)
+      
+      setEditingId(null)
+      setEditValues({})
+      
+      if (onToggleReviewed && !reviewedIds.has(editingId)) {
+        onToggleReviewed(editingId)
+      }
+    } catch (err) {
+      console.error("Failed to save beat", err)
+    } finally {
+      // Remove from saving state after a short delay
+      setTimeout(() => {
+        setSavingIds(prev => {
+          const next = new Set(prev)
+          next.delete(editingId)
+          return next
+        })
+      }, 500)
     }
   }
 
@@ -472,6 +497,7 @@ export function BeatList({
                                 visualType={beat.visual_type}
                                 visualContent={beat.visual_content}
                                 isRefreshing={refreshingIds.has(beat.id)}
+                                isSaving={savingIds.has(beat.id)}
                                 reviewed={isReviewed}
                                 onRefresh={handleRefresh}
                                 onMaximize={(id, path) => {

@@ -83,25 +83,10 @@ export function Home() {
 
 
       <motion.div
-
-
-
         initial={{ opacity: 0, y: 20 }}
-
-
-
         animate={{ opacity: 1, y: 0 }}
-
-
-
         transition={{ duration: 1.6, ease: [0.16, 1, 0.3, 1] }}
-
-
-
         className="w-full max-w-4xl relative z-10"
-
-
-
       >
 
 
@@ -127,13 +112,6 @@ export function Home() {
                 className="mb-8"
 
               >
-
-                <div className="px-3 py-1 border border-white/10 rounded-full bg-white/5 backdrop-blur-sm">
-
-                  <span className="text-[10px] font-black text-white/40 uppercase tracking-[0.4em]">Director's Suite v1.0</span>
-
-                </div>
-
               </motion.div>
 
 

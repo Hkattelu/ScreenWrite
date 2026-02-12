@@ -11,6 +11,7 @@ import shutil
 from typing import List, Optional, Dict, Any
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from dataclasses import dataclass, asdict
 
 from .base_fetcher import AssetFetcher
 from .youtube_client import YouTubeClient
@@ -25,6 +26,31 @@ except ImportError:
 
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class AssetCandidate:
+    """
+    Represents a potential asset found during search that can be downloaded.
+    
+    Attributes:
+        id: Unique identifier for this candidate (video_id for YouTube, id for Pexels)
+        title: Human-readable title of the asset
+        thumbnail_url: URL to thumbnail image for preview
+        duration: Duration of the asset in seconds
+        source: Source provider ("youtube" or "pexels")
+        metadata: Source-specific metadata needed for download
+    """
+    id: str
+    title: str
+    thumbnail_url: str
+    duration: float
+    source: str
+    metadata: Dict[str, Any]
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for JSON serialization."""
+        return asdict(self)
 
 
 class AssetOrchestrator:
@@ -87,6 +113,128 @@ class AssetOrchestrator:
         """
         results = self.fetch_assets(youtube_query, stock_query, duration, count=1, beat_id=beat_id, enable_cache=enable_cache)
         return results[0] if results else None
+    
+    def search_assets(self,
+                     youtube_query: str,
+                     stock_query: str,
+                     duration: float,
+                     count: int = 5) -> List[AssetCandidate]:
+        """
+        Search for asset candidates without downloading.
+        
+        Args:
+            youtube_query: Search query for YouTube
+            stock_query: Search query for stock footage (Pexels)
+            duration: Target duration in seconds
+            count: Number of candidates to return
+            
+        Returns:
+            List of AssetCandidate objects with metadata
+        """
+        if not self.fetchers:
+            logger.error("No asset fetchers available")
+            return []
+        
+        if not youtube_query.strip() and not stock_query.strip():
+            logger.error("Both YouTube and stock queries are empty")
+            return []
+        
+        candidates = []
+        
+        for fetcher in self.fetchers:
+            try:
+                # Choose appropriate query based on fetcher name (duck typing)
+                fetcher_name = getattr(fetcher, 'name', '').lower()
+                if 'youtube' in fetcher_name:
+                    query = youtube_query
+                    if not query.strip():
+                        continue
+                elif 'pexels' in fetcher_name or 'stock' in fetcher_name:
+                    query = stock_query
+                    if not query.strip():
+                        continue
+                else:
+                    query = youtube_query if youtube_query.strip() else stock_query
+                    if not query.strip():
+                        continue
+                
+                logger.info(f"Searching {fetcher.name} for: '{query}'")
+                
+                # Search without downloading
+                search_results = fetcher.search(query, count=count - len(candidates))
+                
+                # Convert to AssetCandidate objects
+                for result in search_results:
+                    candidate = AssetCandidate(
+                        id=result.get('id', ''),
+                        title=result.get('title', 'Untitled'),
+                        thumbnail_url=result.get('thumbnail_url', ''),
+                        duration=result.get('duration', 0.0),
+                        source=fetcher.name.lower(),
+                        metadata=result
+                    )
+                    candidates.append(candidate)
+                
+                # If we have enough candidates, stop
+                if len(candidates) >= count:
+                    break
+                    
+            except Exception as e:
+                logger.error(f"Unexpected error searching with {fetcher.name}: {e}")
+                continue
+        
+        return candidates[:count]
+    
+    def download_candidate(self,
+                          candidate: AssetCandidate,
+                          beat_id: str = None) -> Optional[str]:
+        """
+        Download a specific asset candidate.
+        
+        Args:
+            candidate: AssetCandidate object with metadata
+            beat_id: Optional beat identifier for logging context
+            
+        Returns:
+            Path to downloaded file, or None if download failed
+        """
+        beat_context = f"[{beat_id}] " if beat_id else ""
+        
+        if not self.fetchers:
+            logger.error(f"{beat_context}No asset fetchers available")
+            return None
+        
+        # Find the appropriate fetcher based on source
+        fetcher = None
+        for f in self.fetchers:
+            fetcher_name = getattr(f, 'name', '').lower()
+            if candidate.source.lower() in fetcher_name:
+                fetcher = f
+                break
+        
+        if not fetcher:
+            logger.error(f"{beat_context}No fetcher available for source: {candidate.source}")
+            return None
+        
+        try:
+            logger.info(f"{beat_context}Downloading candidate {candidate.id} from {candidate.source}")
+            
+            # Download the specific asset using metadata
+            file_path = fetcher.download_by_id(
+                candidate.id,
+                candidate.metadata
+            )
+            
+            if file_path and Path(file_path).exists():
+                logger.info(f"{beat_context}Successfully downloaded to: {file_path}")
+                return file_path
+            else:
+                logger.error(f"{beat_context}Download failed or file not found")
+                return None
+                
+        except Exception as e:
+            logger.error(f"{beat_context}Error downloading candidate {candidate.id}: {e}")
+            return None
 
     def fetch_assets(self, 
                     youtube_query: str, 
@@ -124,12 +272,13 @@ class AssetOrchestrator:
         
         for fetcher in self.fetchers:
             try:
-                # Choose appropriate query based on fetcher type
-                if isinstance(fetcher, YouTubeClient):
+                # Choose appropriate query based on fetcher name (duck typing)
+                fetcher_name = getattr(fetcher, 'name', '').lower()
+                if 'youtube' in fetcher_name:
                     query = youtube_query
                     if not query.strip():
                         continue
-                elif isinstance(fetcher, PexelsClient):
+                elif 'pexels' in fetcher_name or 'stock' in fetcher_name:
                     query = stock_query
                     if not query.strip():
                         continue
@@ -251,13 +400,14 @@ class AssetOrchestrator:
                 'type': type(fetcher).__name__
             }
             
-            # Add fetcher-specific status information
-            if isinstance(fetcher, YouTubeClient):
+            # Add fetcher-specific status information based on name (duck typing)
+            fetcher_name = getattr(fetcher, 'name', '').lower()
+            if 'youtube' in fetcher_name:
                 fetcher_status.update({
                     'yt_dlp_available': getattr(fetcher, '_yt_dlp_available', False),
                     'ffmpeg_available': getattr(fetcher, '_ffmpeg_available', False)
                 })
-            elif isinstance(fetcher, PexelsClient):
+            elif 'pexels' in fetcher_name or 'stock' in fetcher_name:
                 fetcher_status.update({
                     'api_available': getattr(fetcher, '_api_available', False),
                     'has_api_key': bool(getattr(fetcher, 'api_key', None))

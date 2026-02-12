@@ -107,6 +107,158 @@ class PexelsClient(AssetFetcher):
         """
         results = self.fetch_multi(query, duration, count=1)
         return results[0] if results else None
+    
+    def search(self, query: str, count: int = 5) -> List[Dict[str, Any]]:
+        """
+        Search for videos without downloading them.
+        
+        Args:
+            query: Search query string
+            count: Number of results to return
+            
+        Returns:
+            List of video metadata dictionaries with id, title, thumbnail_url, duration
+        """
+        if not self._api_available:
+            logger.error("Pexels API key not available, cannot search Pexels")
+            return []
+            
+        if not query.strip():
+            logger.error("Empty query provided to Pexels search")
+            return []
+        
+        try:
+            # Search for videos
+            videos_info = self._search_with_retry(query, count=count)
+            if not videos_info:
+                logger.warning(f"No Pexels results found for query: {query}")
+                return []
+            
+            # Convert to metadata format
+            results = []
+            for video_info in videos_info:
+                try:
+                    # Get additional metadata from API
+                    video_id = video_info.get('id')
+                    if video_id:
+                        metadata = self._get_video_metadata(video_id)
+                        if metadata:
+                            # Merge with existing info
+                            metadata.update({
+                                'download_url': video_info.get('url'),
+                                'quality': video_info.get('quality'),
+                                'file_type': video_info.get('file_type')
+                            })
+                            results.append(metadata)
+                except Exception as e:
+                    logger.warning(f"Failed to get metadata for Pexels video {video_info.get('id')}: {e}")
+                    continue
+            
+            return results
+            
+        except Exception as e:
+            log_error_with_context(
+                logger, logging.ERROR,
+                "Pexels search failed",
+                component="PexelsClient",
+                query=query,
+                error=e
+            )
+            return []
+    
+    def _get_video_metadata(self, video_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Get video metadata without downloading.
+        
+        Args:
+            video_id: Pexels video ID
+            
+        Returns:
+            Dictionary with id, title, thumbnail_url, duration
+        """
+        try:
+            # Get video details from API
+            video_url = f"{self.base_url}/videos/{video_id}"
+            
+            response = self.session.get(
+                video_url,
+                timeout=(10, 30)
+            )
+            
+            if response.status_code != 200:
+                logger.warning(f"Failed to get Pexels video metadata: {response.status_code}")
+                return None
+            
+            data = response.json()
+            
+            # Extract metadata
+            video_id_str = str(data.get('id', ''))
+            
+            # Get image for thumbnail (Pexels provides an image field)
+            thumbnail_url = data.get('image', '')
+            
+            # Get duration from video files
+            video_files = data.get('video_files', [])
+            duration = 0.0
+            if video_files:
+                # Duration should be same across all files
+                duration = video_files[0].get('duration', 0.0) if video_files[0] else 0.0
+            
+            # Pexels doesn't always have titles, use user name or generic
+            user = data.get('user', {})
+            user_name = user.get('name', 'Unknown')
+            title = f"Video by {user_name}"
+            
+            return {
+                'id': video_id_str,
+                'title': title,
+                'thumbnail_url': thumbnail_url,
+                'duration': float(duration) if duration else 0.0,
+                'video_id': video_id
+            }
+            
+        except Exception as e:
+            logger.warning(f"Failed to get metadata for Pexels video {video_id}: {e}")
+            return None
+    
+    def download_by_id(self, video_id: str, metadata: Dict[str, Any]) -> Optional[str]:
+        """
+        Download a specific video by ID using metadata from search.
+        
+        Args:
+            video_id: Pexels video ID
+            metadata: Metadata dictionary from search containing download_url
+            
+        Returns:
+            Path to downloaded video file, or None if failed
+        """
+        if not self._api_available:
+            logger.error("Pexels API key not available, cannot download from Pexels")
+            return None
+        
+        try:
+            # Get download URL from metadata
+            download_url = metadata.get('download_url')
+            if not download_url:
+                logger.error(f"No download URL in metadata for Pexels video {video_id}")
+                return None
+            
+            # Create video info dict for download method
+            video_info = {
+                'id': video_id,
+                'url': download_url,
+                'quality': metadata.get('quality'),
+                'file_type': metadata.get('file_type')
+            }
+            
+            # Download using existing method
+            downloaded_path = self._download_with_retry(video_info, video_id)
+            
+            return downloaded_path
+            
+        except Exception as e:
+            logger.error(f"Failed to download Pexels video {video_id}: {e}")
+            return None
 
     def fetch_multi(self, query: str, duration: float, count: int = 3) -> List[str]:
         """

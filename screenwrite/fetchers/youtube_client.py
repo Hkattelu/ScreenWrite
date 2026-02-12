@@ -10,7 +10,7 @@ import os
 import subprocess
 import tempfile
 import logging
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from pathlib import Path
 
 try:
@@ -138,6 +138,131 @@ class YouTubeClient(AssetFetcher):
         """
         results = self.fetch_multi(query, duration, count=1)
         return results[0] if results else None
+    
+    def search(self, query: str, count: int = 5) -> List[Dict[str, Any]]:
+        """
+        Search for videos without downloading them.
+        
+        Args:
+            query: Search query string
+            count: Number of results to return
+            
+        Returns:
+            List of video metadata dictionaries with id, title, thumbnail_url, duration
+        """
+        if not self._yt_dlp_available:
+            logger.error("yt-dlp not available, cannot search YouTube")
+            return []
+            
+        if not query.strip():
+            logger.error("Empty query provided to YouTube search")
+            return []
+        
+        try:
+            # Search for videos
+            video_urls = self._search_with_retry(query, count=count)
+            if not video_urls:
+                logger.warning(f"No YouTube results found for query: {query}")
+                return []
+            
+            # Get metadata for each video without downloading
+            results = []
+            for video_url in video_urls:
+                try:
+                    metadata = self._get_video_metadata(video_url)
+                    if metadata:
+                        results.append(metadata)
+                except Exception as e:
+                    logger.warning(f"Failed to get metadata for {video_url}: {e}")
+                    continue
+            
+            return results
+            
+        except Exception as e:
+            log_error_with_context(
+                logger, logging.ERROR,
+                "YouTube search failed",
+                component="YouTubeClient",
+                query=query,
+                error=e
+            )
+            return []
+    
+    def _get_video_metadata(self, video_url: str) -> Optional[Dict[str, Any]]:
+        """
+        Get video metadata without downloading.
+        
+        Args:
+            video_url: YouTube video URL
+            
+        Returns:
+            Dictionary with id, title, thumbnail_url, duration
+        """
+        try:
+            ydl_opts = {
+                'quiet': True,
+                'no_warnings': True,
+                'skip_download': True,
+                'socket_timeout': 30,
+            }
+            
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(video_url, download=False)
+                
+                if not info:
+                    return None
+                
+                # Extract relevant metadata
+                video_id = info.get('id', '')
+                title = info.get('title', 'Untitled')
+                duration = info.get('duration', 0)
+                
+                # Get best thumbnail
+                thumbnails = info.get('thumbnails', [])
+                thumbnail_url = ''
+                if thumbnails:
+                    # Prefer high quality thumbnails
+                    thumbnail_url = thumbnails[-1].get('url', '')
+                
+                return {
+                    'id': video_id,
+                    'title': title,
+                    'thumbnail_url': thumbnail_url,
+                    'duration': float(duration) if duration else 0.0,
+                    'url': video_url
+                }
+                
+        except Exception as e:
+            logger.warning(f"Failed to get metadata for {video_url}: {e}")
+            return None
+    
+    def download_by_id(self, video_id: str, metadata: Dict[str, Any]) -> Optional[str]:
+        """
+        Download a specific video by ID using metadata from search.
+        
+        Args:
+            video_id: YouTube video ID
+            metadata: Metadata dictionary from search containing url
+            
+        Returns:
+            Path to downloaded video file, or None if failed
+        """
+        if not self._yt_dlp_available:
+            logger.error("yt-dlp not available, cannot download from YouTube")
+            return None
+        
+        try:
+            # Get video URL from metadata or construct it
+            video_url = metadata.get('url', f"https://www.youtube.com/watch?v={video_id}")
+            
+            # Download using existing method
+            downloaded_path = self._download_with_retry(video_url, video_id)
+            
+            return downloaded_path
+            
+        except Exception as e:
+            logger.error(f"Failed to download YouTube video {video_id}: {e}")
+            return None
 
     def fetch_multi(self, query: str, duration: float, count: int = 3) -> List[str]:
         """

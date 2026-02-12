@@ -144,6 +144,48 @@ export async function listSessions(): Promise<SessionListItem[]> {
 }
 
 /**
+ * Search for asset candidates without downloading
+ */
+export async function searchAssets(
+  sessionId: string,
+  beatId: string,
+  customQuery?: string
+): Promise<AssetCandidate[]> {
+  const response = await apiClient.post(`/session/${sessionId}/search/${beatId}`, {
+    custom_query: customQuery,
+  })
+  return response.data.candidates || []
+}
+
+/**
+ * Download a specific asset candidate
+ */
+export async function downloadAsset(
+  sessionId: string,
+  beatId: string,
+  candidate: AssetCandidate
+): Promise<string> {
+  const response = await apiClient.post(`/session/${sessionId}/download/${beatId}`, {
+    candidate_id: candidate.id,
+    source: candidate.source,
+    metadata: candidate.metadata,
+  })
+  return response.data.file_path
+}
+
+/**
+ * Asset candidate interface
+ */
+export interface AssetCandidate {
+  id: string
+  title: string
+  thumbnail_url: string
+  duration: number
+  source: 'youtube' | 'pexels'
+  metadata: Record<string, any>
+}
+
+/**
  * Handle API errors with user-friendly messages
  */
 export function getErrorMessage(error: unknown): string {

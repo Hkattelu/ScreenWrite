@@ -1,7 +1,8 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { Play, Maximize2, RefreshCcw, Film, Type, Quote, Image as ImageIcon, Upload, Check } from 'lucide-react'
-import { getMediaUrl } from '../services/api'
+import { getMediaUrl, searchAssets, downloadAsset, type AssetCandidate } from '../services/api'
 import type { Beat } from '../types/models'
+import { AssetSearchModal } from './AssetSearchModal'
 
 interface BeatAssetProps {
   sessionId: string
@@ -10,10 +11,12 @@ interface BeatAssetProps {
   visualType?: Beat['visual_type']
   visualContent?: string
   isRefreshing: boolean
+  isSaving?: boolean
   reviewed?: boolean
   onRefresh: (id: string) => void
   onMaximize: (id: string, path?: string) => void
   onSelect?: (id: string, path: string) => void
+  onAssetDownloaded?: (beatId: string, filePath: string) => void
 }
 
 export function BeatAsset({
@@ -23,15 +26,57 @@ export function BeatAsset({
   visualType = 'auto',
   visualContent,
   isRefreshing,
+  isSaving = false,
   reviewed = false,
   onRefresh,
   onMaximize,
-  onSelect
+  onSelect,
+  onAssetDownloaded
 }: BeatAssetProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isDownloading, setIsDownloading] = useState(false)
   
   const paths = Array.isArray(assetPath) ? assetPath : (assetPath ? [assetPath] : [])
   const currentPath = paths[0] || undefined
+
+  const handleSearchAssets = async (
+    sessionId: string,
+    beatId: string,
+    customQuery?: string
+  ): Promise<AssetCandidate[]> => {
+    try {
+      return await searchAssets(sessionId, beatId, customQuery)
+    } catch (err) {
+      throw new Error(err instanceof Error ? err.message : 'Failed to search assets')
+    }
+  }
+
+  const handleDownloadAsset = async (
+    sessionId: string,
+    beatId: string,
+    candidate: AssetCandidate
+  ): Promise<string> => {
+    try {
+      setIsDownloading(true)
+      const filePath = await downloadAsset(sessionId, beatId, candidate)
+      return filePath
+    } catch (err) {
+      throw new Error(err instanceof Error ? err.message : 'Failed to download asset')
+    } finally {
+      setIsDownloading(false)
+    }
+  }
+
+  const handleAssetSelected = (beatId: string, filePath: string) => {
+    if (onAssetDownloaded) {
+      onAssetDownloaded(beatId, filePath)
+    }
+  }
+
+  const handleOpenModal = () => {
+    setIsModalOpen(true)
+  }
 
   const handleUploadClick = (e: React.MouseEvent | React.KeyboardEvent) => {
 
@@ -169,8 +214,8 @@ export function BeatAsset({
 
     return (
       <div className="aspect-video flex flex-col items-center justify-center gap-4 p-8 text-center bg-slate-50/50">
-        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 ${isRefreshing ? 'bg-blue-50 text-blue-500 shadow-inner' : 'bg-white border border-slate-100 text-slate-200 shadow-sm'}`}>
-          {isRefreshing ? (
+        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 ${isRefreshing || isSaving ? 'bg-blue-50 text-blue-500 shadow-inner' : 'bg-white border border-slate-100 text-slate-200 shadow-sm'}`}>
+          {isRefreshing || isSaving ? (
             <RefreshCcw size={20} strokeWidth={2.5} className="animate-spin" />
           ) : (
             <Film size={20} strokeWidth={2.5} />
@@ -178,19 +223,24 @@ export function BeatAsset({
         </div>
         <div className="space-y-1">
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
-            {isRefreshing ? 'Processing' : 'Asset Status'}
+            {isSaving ? 'Saving Changes' : isRefreshing ? 'Processing' : 'Asset Status'}
           </p>
           <p className="text-xs font-black text-slate-800 uppercase tracking-widest">
-            {isRefreshing ? 'Downloading...' : 'No Preview Available'}
+            {isSaving ? 'Please Wait...' : isRefreshing ? 'Downloading...' : 'No Preview Available'}
           </p>
         </div>
-        {!isRefreshing && (
+        {!isRefreshing && !isSaving && (
           <button 
-            onClick={() => onRefresh(beatId)}
+            onClick={handleOpenModal}
             className="mt-2 px-5 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-black text-blue-600 uppercase tracking-widest hover:border-blue-400 hover:bg-blue-50 transition-all active:scale-95 shadow-sm"
           >
             Fetch Asset
           </button>
+        )}
+        {isSaving && (
+          <p className="text-[9px] text-slate-400 font-medium">
+            Saving beat data before fetch...
+          </p>
         )}
       </div>
     )
@@ -198,8 +248,20 @@ export function BeatAsset({
 
   // Placeholder for other types (Phase 3)
   return (
-    <div className="aspect-video flex items-center justify-center bg-gray-50 border border-gray-100 rounded-xl">
-      <p className="text-xs text-gray-400">Preview not available for {visualType}</p>
-    </div>
+    <>
+      <div className="aspect-video flex items-center justify-center bg-gray-50 border border-gray-100 rounded-xl">
+        <p className="text-xs text-gray-400">Preview not available for {visualType}</p>
+      </div>
+      
+      <AssetSearchModal
+        sessionId={sessionId}
+        beatId={beatId}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onAssetSelected={handleAssetSelected}
+        onSearch={handleSearchAssets}
+        onDownload={handleDownloadAsset}
+      />
+    </>
   )
 }
