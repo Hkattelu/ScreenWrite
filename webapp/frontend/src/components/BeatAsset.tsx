@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
-import { Play, Maximize2, RefreshCcw, Film, Type, Quote, Image as ImageIcon, Upload, Check, Loader2, StopCircle } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Maximize2, RefreshCcw, Film, Type, Quote, Image as ImageIcon, Upload, Check, StopCircle } from 'lucide-react'
 import { getMediaUrl, searchAssets, downloadAsset, type AssetCandidate, cancelDownload } from '../services/api'
 import type { Beat, DownloadProgress } from '../types/models'
 import { AssetSearchModal } from './AssetSearchModal'
@@ -11,10 +12,11 @@ interface BeatAssetProps {
   downloadProgress?: DownloadProgress
   visualType?: Beat['visual_type']
   visualContent?: string
+  youtubePhrase?: string
+  stockKeyword?: string
   isRefreshing: boolean
   isSaving?: boolean
   reviewed?: boolean
-  onRefresh: (id: string) => void
   onMaximize: (id: string, path?: string) => void
   onSelect?: (id: string, path: string) => void
   onAssetDownloaded?: (beatId: string, filePath: string) => void
@@ -28,10 +30,11 @@ export function BeatAsset({
   downloadProgress,
   visualType = 'auto',
   visualContent,
+  youtubePhrase,
+  stockKeyword,
   isRefreshing,
   isSaving = false,
   reviewed = false,
-  onRefresh,
   onMaximize,
   onSelect,
   onAssetDownloaded,
@@ -232,6 +235,7 @@ export function BeatAsset({
             sessionId={sessionId}
             beatId={beatId}
             isOpen={isModalOpen}
+            initialQuery={(visualType as any) === 'stock' ? stockKeyword : (youtubePhrase || visualContent || '')}
             onClose={() => setIsModalOpen(false)}
             onAssetSelected={handleAssetSelected}
             onSearch={handleSearchAssets}
@@ -266,9 +270,9 @@ export function BeatAsset({
                 exit={{ opacity: 0 }}
                 className="flex flex-col items-center gap-4"
               >
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 ${isRefreshing || isSaving || isDownloading ? 'bg-blue-50 text-blue-500 shadow-inner' : 'bg-white border border-slate-100 text-slate-200 shadow-sm'}`}>
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 ${isRefreshing || isSaving || isDownloading ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/30' : 'bg-white border border-slate-100 text-slate-200 shadow-sm'}`}>
                   {isRefreshing || isSaving || isDownloading ? (
-                    <RefreshCcw size={20} strokeWidth={2.5} className="animate-spin" />
+                    <RefreshCcw size={20} strokeWidth={3} className="animate-spin" />
                   ) : (
                     <Film size={20} strokeWidth={2.5} />
                   )}
@@ -311,7 +315,7 @@ export function BeatAsset({
           {!isRefreshing && !isSaving && !isDownloading && downloadProgress?.status !== 'complete' && (
             <button 
               onClick={handleOpenModal}
-              className="mt-2 px-5 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-black text-blue-600 uppercase tracking-widest hover:border-blue-400 hover:bg-blue-50 transition-all active:scale-95 shadow-sm"
+              className="mt-2 px-6 py-2.5 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all active:scale-95 shadow-lg shadow-blue-500/20 border border-blue-400/20"
             >
               Fetch Asset
             </button>
@@ -332,6 +336,7 @@ export function BeatAsset({
           sessionId={sessionId}
           beatId={beatId}
           isOpen={isModalOpen}
+          initialQuery={(visualType as any) === 'stock' ? stockKeyword : (youtubePhrase || visualContent || '')}
           onClose={() => setIsModalOpen(false)}
           onAssetSelected={handleAssetSelected}
           onSearch={handleSearchAssets}
@@ -353,6 +358,7 @@ export function BeatAsset({
         sessionId={sessionId}
         beatId={beatId}
         isOpen={isModalOpen}
+        initialQuery={visualType === 'stock' ? stockKeyword : (youtubePhrase || visualContent || '')}
         onClose={() => setIsModalOpen(false)}
         onAssetSelected={handleAssetSelected}
         onSearch={handleSearchAssets}

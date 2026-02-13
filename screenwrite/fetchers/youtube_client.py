@@ -86,9 +86,9 @@ class YouTubeClient(AssetFetcher):
         base_delay=2.0,
         exceptions=(NetworkError, Exception)
     )
-    def _download_with_retry(self, video_url: str, query: str, progress_callback=None) -> Optional[str]:
+    def _download_with_retry(self, video_url: str, query: str, target_duration: float = None, progress_callback=None) -> Optional[str]:
         """Download video with retry logic."""
-        return self._download(video_url, query, progress_callback=progress_callback)
+        return self._download(video_url, query, target_duration=target_duration, progress_callback=progress_callback)
     
     @retry_with_backoff(
         max_retries=1,
@@ -160,20 +160,43 @@ class YouTubeClient(AssetFetcher):
         
         try:
             # Search for videos
-            video_urls = self._search_with_retry(query, count=count)
-            if not video_urls:
+            entries = self._search_with_retry(query, count=count)
+            if not entries:
                 logger.warning(f"No YouTube results found for query: {query}")
                 return []
             
-            # Get metadata for each video without downloading
+            # Process entries into metadata format
             results = []
-            for video_url in video_urls:
+            for entry in entries:
                 try:
-                    metadata = self._get_video_metadata(video_url)
-                    if metadata:
-                        results.append(metadata)
+                    # Extract relevant metadata directly from search result if available
+                    video_id = entry.get('id', '')
+                    if not video_id:
+                        continue
+                        
+                    title = entry.get('title', 'Untitled')
+                    duration = entry.get('duration', 0.0)
+                    
+                    # Get best thumbnail
+                    thumbnails = entry.get('thumbnails', [])
+                    thumbnail_url = ''
+                    if thumbnails:
+                        thumbnail_url = thumbnails[-1].get('url', '')
+                    
+                    video_url = entry.get('url') or f"https://www.youtube.com/watch?v={video_id}"
+                    
+                    # If we have basic info but duration is missing, we MIGHT want to fetch it,
+                    # but for speed we'll accept what search gives us. 
+                    # Most search results DO include duration.
+                    results.append({
+                        'id': video_id,
+                        'title': title,
+                        'thumbnail_url': thumbnail_url,
+                        'duration': float(duration) if duration else 0.0,
+                        'url': video_url
+                    })
                 except Exception as e:
-                    logger.warning(f"Failed to get metadata for {video_url}: {e}")
+                    logger.warning(f"Failed to process search entry: {e}")
                     continue
             
             return results
@@ -236,13 +259,14 @@ class YouTubeClient(AssetFetcher):
             logger.warning(f"Failed to get metadata for {video_url}: {e}")
             return None
     
-    def download_by_id(self, video_id: str, metadata: Dict[str, Any], progress_callback=None) -> Optional[str]:
+    def download_by_id(self, video_id: str, metadata: Dict[str, Any], target_duration: float = None, progress_callback=None) -> Optional[str]:
         """
         Download a specific video by ID using metadata from search.
         
         Args:
             video_id: YouTube video ID
             metadata: Metadata dictionary from search containing url
+            target_duration: Optional target duration in seconds to optimize download
             progress_callback: Optional function(percent, status) to report progress
             
         Returns:
@@ -257,7 +281,12 @@ class YouTubeClient(AssetFetcher):
             video_url = metadata.get('url', f"https://www.youtube.com/watch?v={video_id}")
             
             # Download using existing method
-            downloaded_path = self._download_with_retry(video_url, video_id, progress_callback=progress_callback)
+            downloaded_path = self._download_with_retry(
+                video_url, 
+                video_id, 
+                target_duration=target_duration,
+                progress_callback=progress_callback
+            )
             
             return downloaded_path
             
@@ -330,7 +359,7 @@ class YouTubeClient(AssetFetcher):
             return []
 
 
-    def _search(self, query: str, count: int = 1) -> Optional[List[str]]:
+    def _search(self, query: str, count: int = 1) -> Optional[List[Dict[str, Any]]]:
         """
         Search YouTube for videos matching the query.
         
@@ -339,7 +368,7 @@ class YouTubeClient(AssetFetcher):
             count: Number of results to return
             
         Returns:
-            List of URLs of matching videos, or None if no results
+            List of dictionaries containing matching video info, or None if no results
             
         Raises:
             NetworkError: If network-related errors occur
@@ -351,7 +380,7 @@ class YouTubeClient(AssetFetcher):
                 'no_warnings': True,
                 'extract_flat': True,  # Don't download, just get metadata
                 'default_search': f'ytsearch{count}:',
-                'socket_timeout': 10,  # 10 second timeout
+                'socket_timeout': 20,  # Increased timeout for initial search
             }
             
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -365,14 +394,7 @@ class YouTubeClient(AssetFetcher):
                 if not entries or len(entries) == 0:
                     return None
                 
-                urls = []
-                for entry in entries[:count]:
-                    if 'url' in entry:
-                        urls.append(entry['url'])
-                    elif 'id' in entry:
-                        urls.append(f"https://www.youtube.com/watch?v={entry['id']}")
-                
-                return urls if urls else None
+                return list(entries[:count])
                     
         except yt_dlp.utils.DownloadError as e:
             # Network or YouTube-specific errors
@@ -387,13 +409,14 @@ class YouTubeClient(AssetFetcher):
             )
             raise NetworkError(f"YouTube search error: {e}")
 
-    def _download(self, video_url: str, query: str, progress_callback=None) -> Optional[str]:
+    def _download(self, video_url: str, query: str, target_duration: float = None, progress_callback=None) -> Optional[str]:
         """
         Download video from YouTube URL.
         
         Args:
             video_url: YouTube video URL
             query: Original search query (for filename)
+            target_duration: Optional target duration in seconds to optimize download
             progress_callback: Optional function(percent, status) to report progress
             
         Returns:
@@ -443,6 +466,16 @@ class YouTubeClient(AssetFetcher):
                 'nocheckcertificate': True,
                 'progress_hooks': [yt_dlp_hook] if progress_callback else [],
             }
+
+            # Smart Pulling: Limit download to a section if target_duration is provided
+            if target_duration and self._ffmpeg_available:
+                # Limit download to first part of video (30s minimum or 2x duration)
+                # This prevents pulling hour-long videos for a 5s beat.
+                limit = max(30, target_duration * 2)
+                base_opts['download_sections'] = [
+                    {'start_time': 0, 'end_time': limit}
+                ]
+                base_opts['force_keyframes_at_cuts'] = True
 
             # Common browser headers
             browser_headers = {
@@ -513,6 +546,12 @@ class YouTubeClient(AssetFetcher):
                 except Exception as e:
                     # Capture specific errors
                     error_msg = str(e).lower()
+                    
+                    # CRITICAL: If the user cancelled, we MUST re-raise immediately
+                    # otherwise the loop will just try the next strategy.
+                    if "cancelled" in error_msg:
+                        raise
+                        
                     if "browser" in error_msg and "cookie" in error_msg:
                         logger.debug(f"Strategy {strategy} failed (likely browser not found/locked): {e}")
                     elif "403" in error_msg or "forbidden" in error_msg:

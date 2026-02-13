@@ -188,6 +188,7 @@ class AssetOrchestrator:
     def download_candidate(self,
                           candidate: AssetCandidate,
                           beat_id: str = None,
+                          target_duration: float = None,
                           progress_callback=None) -> Optional[str]:
         """
         Download a specific asset candidate.
@@ -195,6 +196,7 @@ class AssetOrchestrator:
         Args:
             candidate: AssetCandidate object with metadata
             beat_id: Optional beat identifier for logging context
+            target_duration: Optional target duration in seconds to optimize download
             progress_callback: Optional function(percent, status) to report progress
             
         Returns:
@@ -219,12 +221,13 @@ class AssetOrchestrator:
             return None
         
         try:
-            logger.info(f"{beat_context}Downloading candidate {candidate.id} from {candidate.source}")
+            logger.info(f"{beat_context}Downloading candidate {candidate.id} from {candidate.source} (Target: {target_duration}s)")
             
             # Download the specific asset using metadata
             file_path = fetcher.download_by_id(
                 candidate.id,
                 candidate.metadata,
+                target_duration=target_duration,
                 progress_callback=progress_callback
             )
             

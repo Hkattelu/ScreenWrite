@@ -134,27 +134,7 @@ class PexelsClient(AssetFetcher):
                 logger.warning(f"No Pexels results found for query: {query}")
                 return []
             
-            # Convert to metadata format
-            results = []
-            for video_info in videos_info:
-                try:
-                    # Get additional metadata from API
-                    video_id = video_info.get('id')
-                    if video_id:
-                        metadata = self._get_video_metadata(video_id)
-                        if metadata:
-                            # Merge with existing info
-                            metadata.update({
-                                'download_url': video_info.get('url'),
-                                'quality': video_info.get('quality'),
-                                'file_type': video_info.get('file_type')
-                            })
-                            results.append(metadata)
-                except Exception as e:
-                    logger.warning(f"Failed to get metadata for Pexels video {video_info.get('id')}: {e}")
-                    continue
-            
-            return results
+            return videos_info
             
         except Exception as e:
             log_error_with_context(
@@ -221,13 +201,14 @@ class PexelsClient(AssetFetcher):
             logger.warning(f"Failed to get metadata for Pexels video {video_id}: {e}")
             return None
     
-    def download_by_id(self, video_id: str, metadata: Dict[str, Any], progress_callback=None) -> Optional[str]:
+    def download_by_id(self, asset_id: str, metadata: Dict[str, Any], target_duration: float = None, progress_callback=None) -> Optional[str]:
         """
         Download a specific video by ID using metadata from search.
         
         Args:
-            video_id: Pexels video ID
+            asset_id: Pexels video ID
             metadata: Metadata dictionary from search containing download_url
+            target_duration: Optional target duration (not currently supported by Pexels)
             progress_callback: Optional function(percent, status) to report progress
             
         Returns:
@@ -241,19 +222,19 @@ class PexelsClient(AssetFetcher):
             # Get download URL from metadata
             download_url = metadata.get('download_url')
             if not download_url:
-                logger.error(f"No download URL in metadata for Pexels video {video_id}")
+                logger.error(f"No download URL in metadata for Pexels video {asset_id}")
                 return None
             
             # Create video info dict for download method
             video_info = {
-                'id': video_id,
+                'id': asset_id,
                 'url': download_url,
                 'quality': metadata.get('quality'),
                 'file_type': metadata.get('file_type')
             }
             
             # Download using existing method
-            downloaded_path = self._download_with_retry(video_info, video_id, progress_callback=progress_callback)
+            downloaded_path = self._download_with_retry(video_info, asset_id, progress_callback=progress_callback)
             
             return downloaded_path
             
@@ -413,9 +394,21 @@ class PexelsClient(AssetFetcher):
                     best_file = video_files[0]
                 
                 if best_file and 'link' in best_file:
+                    # Pexels provides duration on the video object directly
+                    duration = video.get('duration', 0.0)
+                    if not duration and video_files:
+                        # Fallback to checking first video file
+                        duration = video_files[0].get('duration', 0.0)
+
+                    user_name = video.get('user', {}).get('name', 'Unknown')
+                    
                     results.append({
-                        'id': video.get('id'),
+                        'id': str(video.get('id', '')),
+                        'title': f"Video by {user_name}",
+                        'thumbnail_url': video.get('image', ''),
+                        'duration': float(duration) if duration else 0.0,
                         'url': best_file['link'],
+                        'download_url': best_file['link'],
                         'width': best_file.get('width'),
                         'height': best_file.get('height'),
                         'quality': best_file.get('quality'),

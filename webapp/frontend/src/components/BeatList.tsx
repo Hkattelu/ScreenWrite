@@ -8,19 +8,11 @@ import { useState, useRef, useEffect } from 'react'
 import type { Beat } from '../types/models'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
-  Clock, 
-  Youtube, 
-  Image, 
-  Zap, 
   Slash, 
   CheckCircle2, 
-  Edit3,
-  Check,
-  Film,
-  Quote,
-  Type
+  Edit3
 } from 'lucide-react'
-import { refreshBeatAsset, getMediaUrl, type AssetCandidate } from '../services/api'
+import { getMediaUrl, type AssetCandidate } from '../services/api'
 import { BeatAsset } from './BeatAsset'
 import type { DownloadProgress } from '../types/models'
 
@@ -56,7 +48,6 @@ export function BeatList({
   const [editingId, setEditingId] = useState<string | null>(null)
   const [lightboxId, setLightboxId] = useState<string | null>(null)
   const [lightboxPath, setLightboxPath] = useState<string | null>(null)
-  const [refreshingIds, setRefreshingIds] = useState<Set<string>>(new Set())
   const [savingIds, setSavingIds] = useState<Set<string>>(new Set())
   const [editValues, setEditValues] = useState<Partial<Beat>>({})
   const [sourceMode, setSourceMode] = useState<VisualSourceMode>('auto')
@@ -121,29 +112,6 @@ export function BeatList({
 
     const updatedAssets = { ...assets, [beatId]: newPaths }
     onAssetsUpdate(updatedAssets)
-  }
-
-  const handleRefresh = async (beatId: string) => {
-    // Check if beat is currently being saved
-    if (savingIds.has(beatId)) {
-      console.log(`Beat ${beatId} is being saved, waiting...`)
-      return
-    }
-    
-    setRefreshingIds(prev => new Set(prev).add(beatId))
-    try {
-      await refreshBeatAsset(sessionId, beatId)
-    } catch (err) {
-      console.error("Failed to refresh beat", err)
-    } finally {
-      setTimeout(() => {
-        setRefreshingIds(prev => {
-          const next = new Set(prev)
-          next.delete(beatId)
-          return next
-        })
-      }, 2000)
-    }
   }
 
   const getModeFromBeat = (beat: Partial<Beat>): VisualSourceMode => {
@@ -228,6 +196,7 @@ export function BeatList({
 
   const totalDuration = beats.reduce((sum, b) => sum + b.duration, 0)
   const formatDuration = (sec: number) => {
+    if (!sec || sec <= 0) return '0:00'
     const m = Math.floor(sec / 60)
     const s = Math.floor(sec % 60)
     return `${m}:${s.toString().padStart(2, '0')}`
@@ -502,10 +471,11 @@ export function BeatList({
                                 downloadProgress={downloadProgress[beat.id]}
                                 visualType={beat.visual_type}
                                 visualContent={beat.visual_content}
-                                isRefreshing={refreshingIds.has(beat.id)}
+                                youtubePhrase={beat.youtube_phrase}
+                                stockKeyword={beat.stock_keyword}
+                                isRefreshing={false}
                                 isSaving={savingIds.has(beat.id)}
                                 reviewed={isReviewed}
-                                onRefresh={handleRefresh}
                                 onMaximize={(id, path) => {
                                   setLightboxId(id)
                                   setLightboxPath(path || null)

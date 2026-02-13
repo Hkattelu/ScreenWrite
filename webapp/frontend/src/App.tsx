@@ -2,11 +2,10 @@
  * Main App component with routing
  */
 
-import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Home } from './pages/Home'
 import { Workflow } from './pages/Workflow'
 import { SyntaxGuide } from './pages/SyntaxGuide'
-import { Film } from 'lucide-react'
 import './styles/index.css'
 
 function App() {

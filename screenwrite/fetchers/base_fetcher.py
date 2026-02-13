@@ -76,13 +76,18 @@ class AssetFetcher(ABC):
         pass
 
     @abstractmethod
-    def download_by_id(self, asset_id: str, metadata: dict, progress_callback=None) -> Optional[str]:
+    def download_by_id(self, 
+                       asset_id: str, 
+                       metadata: dict, 
+                       target_duration: float = None,
+                       progress_callback=None) -> Optional[str]:
         """
         Download a specific asset by its ID and metadata.
         
         Args:
             asset_id: Unique identifier for the asset
             metadata: Metadata returned by the search method
+            target_duration: Optional target duration in seconds to optimize download
             progress_callback: Optional function(percent, status) to report progress
             
         Returns:

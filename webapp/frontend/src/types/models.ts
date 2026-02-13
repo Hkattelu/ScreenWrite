@@ -10,7 +10,7 @@ export interface Beat {
   youtube_phrase: string
   header?: string
   reviewed?: boolean
-  visual_type?: 'auto' | 'b-roll' | 'annotation' | 'citation' | 'image'
+  visual_type?: 'auto' | 'b-roll' | 'annotation' | 'citation' | 'image' | 'stock'
   visual_content?: string
 }
 

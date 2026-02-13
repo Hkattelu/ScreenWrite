@@ -154,7 +154,7 @@ export async function searchAssets(
   const response = await apiClient.post(`/session/${sessionId}/search/${beatId}`, {
     custom_query: customQuery,
   }, {
-    timeout: 10000 // 10 second timeout for search operations
+    timeout: 30000 // 30 second timeout for search operations
   })
   return response.data.candidates || []
 }

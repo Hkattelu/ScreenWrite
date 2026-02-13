@@ -312,7 +312,12 @@ def download_beat_asset(session_id, beat_id):
         # Capture app for thread
         app = current_app._get_current_object()
         
-        def background_download(app, session_id, beat_id, candidate_id, source, metadata, update_beat_query):
+        # Get target duration from beat
+        beats = state.get('beats', [])
+        beat = next((b for b in beats if b['id'] == beat_id), None)
+        target_duration = beat.get('duration', 5.0) if beat else 5.0
+        
+        def background_download(app, session_id, beat_id, candidate_id, source, metadata, update_beat_query, target_duration):
             with app.app_context():
                 try:
                     # Initialize Orchestrator
@@ -361,10 +366,11 @@ def download_beat_asset(session_id, beat_id):
                             logger.error(f"Failed to update progress for beat {beat_id}: {e}")
 
                     # Download the candidate
-                    logger.info(f"Downloading candidate {candidate_id} from {source} for beat {beat_id}")
+                    logger.info(f"Downloading candidate {candidate_id} from {source} for beat {beat_id} (Target: {target_duration}s)")
                     file_path = orchestrator.download_candidate(
                         candidate, 
                         beat_id=beat_id, 
+                        target_duration=target_duration,
                         progress_callback=progress_callback
                     )
                     
@@ -444,7 +450,7 @@ def download_beat_asset(session_id, beat_id):
         # Start background thread
         thread = threading.Thread(
             target=background_download,
-            args=(app, session_id, beat_id, candidate_id, source, metadata, update_beat_query)
+            args=(app, session_id, beat_id, candidate_id, source, metadata, update_beat_query, target_duration)
         )
         thread.daemon = True
         thread.start()
