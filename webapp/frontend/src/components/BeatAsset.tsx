@@ -117,11 +117,11 @@ export function BeatAsset({
   
   if (visualType === 'annotation') {
     return (
-      <div className={`flex items-center gap-3 px-4 py-3 bg-purple-50/50 border border-purple-100/50 rounded-xl transition-all ${reviewed ? 'opacity-30 grayscale' : ''}`}>
-        <Type size={14} className="text-purple-500" />
-        <div className="flex flex-col">
+      <div className={`flex items-center gap-3 px-4 py-3 bg-purple-50/50 border border-purple-100/50 rounded-xl transition-all ${reviewed ? 'opacity-60 grayscale-[0.5]' : ''}`}>
+        <Type size={14} className="text-purple-500 flex-shrink-0" />
+        <div className="flex flex-col min-w-0">
           <span className="text-[10px] font-bold text-purple-400 uppercase tracking-wider">Annotation</span>
-          {visualContent && <p className="text-xs font-medium text-purple-700 italic">"{visualContent}"</p>}
+          {visualContent && <p className="text-xs font-medium text-purple-700 italic line-clamp-2 break-words">"{visualContent}"</p>}
         </div>
       </div>
     )
@@ -129,11 +129,11 @@ export function BeatAsset({
 
   if (visualType === 'citation') {
     return (
-      <div className={`flex items-center gap-3 px-4 py-3 bg-amber-50/50 border border-amber-100/50 rounded-xl transition-all ${reviewed ? 'opacity-30 grayscale' : ''}`}>
-        <Quote size={14} className="text-amber-500" />
-        <div className="flex flex-col">
+      <div className={`flex items-center gap-3 px-4 py-3 bg-amber-50/50 border border-amber-100/50 rounded-xl transition-all ${reviewed ? 'opacity-60 grayscale-[0.5]' : ''}`}>
+        <Quote size={14} className="text-amber-500 flex-shrink-0" />
+        <div className="flex flex-col min-w-0">
           <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider">Citation</span>
-          {visualContent && <p className="text-xs font-medium text-amber-700">{visualContent}</p>}
+          {visualContent && <p className="text-xs font-medium text-amber-700 line-clamp-2 break-words">{visualContent}</p>}
         </div>
       </div>
     )
@@ -169,8 +169,8 @@ export function BeatAsset({
     if (paths.length > 0) {
       return (
         <>
-          <div className={`flex flex-col gap-4 transition-all duration-700 ${reviewed ? 'opacity-30 grayscale blur-[2px]' : ''}`}>
-            <div className="relative group/asset overflow-hidden rounded-2xl bg-black shadow-md">
+          <div className={`flex flex-col gap-4 transition-all duration-700 ${reviewed ? 'opacity-80 grayscale-[0.4]' : ''}`}>
+            <div className="relative group/asset overflow-hidden rounded-2xl bg-black shadow-md ring-1 ring-slate-200/10">
               <video 
                 key={currentPath}
                 src={getMediaUrl(sessionId, currentPath || '')} 
@@ -184,13 +184,13 @@ export function BeatAsset({
                 muted
                 loop
               />
-              <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover/asset:opacity-100 transition-all duration-300 flex items-center justify-center gap-4">
+              <div className="absolute inset-0 bg-slate-900/20 opacity-0 group-hover/asset:opacity-100 transition-all duration-300 flex items-center justify-center gap-4">
                 <button 
                   onClick={(e) => {
                     e.stopPropagation()
                     onMaximize(beatId, currentPath)
                   }}
-                  className="w-10 h-10 bg-white text-slate-900 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-all"
+                  className="w-10 h-10 bg-white text-slate-900 rounded-full flex items-center justify-center shadow-xl hover:scale-110 active:scale-95 transition-all"
                   aria-label="Maximize"
                 >
                   <Maximize2 size={18} />
@@ -199,11 +199,18 @@ export function BeatAsset({
               <button 
                 onClick={handleOpenModal}
                 disabled={isRefreshing || isDownloading}
-                className="absolute top-3 right-3 p-1.5 bg-white/90 backdrop-blur-md rounded-lg shadow-sm text-slate-600 hover:text-blue-600 transition-all disabled:opacity-50"
+                className="absolute top-3 right-3 p-1.5 bg-white/90 backdrop-blur-md rounded-lg shadow-sm text-slate-600 hover:text-blue-600 transition-all disabled:opacity-50 z-10"
                 title="Search for new asset"
               >
                 <RefreshCcw size={14} className={isRefreshing || isDownloading ? 'animate-spin' : ''} />
               </button>
+              
+              {reviewed && (
+                <div className="absolute top-3 left-3 px-2 py-1 bg-blue-600 text-white rounded-lg shadow-lg flex items-center gap-1.5 z-10 animate-in fade-in zoom-in duration-300">
+                  <Check size={12} strokeWidth={4} />
+                  <span className="text-[9px] font-black uppercase tracking-widest">Locked</span>
+                </div>
+              )}
             </div>
 
             {/* Improved Candidate Gallery */}

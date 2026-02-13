@@ -45,6 +45,11 @@ export function ScriptUpload({ onUploadSuccess }: ScriptUploadProps) {
       return
     }
 
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Script file is too large (max 5MB)')
+      return
+    }
+
     setIsLoading(true)
     setError(null)
 
@@ -166,10 +171,10 @@ export function ScriptUpload({ onUploadSuccess }: ScriptUploadProps) {
             handleTrySample()
           }}
           disabled={isLoading}
-          className="group flex items-center gap-3 px-6 py-3 rounded-xl border border-blue-100 bg-blue-50/30 text-blue-600 hover:bg-blue-50 hover:border-blue-200 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-4 focus:ring-blue-500/10"
+          className="group flex items-center gap-3 px-6 py-3 rounded-xl border border-blue-100 bg-blue-50/50 text-blue-600 hover:bg-blue-100/50 hover:border-blue-200 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-4 focus:ring-blue-500/10"
         >
           <Wand2 size={16} className="group-hover:rotate-12 transition-transform" />
-          <span className="text-xs text-white/90 font-bold uppercase tracking-wider">Try with an Example</span>
+          <span className="text-xs font-bold uppercase tracking-wider">Try with an Example</span>
         </button>
       </div>
 

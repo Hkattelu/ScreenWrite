@@ -196,7 +196,7 @@ export function BeatList({
 
   const totalDuration = beats.reduce((sum, b) => sum + b.duration, 0)
   const formatDuration = (sec: number) => {
-    if (!sec || sec <= 0) return '0:00'
+    if (!sec || sec <= 0) return 'LIVE / N/A'
     const m = Math.floor(sec / 60)
     const s = Math.floor(sec % 60)
     return `${m}:${s.toString().padStart(2, '0')}`
@@ -458,12 +458,12 @@ export function BeatList({
                             )}
                           </div>
 
-                          <p className={`text-base leading-relaxed transition-all duration-500 mb-6 ${isReviewed ? 'text-slate-300 line-through decoration-slate-200' : 'text-slate-800 font-medium'}`}>
+                          <p className={`text-base leading-relaxed transition-all duration-500 mb-6 break-words ${isReviewed ? 'text-slate-400 font-medium' : 'text-slate-800 font-medium'}`}>
                             {beat.text}
                           </p>
                           
                           {viewMode !== 'none' && (
-                            <div className={`transition-all duration-500 ${isReviewed ? 'grayscale opacity-50' : ''}`}>
+                            <div className="transition-all duration-500">
                               <BeatAsset 
                                 sessionId={sessionId}
                                 beatId={beat.id}

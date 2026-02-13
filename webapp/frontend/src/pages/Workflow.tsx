@@ -19,7 +19,7 @@ import {
 
 type WorkflowStep = 'upload' | 'review' | 'configure' | 'export'
 
-function FetchStatusPoller({ sessionId, onComplete }: { sessionId: string | null, onComplete: () => void }) {
+function FetchStatusPoller({ sessionId }: { sessionId: string | null }) {
   const [status, setStatus] = useState<any>(null)
   const [shouldPoll, setShouldPoll] = useState(false)
 
@@ -582,7 +582,7 @@ export function Workflow() {
               </div>
 
               {/* Status Polling for Fetching */}
-              <FetchStatusPoller sessionId={sessionId} onComplete={() => {}} />
+              <FetchStatusPoller sessionId={sessionId} />
 
               {exportResult ? (
                 <div className="p-10 bg-white border border-slate-100 rounded-[32px] shadow-2xl shadow-slate-200">
