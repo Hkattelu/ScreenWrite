@@ -242,6 +242,68 @@ class AssetOrchestrator:
             logger.error(f"{beat_context}Error downloading candidate {candidate.id}: {e}")
             return None
 
+    def download_segment(self,
+                        candidate: AssetCandidate,
+                        start_time: float,
+                        duration: float,
+                        beat_id: str = None,
+                        progress_callback=None) -> Optional[str]:
+        """
+        Download a specific segment of an asset candidate.
+        """
+        beat_context = f"[{beat_id}] " if beat_id else ""
+        
+        if not self.fetchers:
+            logger.error(f"{beat_context}No asset fetchers available")
+            return None
+        
+        # Find the appropriate fetcher based on source
+        fetcher = None
+        for f in self.fetchers:
+            fetcher_name = getattr(f, 'name', '').lower()
+            if candidate.source.lower() in fetcher_name:
+                fetcher = f
+                break
+        
+        if not fetcher:
+            logger.error(f"{beat_context}No fetcher available for source: {candidate.source}")
+            return None
+        
+        try:
+            logger.info(f"{beat_context}Downloading segment of candidate {candidate.id} from {candidate.source} (Start: {start_time}s, Duration: {duration}s)")
+            
+            # Check if fetcher supports download_segment
+            if hasattr(fetcher, 'download_segment'):
+                file_path = fetcher.download_segment(
+                    candidate.id,
+                    candidate.metadata,
+                    start_time=start_time,
+                    duration=duration,
+                    progress_callback=progress_callback
+                )
+            else:
+                # Fallback: download whole (or optimized) then trim
+                # This is already handled inside YouTubeClient.download_segment, 
+                # but for other fetchers we might need fallback logic here.
+                # For now, we only support segment download for YouTube.
+                file_path = fetcher.download_by_id(
+                    candidate.id,
+                    candidate.metadata,
+                    target_duration=start_time + duration,
+                    progress_callback=progress_callback
+                )
+            
+            if file_path and Path(file_path).exists():
+                logger.info(f"{beat_context}Successfully downloaded segment to: {file_path}")
+                return file_path
+            else:
+                logger.error(f"{beat_context}Segment download failed or file not found")
+                return None
+                
+        except Exception as e:
+            logger.error(f"{beat_context}Error downloading segment for {candidate.id}: {e}")
+            return None
+
     def fetch_assets(self, 
                     youtube_query: str, 
                     stock_query: str, 

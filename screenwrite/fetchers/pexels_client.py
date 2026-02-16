@@ -67,6 +67,9 @@ class PexelsClient(AssetFetcher):
             logger.warning("No Pexels API key provided. Pexels fetching will be unavailable.")
             self._api_available = False
             
+        # Check for ffmpeg
+        self._ffmpeg_available = self._check_ffmpeg()
+            
         # Pexels API configuration
         self.base_url = "https://api.pexels.com/videos"
         self.headers = {
@@ -239,7 +242,72 @@ class PexelsClient(AssetFetcher):
             return downloaded_path
             
         except Exception as e:
-            logger.error(f"Failed to download Pexels video {video_id}: {e}")
+            logger.error(f"Failed to download Pexels video {asset_id}: {e}")
+            return None
+
+    def download_segment(self, asset_id: str, metadata: Dict[str, Any], start_time: float, duration: float, progress_callback=None) -> Optional[str]:
+        """
+        Download a specific segment of a Pexels video.
+        """
+        try:
+            # Pexels doesn't support smart pulling, so we download whole then trim
+            downloaded_path = self.download_by_id(asset_id, metadata, progress_callback=progress_callback)
+            
+            if not downloaded_path:
+                return None
+                
+            if not self._ffmpeg_available:
+                return downloaded_path
+                
+            # Trim to segment
+            trimmed_path = self._trim_video(downloaded_path, duration, start_time)
+            
+            if trimmed_path and trimmed_path != downloaded_path:
+                try:
+                    os.remove(downloaded_path)
+                except:
+                    pass
+                return trimmed_path
+                
+            return downloaded_path
+        except Exception as e:
+            logger.error(f"Failed to download Pexels segment {asset_id}: {e}")
+            return None
+
+    def _check_ffmpeg(self) -> bool:
+        """Check if ffmpeg is available."""
+        import shutil
+        import subprocess
+        try:
+            if shutil.which("ffmpeg"):
+                subprocess.run(["ffmpeg", "-version"], capture_output=True, check=False, timeout=10)
+                return True
+            return False
+        except:
+            return False
+
+    def _trim_video(self, input_path: str, duration: float, start_time: float = 0) -> Optional[str]:
+        """Trim video using ffmpeg."""
+        if not self._ffmpeg_available:
+            return None
+        try:
+            input_file = Path(input_path)
+            output_path = input_file.parent / f"trimmed_{input_file.name}"
+            cmd = [
+                'ffmpeg',
+                '-ss', str(start_time),
+                '-i', str(input_path),
+                '-t', str(duration),
+                '-c', 'copy',
+                '-avoid_negative_ts', 'make_zero',
+                '-y',
+                str(output_path)
+            ]
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+            if result.returncode == 0 and os.path.exists(output_path):
+                return str(output_path)
+            return None
+        except Exception:
             return None
 
     def fetch_multi(self, query: str, duration: float, count: int = 3) -> List[str]:

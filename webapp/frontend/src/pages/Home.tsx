@@ -147,31 +147,46 @@ export function Home() {
           {/* Primary Action Card */}
 
           <motion.div
-
             initial={{ opacity: 0, y: 30 }}
-
             animate={{ opacity: 1, y: 0 }}
-
             transition={{ duration: 1, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
-
-            className="max-w-2xl mx-auto w-full"
-
+            className="flex flex-col gap-6 max-w-2xl mx-auto w-full"
           >
-
+            {/* Main Action Card */}
             <div className="bg-white/[0.02] backdrop-blur-3xl border border-white/5 shadow-[0_48px_96px_-24px_rgba(0,0,0,0.5)] rounded-[32px] overflow-hidden">
-
               <div className="p-1">
-
                 <div className="bg-black/40 rounded-[30px] p-8 md:p-12">
-
                   <ScriptUpload onUploadSuccess={handleUploadSuccess} />
-
                 </div>
-
               </div>
-
             </div>
 
+            {/* Simple Mode Card */}
+            <Link
+              to="/simple-broll"
+              className="group relative bg-[#111]/40 hover:bg-[#111]/60 backdrop-blur-3xl border border-white/5 hover:border-blue-500/30 rounded-[32px] p-8 flex items-center justify-between transition-all duration-500"
+            >
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-3">
+                  <span className="text-[10px] font-black uppercase tracking-[0.4em] text-blue-500">Lightweight</span>
+                  <div className="w-1 h-1 rounded-full bg-white/20" />
+                  <span className="text-[10px] font-black uppercase tracking-[0.4em] text-white/40">Mode</span>
+                </div>
+                <h2 className="text-2xl font-medium tracking-tight">Simple B-Roll <span className="text-white/20 group-hover:text-blue-500/50 transition-colors">→</span></h2>
+                <p className="text-sm text-white/30 font-medium">Search and download quick clips without the full workflow.</p>
+              </div>
+
+              <div className="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/5 flex items-center justify-center group-hover:bg-blue-600/10 group-hover:border-blue-500/30 transition-all duration-500">
+                <svg className="w-6 h-6 text-white/20 group-hover:text-blue-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+                </svg>
+              </div>
+
+              {/* Hover Glow */}
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none">
+                <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-32 h-32 bg-blue-500/10 rounded-full blur-[80px]" />
+              </div>
+            </Link>
           </motion.div>
 
 

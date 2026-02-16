@@ -39,11 +39,13 @@ from routes.upload import upload_bp
 from routes.api import api_bp
 from routes.export import export_bp
 from routes.fetch import fetch_bp
+from routes.simple_broll import simple_broll_bp
 
 app.register_blueprint(upload_bp, url_prefix='/api')
 app.register_blueprint(api_bp, url_prefix='/api')
 app.register_blueprint(export_bp, url_prefix='/api')
 app.register_blueprint(fetch_bp, url_prefix='/api')
+app.register_blueprint(simple_broll_bp, url_prefix='/api')
 
 @app.route('/api/health', methods=['GET'])
 def health_check():

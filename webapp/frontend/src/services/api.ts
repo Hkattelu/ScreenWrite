@@ -201,6 +201,32 @@ export interface AssetCandidate {
 }
 
 /**
+ * Search for videos in Simple B-Roll mode
+ */
+export async function searchSimpleBRoll(query: string): Promise<AssetCandidate[]> {
+  const response = await apiClient.post<{ success: boolean; candidates: AssetCandidate[] }>('/simple-broll/search', {
+    query,
+  })
+  return response.data.candidates || []
+}
+
+/**
+ * Download a segment of a video in Simple B-Roll mode
+ * Returns a Blob that can be saved as a file
+ */
+export async function downloadSimpleBRoll(candidate: AssetCandidate, startTime: number, duration: number): Promise<Blob> {
+  const response = await apiClient.post('/simple-broll/download', {
+    candidate,
+    start_time: startTime,
+    duration,
+  }, {
+    responseType: 'blob',
+    timeout: 120000 // 2 minute timeout for download + processing
+  })
+  return response.data
+}
+
+/**
  * Handle API errors with user-friendly messages
  */
 export function getErrorMessage(error: unknown): string {

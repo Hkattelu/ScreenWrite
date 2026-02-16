@@ -95,9 +95,9 @@ class YouTubeClient(AssetFetcher):
         base_delay=1.0,
         exceptions=(Exception,)
     )
-    def _trim_video_with_retry(self, input_path: str, duration: float) -> Optional[str]:
+    def _trim_video_with_retry(self, input_path: str, duration: float, start_time: float = 0) -> Optional[str]:
         """Trim video with retry logic."""
-        return self._trim_video(input_path, duration)
+        return self._trim_video(input_path, duration, start_time)
     
     def _check_ffmpeg(self) -> bool:
         """
@@ -292,6 +292,61 @@ class YouTubeClient(AssetFetcher):
             
         except Exception as e:
             logger.error(f"Failed to download YouTube video {video_id}: {e}")
+            return None
+
+    def download_segment(self, video_id: str, metadata: Dict[str, Any], start_time: float, duration: float, progress_callback=None) -> Optional[str]:
+        """
+        Download a specific segment of a video.
+        
+        Args:
+            video_id: YouTube video ID
+            metadata: Metadata dictionary
+            start_time: Start time in seconds
+            duration: Duration in seconds
+            progress_callback: Optional progress callback
+            
+        Returns:
+            Path to downloaded and trimmed segment
+        """
+        if not self._yt_dlp_available:
+            return None
+            
+        try:
+            video_url = metadata.get('url', f"https://www.youtube.com/watch?v={video_id}")
+            
+            # We want to optimize download by only pulling the part we need
+            # but yt-dlp's download_sections can be flaky with offsets.
+            # For "Simple B-Roll", accuracy is key.
+            # We'll download the chunk starting at start_time and ending at start_time + duration + cushion
+            
+            cushion = 10 # 10s cushion for safety
+            
+            # Download using smart pulling if possible
+            downloaded_path = self._download_with_retry(
+                video_url,
+                f"{video_id}_segment_{start_time}",
+                target_duration=start_time + duration + cushion,
+                progress_callback=progress_callback
+            )
+            
+            if not downloaded_path:
+                return None
+                
+            # Now trim to EXACT segment
+            trimmed_path = self._trim_video_with_retry(downloaded_path, duration, start_time)
+            
+            # Cleanup source
+            if trimmed_path and trimmed_path != downloaded_path:
+                try:
+                    os.remove(downloaded_path)
+                except:
+                    pass
+                return trimmed_path
+            
+            return downloaded_path
+            
+        except Exception as e:
+            logger.error(f"Failed to download segment for {video_id}: {e}")
             return None
 
     def fetch_multi(self, query: str, duration: float, count: int = 3) -> List[str]:
@@ -597,13 +652,14 @@ class YouTubeClient(AssetFetcher):
             # Re-raise as NetworkError for consistent handling
             raise NetworkError(f"YouTube download failed: {e}")
     
-    def _trim_video(self, input_path: str, duration: float) -> Optional[str]:
+    def _trim_video(self, input_path: str, duration: float, start_time: float = 0) -> Optional[str]:
         """
         Trim video to target duration using ffmpeg.
         
         Args:
             input_path: Path to input video file
             duration: Target duration in seconds
+            start_time: Start time in seconds
             
         Returns:
             Path to trimmed video file, or None if failed
@@ -618,8 +674,10 @@ class YouTubeClient(AssetFetcher):
             output_path = input_file.parent / f"trimmed_{input_file.name}"
             
             # Build ffmpeg command
+            # Using -ss before -i for fast seeking
             cmd = [
                 'ffmpeg',
+                '-ss', str(start_time),  # Start time
                 '-i', str(input_path),
                 '-t', str(duration),  # Duration
                 '-c', 'copy',  # Copy streams without re-encoding for speed
