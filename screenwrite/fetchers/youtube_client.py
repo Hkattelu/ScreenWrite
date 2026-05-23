@@ -478,8 +478,15 @@ class YouTubeClient(AssetFetcher):
             Path to downloaded video file, or None if failed
             
         Raises:
-            NetworkError: If network-related errors occur
+            NetworkError: If download fails
         """
+        # Handle dict input if passed by mistake
+        if isinstance(video_url, dict):
+            video_url = video_url.get('url')
+            
+        if not video_url:
+            return None
+            
         try:
             # Generate safe filename from query
             safe_query = "".join(c for c in query if c.isalnum() or c in (' ', '-', '_')).rstrip()
