@@ -135,6 +135,19 @@ Examples:
         action='store_true',
         help='Disable persistent asset caching'
     )
+
+    parser.add_argument(
+        '--prefer-youtube',
+        action='store_true',
+        help='Always try YouTube before Pexels (default: prefer Pexels stock for '
+             'generic beats, YouTube for specific ones)'
+    )
+
+    parser.add_argument(
+        '--disable-llm-queries',
+        action='store_true',
+        help='Disable LLM (Gemini) B-roll query generation and use heuristics only'
+    )
     
     parser.add_argument(
         '--clear-cache',
@@ -299,6 +312,14 @@ def main() -> int:
         Exit code (0 for success, 1 for failure)
     """
     try:
+        # Load environment variables from a project-local .env, if present, so
+        # PEXELS_API_KEY / GEMINI_API_KEY can be configured there.
+        try:
+            from dotenv import load_dotenv
+            load_dotenv()
+        except ImportError:
+            pass
+
         # Parse command-line arguments
         parser = create_parser()
         args = parser.parse_args()
@@ -340,6 +361,8 @@ def main() -> int:
             'skip_failed_beats': args.skip_failed_beats,
             'max_workers': args.max_workers,
             'enable_asset_cache': not args.disable_cache,
+            'prefer_stock_for_generic': not args.prefer_youtube,
+            'use_llm_queries': not args.disable_llm_queries,
             'verbose': args.verbose
         }
         

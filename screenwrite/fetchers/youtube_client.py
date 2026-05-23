@@ -19,6 +19,14 @@ except ImportError:
     yt_dlp = None
 
 from .base_fetcher import AssetFetcher
+from ..config import (
+    TALKING_HEAD_TITLE_PATTERNS,
+    BROLL_TITLE_BOOST_PATTERNS,
+    TALKING_HEAD_PENALTY,
+    BROLL_BOOST,
+    MIN_YOUTUBE_DURATION,
+    MAX_YOUTUBE_DURATION,
+)
 from ..utils.error_handling import (
     retry_with_backoff,
     check_dependency,
@@ -414,6 +422,76 @@ class YouTubeClient(AssetFetcher):
             return []
 
 
+    def _duration_ok(self, entry: Dict[str, Any]) -> bool:
+        """
+        Return True if a search entry's duration is within acceptable bounds.
+
+        Unknown/zero durations are allowed through (search results sometimes omit
+        duration); very short clips and very long videos (e.g. multi-hour streams
+        or lectures) are rejected since they rarely yield usable B-roll.
+        """
+        duration = entry.get('duration') or 0
+        try:
+            duration = float(duration)
+        except (TypeError, ValueError):
+            return True
+        if duration <= 0:
+            return True
+        return MIN_YOUTUBE_DURATION <= duration <= MAX_YOUTUBE_DURATION
+
+    def _score_entry(self, entry: Dict[str, Any]) -> float:
+        """
+        Score a search entry by how likely it is to be good background B-roll.
+
+        Talking-head / explainer titles are penalized; B-roll / footage titles
+        are boosted. Higher is better.
+        """
+        title = (entry.get('title') or '').lower()
+        score = 0.0
+
+        for pattern in TALKING_HEAD_TITLE_PATTERNS:
+            if pattern in title:
+                score -= TALKING_HEAD_PENALTY
+
+        for pattern in BROLL_TITLE_BOOST_PATTERNS:
+            if pattern in title:
+                score += BROLL_BOOST
+
+        return score
+
+    def _rank_and_filter(self, entries: List[Dict[str, Any]], count: int) -> List[Dict[str, Any]]:
+        """
+        Filter by duration and rank candidates toward background B-roll.
+
+        Args:
+            entries: Raw search result entries from yt-dlp.
+            count: Number of ranked results to return.
+
+        Returns:
+            Up to `count` entries, best first. Talking-head results are demoted
+            rather than hard-removed so niche queries still return something.
+        """
+        if not entries:
+            return []
+
+        # Drop out-of-range durations, but never return empty because of it.
+        filtered = [e for e in entries if self._duration_ok(e)]
+        if not filtered:
+            filtered = list(entries)
+
+        # Stable sort by score descending preserves YouTube's relevance order for
+        # ties, so among equally-scored clips we keep the most relevant first.
+        ranked = sorted(filtered, key=self._score_entry, reverse=True)
+
+        if logger.isEnabledFor(logging.DEBUG):
+            for entry in ranked[:count]:
+                logger.debug(
+                    "B-roll candidate (score %.1f): %s",
+                    self._score_entry(entry), entry.get('title', '')
+                )
+
+        return ranked[:count]
+
     def _search(self, query: str, count: int = 1) -> Optional[List[Dict[str, Any]]]:
         """
         Search YouTube for videos matching the query.
@@ -438,19 +516,25 @@ class YouTubeClient(AssetFetcher):
                 'socket_timeout': 20,  # Increased timeout for initial search
             }
             
+            # Over-fetch so we have enough candidates to rank and still return
+            # `count` good results after filtering out talking-head videos.
+            fetch_count = max(count * 4, 20)
+
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 # Search for videos
-                search_results = ydl.extract_info(f"ytsearch{count}:{query}", download=False)
-                
+                search_results = ydl.extract_info(f"ytsearch{fetch_count}:{query}", download=False)
+
                 if not search_results or 'entries' not in search_results:
                     return None
-                    
+
                 entries = search_results['entries']
                 if not entries or len(entries) == 0:
                     return None
-                
-                return list(entries[:count])
-                    
+
+                # Rank/filter toward background B-roll and away from talking heads.
+                ranked = self._rank_and_filter(list(entries), count)
+                return ranked if ranked else list(entries[:count])
+
         except yt_dlp.utils.DownloadError as e:
             # Network or YouTube-specific errors
             raise NetworkError(f"YouTube search failed: {e}")

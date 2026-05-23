@@ -52,6 +52,8 @@ class VideoOrchestrator:
                  skip_failed_beats: bool = False,
                  max_workers: int = 4,
                  enable_asset_cache: bool = True,
+                 prefer_stock_for_generic: bool = True,
+                 use_llm_queries: bool = True,
                  verbose: bool = False):
         """
         Initialize the video orchestrator.
@@ -65,6 +67,10 @@ class VideoOrchestrator:
             skip_failed_beats: Continue processing if some beats fail to fetch assets
             max_workers: Maximum number of parallel download threads (default: 4)
             enable_asset_cache: Whether to use persistent asset cache (default: True)
+            prefer_stock_for_generic: Prefer curated stock footage (Pexels) for
+                generic beats and YouTube for specific ones (default: True)
+            use_llm_queries: Enhance B-roll queries with the LLM query generator
+                when a Gemini API key is configured (default: True)
             verbose: Enable debug logging
         """
         # Configure logging level
@@ -82,12 +88,13 @@ class VideoOrchestrator:
         logger.info(f"Video orchestrator initialized with output directory: {self.output_dir}")
         
         # Initialize components
-        self.script_parser = ScriptParser()
+        self.script_parser = ScriptParser(use_llm_queries=use_llm_queries)
         self.asset_orchestrator = AssetOrchestrator(
             pexels_api_key=pexels_api_key,
             output_dir=str(self.output_dir),
             youtube_enabled=youtube_enabled,
-            pexels_enabled=pexels_enabled
+            pexels_enabled=pexels_enabled,
+            prefer_stock_for_generic=prefer_stock_for_generic
         )
         self.xml_generator = XMLGenerator()
         

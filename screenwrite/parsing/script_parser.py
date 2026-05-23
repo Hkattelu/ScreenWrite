@@ -30,6 +30,7 @@ from ..config import (
     VISUAL_PATTERNS,
     YOUTUBE_PHRASE_STOP_WORDS,
     TECHNICAL_PATTERNS,
+    BROLL_QUERY_MODIFIERS,
 )
 from ..utils.error_handling import (
     validate_markdown_file,
@@ -37,6 +38,7 @@ from ..utils.error_handling import (
     log_error_with_context
 )
 from ..utils.cache import load_cached_beats, cache_beats
+from .query_generator import QueryGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -82,11 +84,20 @@ class ScriptParser:
     and chunks body text into logical beats with auto-generated search queries.
     """
     
-    def __init__(self):
-        """Initialize the script parser."""
+    def __init__(self, use_llm_queries: bool = True):
+        """
+        Initialize the script parser.
+
+        Args:
+            use_llm_queries: Whether to enhance auto-generated B-roll queries with
+                the LLM query generator when a Gemini API key is configured. When
+                disabled (or no key is present), heuristic queries are used.
+        """
         self.target_min_duration = TARGET_MIN_DURATION
         self.target_max_duration = TARGET_MAX_DURATION
         self.words_per_second = WORDS_PER_SECOND
+        self.use_llm_queries = use_llm_queries
+        self.query_generator = QueryGenerator() if use_llm_queries else None
     
     def parse(self, file_path: str, use_cache: bool = True) -> List[Beat]:
         """
@@ -246,7 +257,11 @@ class ScriptParser:
             
             if not beats:
                 raise InputValidationError(f"No valid beats could be generated from script: {file_path}")
-            
+
+            # Enhance auto-generated queries with the LLM query generator (no-op
+            # if disabled, unavailable, or it fails - heuristic queries remain).
+            self._enhance_queries_with_llm(beats, full_context)
+
             # Log successful parsing summary
             total_duration = sum(beat.duration for beat in beats)
             logger.info(
@@ -579,6 +594,53 @@ class ScriptParser:
         
         return sentences
     
+    def _enhance_queries_with_llm(self, beats: List[Beat], context: str) -> None:
+        """
+        Replace heuristic queries on auto-generated beats with LLM visual queries.
+
+        Beats that came from explicit ``[@...]`` instructions (visual_type other
+        than 'auto') are left untouched - the user's intent takes priority. This
+        mutates ``beats`` in place and silently no-ops when the generator is
+        unavailable or returns nothing.
+
+        Args:
+            beats: Parsed beats to enhance.
+            context: Video-level context passed to the generator.
+        """
+        if not self.query_generator or not self.query_generator.is_available():
+            return
+
+        targets = [beat for beat in beats if beat.visual_type == 'auto']
+        if not targets:
+            return
+
+        payload = [{'id': beat.id, 'text': beat.text} for beat in targets]
+
+        try:
+            generated = self.query_generator.generate(payload, context)
+        except Exception as e:  # noqa: BLE001 - never let query gen break parsing
+            logger.warning(f"LLM query enhancement failed, keeping heuristics: {e}")
+            return
+
+        if not generated:
+            return
+
+        enhanced = 0
+        for beat in targets:
+            queries = generated.get(beat.id)
+            if not queries:
+                continue
+            youtube_query = queries.get('youtube_query', '').strip()
+            stock_query = queries.get('stock_query', '').strip()
+            if youtube_query:
+                beat.youtube_search_phrase = youtube_query
+            if stock_query:
+                beat.stock_keyword = stock_query
+            if youtube_query or stock_query:
+                enhanced += 1
+
+        logger.info(f"Enhanced {enhanced}/{len(targets)} beat queries with LLM")
+
     def _generate_stock_keyword(self, text: str, context: str = '') -> str:
         """
         Generate a stock ScreenWrite keyword from beat text.
@@ -697,6 +759,9 @@ class ScriptParser:
             if filtered_words:
                 result = ' '.join(filtered_words[:4])
             else:
-                result = 'programming tutorial'
-        
-        return result
+                result = 'establishing shot'
+
+        # Bias the heuristic query toward background footage rather than
+        # talking-head/explainer videos. The LLM path overrides this entirely
+        # when a key is configured.
+        return f"{result} {BROLL_QUERY_MODIFIERS}".strip()

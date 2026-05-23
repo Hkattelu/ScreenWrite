@@ -1259,7 +1259,12 @@ class TestExploratorySearch(unittest.TestCase):
              patch('routes.fetch.save_session_state', side_effect=mock_save_state), \
              patch('routes.fetch.session_exists', return_value=True), \
              patch('routes.fetch.get_session_path', return_value=self.temp_dir), \
+             patch('threading.Thread'), \
              patch('screenwrite.fetchers.asset_orchestrator.AssetOrchestrator.download_candidate', return_value='/tmp/file.mp4'):
+            # Mock threading.Thread so the background download never spawns. The
+            # behavior under test (the optional synchronous beat-query update) runs
+            # before the thread starts; without this, the daemon thread can outlive
+            # the patch context and invoke the real downloader (real network call).
             
             # Initial state
             initial_beat = json.loads(json.dumps(beat))

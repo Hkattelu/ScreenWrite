@@ -188,3 +188,54 @@ TECHNICAL_PATTERNS = [
     r'\b\w+\.py\b',  # File names
     r'\b\w+ing\b',  # Actions (e.g., "programming", "coding")
 ]
+
+# ============================================================================
+# B-roll Query & Result Filtering Constants
+# ============================================================================
+
+# Modifiers appended to heuristic YouTube queries to bias results toward
+# background footage rather than talking-head / explainer videos.
+BROLL_QUERY_MODIFIERS = "b-roll footage no commentary"
+
+# Title substrings that signal talking-head / non-B-roll content. Matching
+# candidates are heavily penalized during ranking so they sink below real
+# B-roll (they are not hard-removed, to avoid returning nothing for niche
+# queries).
+TALKING_HEAD_TITLE_PATTERNS = [
+    'interview', 'podcast', 'reaction', 'explained', 'explainer', 'review',
+    'vlog', 'episode', 'lecture', ' talk', 'press conference', 'debate',
+    'q&a', 'q & a', 'tutorial', 'how to', "let's play", 'lets play',
+    'livestream', 'live stream', 'speech', 'testimony', 'news', 'documentary',
+    'ft.', 'feat.', 'commentary', 'reacts', 'analysis', 'breakdown',
+]
+
+# Title substrings that signal good B-roll footage. Matching candidates are
+# boosted during ranking.
+BROLL_TITLE_BOOST_PATTERNS = [
+    'b-roll', 'broll', 'b roll', 'footage', 'cinematic', 'stock footage',
+    'no copyright', 'no commentary', 'copyright free', 'royalty free',
+    '4k', '1080p', 'timelapse', 'time lapse', 'aerial', 'drone',
+    'ambience', 'ambient', 'relaxing', 'scenery', 'establishing shot',
+    'montage', 'slow motion', 'free to use',
+]
+
+# Per-match weights for ranking YouTube candidates.
+TALKING_HEAD_PENALTY = 5.0
+BROLL_BOOST = 3.0
+
+# Acceptable duration bounds (seconds) for YouTube B-roll candidates. Results
+# outside this range are dropped before ranking (unless that would leave no
+# candidates). Unknown/zero durations are allowed through.
+MIN_YOUTUBE_DURATION = 12
+MAX_YOUTUBE_DURATION = 1200
+
+# ============================================================================
+# LLM Query Generation Constants
+# ============================================================================
+
+# Default Gemini model used for visual B-roll query generation. Overridable via
+# the GEMINI_MODEL environment variable.
+DEFAULT_GEMINI_MODEL = "gemini-2.0-flash"
+
+# Timeout (seconds) for Gemini API requests.
+GEMINI_REQUEST_TIMEOUT = 30

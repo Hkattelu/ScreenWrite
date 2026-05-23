@@ -7,6 +7,7 @@ to Pexels if YouTube fails, and handles all error conditions gracefully.
 """
 
 import logging
+import re
 import shutil
 from typing import List, Optional, Dict, Any
 from pathlib import Path
@@ -62,21 +63,28 @@ class AssetOrchestrator:
     strategy and provides comprehensive error handling.
     """
     
-    def __init__(self, 
+    def __init__(self,
                  pexels_api_key: Optional[str] = None,
                  output_dir: Optional[str] = None,
                  youtube_enabled: bool = True,
-                 pexels_enabled: bool = True):
+                 pexels_enabled: bool = True,
+                 prefer_stock_for_generic: bool = True):
         """
         Initialize the asset orchestrator.
-        
+
         Args:
             pexels_api_key: API key for Pexels. If None, will try environment variable.
             output_dir: Directory to save downloaded videos. If None, uses temp directory.
             youtube_enabled: Whether to enable YouTube fetching
             pexels_enabled: Whether to enable Pexels fetching
+            prefer_stock_for_generic: When True, generic/abstract queries try
+                curated stock footage (Pexels) first - which never returns
+                talking heads - while specific queries (proper nouns, years,
+                quoted names) try YouTube first. When False, YouTube is always
+                tried first (legacy behavior).
         """
         self.output_dir = output_dir
+        self.prefer_stock_for_generic = prefer_stock_for_generic
         self.fetchers: List[AssetFetcher] = []
         
         # Initialize fetchers in priority order (YouTube first, then Pexels)
@@ -102,9 +110,53 @@ class AssetOrchestrator:
             fetcher_names = [f.name for f in self.fetchers]
             logger.info(f"Asset orchestrator initialized with fetchers: {', '.join(fetcher_names)}")
     
-    def fetch_asset(self, 
-                   youtube_query: str, 
-                   stock_query: str, 
+    def _is_specific_query(self, query: str) -> bool:
+        """
+        Heuristically decide whether a query targets specific real-world footage.
+
+        Specific queries (a named entity, a year, or a quoted phrase) are good
+        candidates for YouTube, where archival/specific clips live. Generic or
+        abstract queries are better served by curated stock footage.
+        """
+        if not query or not query.strip():
+            return False
+        # A four-digit year (e.g. a historical date).
+        if re.search(r'\b(1\d{3}|20\d{2})\b', query):
+            return True
+        # An explicitly quoted phrase.
+        if re.search(r'"[^"]+"', query):
+            return True
+        # Two or more consecutive capitalized words = likely a proper noun
+        # (e.g. "World War", "Pac Man"). Ignore a single leading capital.
+        if re.search(r'\b[A-Z][a-z]+\b(?:\s+\b[A-Z][a-z]+\b)+', query):
+            return True
+        return False
+
+    def _order_fetchers(self, youtube_query: str) -> List[AssetFetcher]:
+        """
+        Order fetchers for a query, preferring stock footage for generic queries.
+
+        Returns the configured fetchers as-is unless ``prefer_stock_for_generic``
+        is enabled and the query looks generic, in which case stock fetchers
+        (Pexels) are moved to the front of the fallback chain.
+        """
+        if not self.prefer_stock_for_generic:
+            return self.fetchers
+        if self._is_specific_query(youtube_query):
+            return self.fetchers
+
+        stock, others = [], []
+        for fetcher in self.fetchers:
+            name = getattr(fetcher, 'name', '').lower()
+            if 'pexels' in name or 'stock' in name:
+                stock.append(fetcher)
+            else:
+                others.append(fetcher)
+        return stock + others
+
+    def fetch_asset(self,
+                   youtube_query: str,
+                   stock_query: str,
                    duration: float,
                    beat_id: str = None,
                    enable_cache: bool = True) -> Optional[str]:
@@ -140,8 +192,8 @@ class AssetOrchestrator:
             return []
         
         candidates = []
-        
-        for fetcher in self.fetchers:
+
+        for fetcher in self._order_fetchers(youtube_query):
             try:
                 # Choose appropriate query based on fetcher name (duck typing)
                 fetcher_name = getattr(fetcher, 'name', '').lower()
@@ -157,7 +209,7 @@ class AssetOrchestrator:
                     query = youtube_query if youtube_query.strip() else stock_query
                     if not query.strip():
                         continue
-                
+
                 logger.info(f"Searching {fetcher.name} for: '{query}'")
                 
                 # Search without downloading
@@ -337,8 +389,8 @@ class AssetOrchestrator:
         
         results = []
         attempted_fetchers = []
-        
-        for fetcher in self.fetchers:
+
+        for fetcher in self._order_fetchers(youtube_query):
             try:
                 # Choose appropriate query based on fetcher name (duck typing)
                 fetcher_name = getattr(fetcher, 'name', '').lower()
@@ -354,7 +406,7 @@ class AssetOrchestrator:
                     query = youtube_query if youtube_query.strip() else stock_query
                     if not query.strip():
                         continue
-                
+
                 logger.info(f"{beat_context}Attempting to fetch {count} candidates using {fetcher.name} for: '{query}'")
                 attempted_fetchers.append(fetcher.name)
                 
