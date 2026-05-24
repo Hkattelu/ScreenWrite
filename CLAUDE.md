@@ -46,3 +46,13 @@ Cross-cutting: `utils/cache.py` provides persistent beat + asset caching (skippa
 - External requirements: **FFmpeg** (mandatory whenever fetching), **yt-dlp**, Python 3.8+, Node. `PEXELS_API_KEY` enables stock footage (via flag or env); without it Pexels is silently disabled.
 - Python style follows the Google Python Style Guide (`conductor/code_styleguides/python.md`) **except line length is 100** (set by `black` and pylint in `pyproject.toml`), not 80. Run `black` before committing.
 - This repo is managed with the **Conductor** workflow: specs, tracks, and product docs live under `conductor/`. Active design specs also live in `.kiro/specs/`. Consult these for product intent before larger changes.
+
+## Running the engine locally (Windows) — environment notes
+
+These save rediscovery when actually fetching assets on this machine:
+
+- **Run through the venv in PowerShell, not the Bash tool.** Invoke `& "venv\Scripts\python.exe" -m screenwrite <script.md> -o out.fcpxml ...`. The agent Bash tool runs in a separate environment where **ffmpeg and the venv are not on PATH** (`shutil.which("ffmpeg")` → `None`), so CLI fetches launched from Bash fail the dependency gate. Native PowerShell has them.
+- **ffmpeg** is mandatory for fetching and lives at `C:\Users\himan\ffmpeg\bin\ffmpeg.exe` (on PATH in PowerShell). Its version flag is **`-version`** (single dash) — `--version` exits non-zero on some builds (this previously broke the CLI's dependency check).
+- **Keep your clips:** pass `--output-dir <dir>`. Without it the orchestrator creates a temp dir (prefix `screenwrite_`) and **deletes it on exit**, so downloaded clips vanish.
+- **API keys** load from `.env` (CLI calls `load_dotenv()`; web backend does too). Missing/invalid keys fall back silently: no `PEXELS_API_KEY` → Pexels disabled (YouTube-only); no/invalid `GEMINI_API_KEY` → LLM visual queries fall back to heuristics. A well-formed Gemini key (`AIza…`) can still be rejected with "API Key not found" if the Generative Language API isn't enabled for its project — verify before assuming the LLM path ran.
+- **Quick smoke test without downloads:** add `--dry-run` (parse + FCPXML only).

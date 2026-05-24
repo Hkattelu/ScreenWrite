@@ -201,9 +201,11 @@ def validate_arguments(args: argparse.Namespace) -> None:
     except Exception as e:
         raise OutputError(f"Failed to validate output path: {e}")
     
-    # Check for FFmpeg dependency (now mandatory for fetching)
+    # Check for FFmpeg dependency (now mandatory for fetching).
+    # ffmpeg's version flag is '-version' (single dash); '--version' makes some
+    # builds exit non-zero and falsely fail the check.
     if not args.no_fetch:
-        ffmpeg_result = check_dependency('ffmpeg', 'FFmpeg')
+        ffmpeg_result = check_dependency('ffmpeg', 'FFmpeg', version_flag='-version')
         if not ffmpeg_result.is_valid:
             raise DependencyError(
                 f"FFmpeg is required for asset fetching. Details: {ffmpeg_result.error_message}\n"
