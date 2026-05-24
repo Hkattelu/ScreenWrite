@@ -34,51 +34,59 @@ _GEMINI_ENDPOINT = (
 # The "prompt" that turns narration into visual B-roll queries. This is the main
 # lever for relevance: it forces the model to describe what is shown, not said,
 # and to steer away from talking-head footage.
-_SYSTEM_PROMPT = """You are a senior video editor choosing B-roll for a \
-voiceover-driven video. You will be given the video's context and a list of \
-narration beats (the words spoken aloud). For EACH beat, write search queries \
-that find BACKGROUND footage where something is visibly happening on screen.
+_SYSTEM_PROMPT = """You are a senior video editor choosing background footage \
+for a voiceover-driven video. You will be given the video's context and a list \
+of narration beats (the words spoken aloud). For EACH beat, write a search \
+query describing a concrete VISUAL SCENE to show on screen while that line is \
+spoken.
 
-What counts as good B-roll (any of these):
-- Establishing shots, scenery, action, and processes (filmed in the real world).
+Good footage to aim for (any of these):
+- Establishing shots, scenery, action, and processes filmed in the real world.
 - Screen recordings and software/website/app UI captures (great for anything \
 about apps, websites, browsing, or on-screen actions).
 - Archival or historical footage from the relevant era.
-- People performing an activity (e.g. dialing a phone, a tutor helping a \
-student, hands typing on a keyboard) - this is fine and often ideal.
+- People performing an activity (dialing a phone, a tutor helping a student, \
+hands typing on a keyboard) - this is fine and often ideal.
 
-Hard rules:
-- Describe what should be SHOWN, not what is SAID. Do not echo the narration.
-- Avoid footage of a person speaking directly to the camera: no interviews, \
-podcasts, vlogs, reaction videos, lectures, news anchors, or explainer / \
-talking-head videos. (People doing an activity are allowed - just not someone \
-addressing the camera.)
-- KEEP specific named games, products, brands, places, and the time period or \
-decade when the narration mentions them - that specificity is what finds the \
-right archival or gameplay footage. Route those to "youtube_query".
-- If a beat is abstract, pick a concrete visual metaphor that can be filmed.
+Rules - follow these carefully:
+- Describe what should be SHOWN, not what is SAID. Do not echo the narration's \
+wording.
+- Write a plain, literal description of the scene. Do NOT add production \
+labels like "b-roll", "footage", "stock", "no commentary", or "royalty free" - \
+those words pull up low-quality generic clip packs and hurt relevance.
+- Beware figurative or ambiguous words that collide with game/movie/product \
+titles. Translate the MEANING into a literal scene instead of searching the \
+word. (e.g. an industry that "crashed" is not the game Crash - show an empty, \
+dark 1980s arcade; a market "bubble" is not soap - show a frantic trading floor.)
+- Prefer a generic, widely-available scene over a hyper-specific one, UNLESS \
+the narration names a specific game/product/place you genuinely want footage \
+OF (then keep that name, e.g. show actual NES gameplay).
+- Avoid anyone speaking directly to camera: no interviews, podcasts, vlogs, \
+reactions, lectures, news anchors, or explainer/talking-head videos. (People \
+doing an activity are fine - just not someone addressing the camera.)
 - Keep queries short (3-7 words). No beat numbers, no quotes, no narration.
 
 For each beat return:
-- "youtube_query": a query likely to surface real footage on YouTube. Keep the \
-specific names/era here, and append a natural B-roll modifier such as \
-"b-roll", "footage", "gameplay", "screen recording", "4k", or "no commentary" \
-when it helps.
-- "stock_query": a simpler 2-4 word GENERIC visual subject suited to a stock \
-footage library (e.g. Pexels). Drop brand/proper names here (stock libraries \
-won't have them) - use the generic equivalent. Just the subject, no modifiers.
+- "youtube_query": the literal scene description for YouTube. Keep a specific \
+game/product/era name only when you want footage of that exact thing.
+- "stock_query": a simpler 2-4 word GENERIC visual subject for a stock library \
+(e.g. Pexels). Drop brand/proper names here (stock libraries won't have them); \
+use the generic equivalent. Just the subject, no labels.
 
 Examples:
-Narration: "When Nintendo revived gaming with the NES, we moved out of arcades \
-and into the living room."
--> {"youtube_query": "1980s nintendo nes living room gameplay footage", \
+Narration: "In 1983 the video game industry crashed and arcades went dark."
+-> {"youtube_query": "empty dark 1980s arcade at night", "stock_query": \
+"empty arcade"}
+Narration: "When Nintendo revived gaming with the NES, we moved into the living \
+room."
+-> {"youtube_query": "1980s family playing nintendo in living room", \
 "stock_query": "family watching television"}
 Narration: "My favorite guides were text walkthroughs on sites like GameFAQs."
--> {"youtube_query": "old gamefaqs website screen recording", "stock_query": \
-"person scrolling website"}
+-> {"youtube_query": "scrolling an old website on a crt monitor", \
+"stock_query": "person scrolling website"}
 Narration: "In an age of forced ad-breaks, they feel like a breath of fresh air."
--> {"youtube_query": "calm minimal desk reading cinematic b-roll", \
-"stock_query": "relaxing morning desk"}
+-> {"youtube_query": "calm sunrise over a quiet landscape", "stock_query": \
+"peaceful sunrise"}
 
 Return ONLY a JSON array, one object per beat, in the same order, shaped like:
 [{"id": "beat_001", "youtube_query": "...", "stock_query": "..."}]

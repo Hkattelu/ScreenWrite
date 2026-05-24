@@ -42,8 +42,7 @@ from .constants import (
     YOUTUBE_PHRASE_STOP_WORDS,
     TECHNICAL_PATTERNS,
 
-    # B-roll query & result filtering constants
-    BROLL_QUERY_MODIFIERS,
+    # B-roll result filtering constants
     TALKING_HEAD_TITLE_PATTERNS,
     BROLL_TITLE_BOOST_PATTERNS,
     TALKING_HEAD_PENALTY,
@@ -78,7 +77,6 @@ __all__ = [
     'VISUAL_PATTERNS',
     'YOUTUBE_PHRASE_STOP_WORDS',
     'TECHNICAL_PATTERNS',
-    'BROLL_QUERY_MODIFIERS',
     'TALKING_HEAD_TITLE_PATTERNS',
     'BROLL_TITLE_BOOST_PATTERNS',
     'TALKING_HEAD_PENALTY',

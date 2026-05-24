@@ -190,16 +190,17 @@ TECHNICAL_PATTERNS = [
 ]
 
 # ============================================================================
-# B-roll Query & Result Filtering Constants
+# B-roll Result Filtering Constants
 # ============================================================================
-
-# Modifiers appended to heuristic YouTube queries to bias results toward
-# background footage rather than talking-head / explainer videos.
-BROLL_QUERY_MODIFIERS = "b-roll footage no commentary"
+#
+# Note: we deliberately do NOT inject words like "b-roll" or "footage" into the
+# search query itself. Searching for those labels surfaces generic self-labeled
+# "B-Roll" compilation packs that are usually irrelevant to the topic. Relevance
+# is steered on the result side (below) instead, by demoting talking-head titles.
 
 # Title substrings that signal talking-head / non-B-roll content. Matching
-# candidates are heavily penalized during ranking so they sink below real
-# B-roll (they are not hard-removed, to avoid returning nothing for niche
+# candidates are heavily penalized during ranking so they sink below usable
+# footage (they are not hard-removed, to avoid returning nothing for niche
 # queries).
 TALKING_HEAD_TITLE_PATTERNS = [
     'interview', 'podcast', 'reaction', 'explained', 'explainer', 'review',
@@ -209,14 +210,14 @@ TALKING_HEAD_TITLE_PATTERNS = [
     'ft.', 'feat.', 'commentary', 'reacts', 'analysis', 'breakdown',
 ]
 
-# Title substrings that signal good B-roll footage. Matching candidates are
-# boosted during ranking.
+# Title substrings that signal genuinely visual footage. Matching candidates are
+# mildly boosted during ranking. Intentionally excludes "b-roll"/"footage"/
+# "stock"/"no copyright" - those labels correlate with low-value generic packs;
+# we keep only descriptors of what the footage actually looks like.
 BROLL_TITLE_BOOST_PATTERNS = [
-    'b-roll', 'broll', 'b roll', 'footage', 'cinematic', 'stock footage',
-    'no copyright', 'no commentary', 'copyright free', 'royalty free',
-    '4k', '1080p', 'timelapse', 'time lapse', 'aerial', 'drone',
+    'cinematic', '4k', '1080p', 'timelapse', 'time lapse', 'aerial', 'drone',
     'ambience', 'ambient', 'relaxing', 'scenery', 'establishing shot',
-    'montage', 'slow motion', 'free to use',
+    'montage', 'slow motion', 'nature',
 ]
 
 # Per-match weights for ranking YouTube candidates.

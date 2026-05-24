@@ -30,7 +30,6 @@ from ..config import (
     VISUAL_PATTERNS,
     YOUTUBE_PHRASE_STOP_WORDS,
     TECHNICAL_PATTERNS,
-    BROLL_QUERY_MODIFIERS,
 )
 from ..utils.error_handling import (
     validate_markdown_file,
@@ -748,7 +747,11 @@ class ScriptParser:
                 seen.add(term_lower)
                 unique_terms.append(term)
         
-        # Build search phrase - take most relevant terms
+        # Build search phrase - take most relevant terms. We do NOT append
+        # "b-roll"/"footage" labels: searching for them returns generic
+        # self-labeled compilation packs. Talking-head avoidance is handled on
+        # the result side (YouTubeClient ranking). The LLM path overrides this
+        # entirely when a key is configured.
         if unique_terms:
             # Take first 3-4 most relevant terms from the beat
             result = ' '.join(unique_terms[:4])
@@ -761,7 +764,4 @@ class ScriptParser:
             else:
                 result = 'establishing shot'
 
-        # Bias the heuristic query toward background footage rather than
-        # talking-head/explainer videos. The LLM path overrides this entirely
-        # when a key is configured.
-        return f"{result} {BROLL_QUERY_MODIFIERS}".strip()
+        return result.strip()
