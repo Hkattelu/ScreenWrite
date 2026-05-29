@@ -87,8 +87,10 @@ class TestYouTubeClient(unittest.TestCase):
             'entries': [{'url': 'http://youtube.com/watch?v=123'}]
         }
 
-        urls = client._search("test query")
-        self.assertEqual(urls, ['http://youtube.com/watch?v=123'])
+        # _search returns ranked metadata entries (dicts), not bare URLs, so
+        # downstream ranking can use titles/durations.
+        entries = client._search("test query")
+        self.assertEqual(entries, [{'url': 'http://youtube.com/watch?v=123'}])
 
     def test_search_no_results(self):
         """Test search with no results."""

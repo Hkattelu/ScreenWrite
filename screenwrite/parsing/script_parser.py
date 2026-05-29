@@ -14,6 +14,7 @@ Markdown Script Specification:
 """
 
 import re
+import json
 import logging
 import os
 from pathlib import Path
@@ -40,6 +41,11 @@ from ..utils.cache import load_cached_beats, cache_beats
 from .query_generator import QueryGenerator
 
 logger = logging.getLogger(__name__)
+
+# Beat visual types that resolve to fetched footage (and so benefit from better
+# search queries). Text-overlay types (annotation/citation/image) are left
+# alone by the LLM and manifest passes.
+_FOOTAGE_VISUAL_TYPES = ('auto', 'b-roll')
 
 
 @dataclass
@@ -83,19 +89,24 @@ class ScriptParser:
     and chunks body text into logical beats with auto-generated search queries.
     """
     
-    def __init__(self, use_llm_queries: bool = True):
+    def __init__(self, use_llm_queries: bool = True, manifest_path: Optional[str] = None):
         """
         Initialize the script parser.
 
         Args:
             use_llm_queries: Whether to enhance auto-generated B-roll queries with
-                the LLM query generator when a Gemini API key is configured. When
+                the LLM query generator when an API key is configured. When
                 disabled (or no key is present), heuristic queries are used.
+            manifest_path: Optional path to a B-roll manifest JSON authored by an
+                editor (or the /broll-editor skill). When present, its per-beat
+                queries override heuristic/LLM queries for auto-generated beats.
+                See ``_apply_manifest`` for the format.
         """
         self.target_min_duration = TARGET_MIN_DURATION
         self.target_max_duration = TARGET_MAX_DURATION
         self.words_per_second = WORDS_PER_SECOND
         self.use_llm_queries = use_llm_queries
+        self.manifest_path = manifest_path
         self.query_generator = QueryGenerator() if use_llm_queries else None
     
     def parse(self, file_path: str, use_cache: bool = True) -> List[Beat]:
@@ -260,6 +271,10 @@ class ScriptParser:
             # Enhance auto-generated queries with the LLM query generator (no-op
             # if disabled, unavailable, or it fails - heuristic queries remain).
             self._enhance_queries_with_llm(beats, full_context)
+
+            # Apply an editor-authored manifest last so it takes priority over
+            # both heuristic and LLM queries (no-op if no manifest is configured).
+            self._apply_manifest(beats)
 
             # Log successful parsing summary
             total_duration = sum(beat.duration for beat in beats)
@@ -595,12 +610,15 @@ class ScriptParser:
     
     def _enhance_queries_with_llm(self, beats: List[Beat], context: str) -> None:
         """
-        Replace heuristic queries on auto-generated beats with LLM visual queries.
+        Replace heuristic queries on footage beats with LLM visual queries.
 
-        Beats that came from explicit ``[@...]`` instructions (visual_type other
-        than 'auto') are left untouched - the user's intent takes priority. This
-        mutates ``beats`` in place and silently no-ops when the generator is
-        unavailable or returns nothing.
+        Targets both ``auto`` beats and explicit ``[@Show: ...]`` (``b-roll``)
+        beats: for the latter the user's instruction is a note about *what* to
+        show, but verbatim it often makes a poor search query (e.g. "X interview
+        footage" pulls up talking heads), so we hand the model the narration plus
+        the intended visual and let it produce a better query. Text-overlay beats
+        (annotation/citation/image) are left untouched. This mutates ``beats`` in
+        place and silently no-ops when the generator is unavailable.
 
         Args:
             beats: Parsed beats to enhance.
@@ -609,11 +627,18 @@ class ScriptParser:
         if not self.query_generator or not self.query_generator.is_available():
             return
 
-        targets = [beat for beat in beats if beat.visual_type == 'auto']
+        targets = [beat for beat in beats if beat.visual_type in _FOOTAGE_VISUAL_TYPES]
         if not targets:
             return
 
-        payload = [{'id': beat.id, 'text': beat.text} for beat in targets]
+        payload = []
+        for beat in targets:
+            text = beat.text
+            # For explicit [@Show: ...] beats, give the model the intended visual
+            # so it refines toward that subject rather than the spoken words.
+            if beat.visual_content:
+                text = f"{text} (intended on-screen visual: {beat.visual_content})"
+            payload.append({'id': beat.id, 'text': text})
 
         try:
             generated = self.query_generator.generate(payload, context)
@@ -639,6 +664,72 @@ class ScriptParser:
                 enhanced += 1
 
         logger.info(f"Enhanced {enhanced}/{len(targets)} beat queries with LLM")
+
+    def _apply_manifest(self, beats: List[Beat]) -> None:
+        """
+        Override auto-generated beat queries from an editor-authored manifest.
+
+        The manifest is JSON shaped like::
+
+            {"version": 1,
+             "beats": [{"id": "beat_001",
+                        "youtube_query": "...",
+                        "stock_query": "..."}]}
+
+        Overrides footage beats (``auto`` and explicit ``[@Show: ...]`` /
+        ``b-roll`` beats) - the manifest is a deliberate editor pass invoked to
+        improve footage, so it supersedes the raw instruction text. Text-overlay
+        beats (annotation/citation/image) are never touched. Unknown ids and
+        missing fields are ignored; a malformed/missing manifest is a no-op (it
+        must never break parsing). This mutates ``beats`` in place.
+
+        Args:
+            beats: Parsed beats to update.
+        """
+        if not self.manifest_path:
+            return
+
+        try:
+            with open(self.manifest_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+        except FileNotFoundError:
+            logger.warning(f"B-roll manifest not found: {self.manifest_path}")
+            return
+        except (OSError, json.JSONDecodeError) as e:
+            logger.warning(f"Could not read B-roll manifest, ignoring: {e}")
+            return
+
+        # Accept either {"beats": [...]} or a bare list of beat entries.
+        entries = data.get('beats', data) if isinstance(data, dict) else data
+        if not isinstance(entries, list):
+            logger.warning("B-roll manifest has no 'beats' list; ignoring")
+            return
+
+        manifest_by_id = {}
+        for entry in entries:
+            if isinstance(entry, dict) and entry.get('id'):
+                manifest_by_id[entry['id']] = entry
+
+        if not manifest_by_id:
+            return
+
+        applied = 0
+        for beat in beats:
+            if beat.visual_type not in _FOOTAGE_VISUAL_TYPES:
+                continue
+            entry = manifest_by_id.get(beat.id)
+            if not entry:
+                continue
+            youtube_query = (entry.get('youtube_query') or '').strip()
+            stock_query = (entry.get('stock_query') or '').strip()
+            if youtube_query:
+                beat.youtube_search_phrase = youtube_query
+            if stock_query:
+                beat.stock_keyword = stock_query
+            if youtube_query or stock_query:
+                applied += 1
+
+        logger.info(f"Applied manifest to {applied}/{len(beats)} beats")
 
     def _generate_stock_keyword(self, text: str, context: str = '') -> str:
         """

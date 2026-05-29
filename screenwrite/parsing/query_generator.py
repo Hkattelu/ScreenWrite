@@ -1,35 +1,52 @@
 """
 LLM-backed B-roll query generation.
 
-Converts narration beats into *visual* B-roll search queries using the Gemini
-REST API. The goal is footage where something is visibly happening on screen
-(establishing shots, action, processes, scenery, archival) rather than a person
-talking to camera.
+Converts narration beats into *visual* B-roll search queries using an LLM. The
+goal is footage where something is visibly happening on screen (establishing
+shots, action, processes, scenery, archival) rather than a person talking to
+camera.
 
 The narration describes ideas; searching YouTube for the spoken words returns
 explainer / talking-head videos. This module instead asks an LLM to describe
 what should be *shown* on screen, producing far more relevant background B-roll.
 
-It degrades gracefully: when no ``GEMINI_API_KEY`` is configured, or the API
-call fails for any reason, ``generate`` returns ``None`` and the caller falls
-back to the parser's heuristic queries.
+Two backends are supported and selected automatically:
+
+- **Anthropic (Claude)** when ``ANTHROPIC_API_KEY`` is set.
+- **Gemini** when ``GEMINI_API_KEY`` is set.
+
+The provider can be pinned with ``BROLL_LLM_PROVIDER`` (``auto`` | ``anthropic``
+| ``gemini`` | ``none``); ``auto`` (the default) prefers Anthropic, then Gemini.
+
+It degrades gracefully: when no key is configured, the chosen provider's SDK is
+missing, or an API call fails for any reason, ``generate`` returns ``None`` and
+the caller falls back to the parser's heuristic queries.
 """
 
 import json
 import logging
 import os
 import re
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 import requests
 
-from ..config import DEFAULT_GEMINI_MODEL, GEMINI_REQUEST_TIMEOUT
+from ..config import (
+    DEFAULT_GEMINI_MODEL,
+    GEMINI_REQUEST_TIMEOUT,
+    DEFAULT_ANTHROPIC_MODEL,
+    ANTHROPIC_REQUEST_TIMEOUT,
+    ANTHROPIC_MAX_TOKENS,
+)
 
 logger = logging.getLogger(__name__)
 
 _GEMINI_ENDPOINT = (
     "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 )
+
+# Placeholder values that mean "not actually configured".
+_PLACEHOLDER_KEYS = {"", "your_api_key_here"}
 
 # The "prompt" that turns narration into visual B-roll queries. This is the main
 # lever for relevance: it forces the model to describe what is shown, not said,
@@ -93,46 +110,103 @@ Return ONLY a JSON array, one object per beat, in the same order, shaped like:
 """
 
 
-def _load_api_key() -> Optional[str]:
-    """Resolve the Gemini API key from the environment.
-
-    The key is read from ``GEMINI_API_KEY``. Loading a project ``.env`` is the
-    responsibility of the entry point (the CLI and web backend call
-    ``load_dotenv``); keeping this function side-effect free ensures callers that
-    have not configured a key - including unit tests - never trigger live API
-    calls just by constructing a parser.
-    """
-    key = os.getenv("GEMINI_API_KEY")
-    return key.strip() if key else None
+def _clean_key(key: Optional[str]) -> Optional[str]:
+    """Return a stripped key, or None if it is missing/placeholder."""
+    if not key:
+        return None
+    key = key.strip()
+    return None if key in _PLACEHOLDER_KEYS else key
 
 
 class QueryGenerator:
-    """Generates visual B-roll search queries for beats using the Gemini API."""
+    """Generates visual B-roll search queries for beats using an LLM backend."""
 
-    def __init__(self, api_key: Optional[str] = None, model: Optional[str] = None):
+    def __init__(
+        self,
+        api_key: Optional[str] = None,
+        model: Optional[str] = None,
+        provider: Optional[str] = None,
+    ):
         """
         Initialize the query generator.
 
         Args:
-            api_key: Gemini API key. If None, read from GEMINI_API_KEY (or .env).
-            model: Gemini model name. If None, read from GEMINI_MODEL env var or
-                fall back to the configured default.
+            api_key: Explicit API key. When given, it is used directly and the
+                provider defaults to Gemini unless ``provider`` says otherwise
+                (preserving the historical single-provider behavior). If None,
+                a key is resolved from the environment per the selected provider.
+            model: Model name override. If None, resolved from the provider's
+                ``*_MODEL`` env var or the configured default.
+            provider: ``auto`` (default) | ``anthropic`` | ``gemini`` | ``none``.
+                If None, read from ``BROLL_LLM_PROVIDER`` (default ``auto``).
         """
-        self.api_key = api_key or _load_api_key()
-        # Treat the example placeholder as "not configured".
-        if self.api_key in ("", "your_api_key_here"):
-            self.api_key = None
-        self.model = model or os.getenv("GEMINI_MODEL") or DEFAULT_GEMINI_MODEL
+        self.provider, self.api_key, self.model = self._resolve(
+            api_key, model, provider
+        )
 
         if self.api_key:
-            logger.info("Gemini query generation enabled (model: %s)", self.model)
+            logger.info(
+                "LLM query generation enabled (provider: %s, model: %s)",
+                self.provider, self.model,
+            )
         else:
             logger.debug(
-                "No GEMINI_API_KEY configured; using heuristic B-roll queries"
+                "No LLM key configured (provider: %s); using heuristic B-roll "
+                "queries", self.provider,
             )
 
+    @staticmethod
+    def _resolve(
+        api_key: Optional[str],
+        model: Optional[str],
+        provider: Optional[str],
+    ) -> Tuple[str, Optional[str], Optional[str]]:
+        """Resolve (provider, api_key, model) from args and the environment.
+
+        Returns a provider name even when no key is available, so callers can
+        log a useful reason; ``is_available`` keys off the resolved api_key.
+        """
+        requested = (provider or os.getenv("BROLL_LLM_PROVIDER") or "auto").strip().lower()
+
+        if requested == "none":
+            return "none", None, None
+
+        # When an api_key argument is supplied at all (even a placeholder), it is
+        # authoritative: we do NOT fall back to environment keys. It uses Gemini
+        # by default (historical behavior) unless the caller pinned a provider.
+        # A placeholder cleans to None -> resolves as unconfigured.
+        if api_key is not None:
+            chosen = requested if requested in ("anthropic", "gemini") else "gemini"
+            return chosen, _clean_key(api_key), QueryGenerator._resolve_model(chosen, model)
+
+        anthropic_key = _clean_key(os.getenv("ANTHROPIC_API_KEY"))
+        gemini_key = _clean_key(os.getenv("GEMINI_API_KEY"))
+
+        if requested == "anthropic":
+            return "anthropic", anthropic_key, QueryGenerator._resolve_model("anthropic", model)
+        if requested == "gemini":
+            return "gemini", gemini_key, QueryGenerator._resolve_model("gemini", model)
+
+        # auto: prefer Anthropic, then Gemini.
+        if anthropic_key:
+            return "anthropic", anthropic_key, QueryGenerator._resolve_model("anthropic", model)
+        if gemini_key:
+            return "gemini", gemini_key, QueryGenerator._resolve_model("gemini", model)
+
+        # Nothing configured. Report 'auto' so the debug log is accurate.
+        return "auto", None, None
+
+    @staticmethod
+    def _resolve_model(provider: str, model: Optional[str]) -> str:
+        """Pick the model for a provider from an override, env var, or default."""
+        if model:
+            return model
+        if provider == "anthropic":
+            return os.getenv("ANTHROPIC_MODEL") or DEFAULT_ANTHROPIC_MODEL
+        return os.getenv("GEMINI_MODEL") or DEFAULT_GEMINI_MODEL
+
     def is_available(self) -> bool:
-        """Return True if an API key is configured and generation can be attempted."""
+        """Return True if a key is configured and generation can be attempted."""
         return bool(self.api_key)
 
     def generate(
@@ -156,24 +230,30 @@ class QueryGenerator:
         if not beats:
             return {}
 
-        prompt = self._build_prompt(beats, context)
+        user_content = self._build_user_content(beats, context)
 
         try:
-            raw = self._call_gemini(prompt)
+            raw = self._call_backend(user_content)
         except Exception as e:  # noqa: BLE001 - any failure must fall back cleanly
-            logger.warning("Gemini query generation failed, falling back: %s", e)
+            logger.warning("LLM query generation failed, falling back: %s", e)
             return None
 
         parsed = self._parse_response(raw)
         if parsed is None:
-            logger.warning("Could not parse Gemini response; falling back")
+            logger.warning("Could not parse LLM response; falling back")
             return None
 
         return parsed
 
-    def _build_prompt(self, beats: List[Dict[str, str]], context: str) -> str:
-        """Assemble the full prompt from the system instructions, context, and beats."""
-        lines = [_SYSTEM_PROMPT, ""]
+    def _call_backend(self, user_content: str) -> str:
+        """Dispatch to the configured provider's backend."""
+        if self.provider == "anthropic":
+            return self._call_anthropic(user_content)
+        return self._call_gemini(user_content)
+
+    def _build_user_content(self, beats: List[Dict[str, str]], context: str) -> str:
+        """Assemble the per-request content (context + beats), without the system prompt."""
+        lines: List[str] = []
         if context.strip():
             lines.append(f"Video context: {context.strip()}")
             lines.append("")
@@ -184,8 +264,10 @@ class QueryGenerator:
             lines.append(f"{beat_id}: {text}")
         return "\n".join(lines)
 
-    def _call_gemini(self, prompt: str) -> str:
+    def _call_gemini(self, user_content: str) -> str:
         """Call the Gemini generateContent endpoint and return the raw text part."""
+        # Gemini takes a single combined prompt (system instructions + content).
+        prompt = f"{_SYSTEM_PROMPT}\n\n{user_content}"
         url = _GEMINI_ENDPOINT.format(model=self.model)
         payload = {
             "contents": [{"parts": [{"text": prompt}]}],
@@ -213,6 +295,44 @@ class QueryGenerator:
             raise ValueError("Gemini response contained no content parts")
 
         return parts[0].get("text", "")
+
+    def _call_anthropic(self, user_content: str) -> str:
+        """Call the Anthropic Messages API and return the raw text content.
+
+        The static system prompt is sent as a cached content block so repeated
+        batches in the same run reuse it cheaply (prompt caching).
+        """
+        try:
+            import anthropic  # Lazy import: optional dependency.
+        except ImportError as e:
+            raise RuntimeError(
+                "anthropic package not installed; run 'pip install anthropic' or "
+                "set BROLL_LLM_PROVIDER=gemini"
+            ) from e
+
+        client = anthropic.Anthropic(api_key=self.api_key)
+        response = client.messages.create(
+            model=self.model,
+            max_tokens=ANTHROPIC_MAX_TOKENS,
+            system=[
+                {
+                    "type": "text",
+                    "text": _SYSTEM_PROMPT,
+                    "cache_control": {"type": "ephemeral"},
+                }
+            ],
+            messages=[{"role": "user", "content": user_content}],
+            timeout=ANTHROPIC_REQUEST_TIMEOUT,
+        )
+
+        texts = [
+            block.text
+            for block in (response.content or [])
+            if getattr(block, "type", None) == "text"
+        ]
+        if not texts:
+            raise ValueError("Anthropic response contained no text content")
+        return "".join(texts)
 
     def _parse_response(
         self, raw: str

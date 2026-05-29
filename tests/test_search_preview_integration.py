@@ -48,9 +48,11 @@ class TestSearchPreviewIntegration(unittest.TestCase):
                 {'id': 'px1', 'title': 'Pexels Video 1', 'thumbnail_url': 't2', 'duration': 5.0, 'download_url': 'u2'}
             ]
             
-            # 2. Perform search
+            # 2. Perform search. Use a specific query (proper noun + year) so
+            # fetcher ordering keeps YouTube first; generic queries now prefer
+            # stock (Pexels) first via prefer_stock_for_generic.
             candidates = orchestrator.search_assets(
-                youtube_query="test youtube",
+                youtube_query="Apollo 11 launch 1969",
                 stock_query="test stock",
                 duration=5.0
             )
@@ -80,8 +82,9 @@ class TestSearchPreviewIntegration(unittest.TestCase):
             # 5. Verify results
             self.assertEqual(result_path, "/path/to/pexels_px1.mp4")
             mock_pexels.download_by_id.assert_called_with(
-                'px1', 
+                'px1',
                 selected_candidate.metadata,
+                target_duration=None,
                 progress_callback=progress_callback
             )
 
@@ -145,7 +148,7 @@ class TestSearchPreviewIntegration(unittest.TestCase):
             name = "TestFetcher"
             def __init__(self, **kwargs): pass
             def search(self, q, count): return []
-            def download_by_id(self, aid, meta, progress_callback=None):
+            def download_by_id(self, aid, meta, target_duration=None, progress_callback=None):
                 # Simulate time-consuming download
                 for i in range(1, 6):
                     if progress_callback:

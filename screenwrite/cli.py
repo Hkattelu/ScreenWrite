@@ -146,7 +146,23 @@ Examples:
     parser.add_argument(
         '--disable-llm-queries',
         action='store_true',
-        help='Disable LLM (Gemini) B-roll query generation and use heuristics only'
+        help='Disable LLM B-roll query generation and use heuristics only'
+    )
+
+    parser.add_argument(
+        '--broll-manifest',
+        type=str,
+        help='Path to an editor-authored B-roll manifest JSON. Its per-beat '
+             'youtube_query/stock_query override heuristic/LLM queries. '
+             'Pairs with --dump-beats and the /broll-editor skill.'
+    )
+
+    parser.add_argument(
+        '--dump-beats',
+        type=str,
+        help='Parse the script and write the beats (id, text, duration, queries) '
+             'as JSON to this path, then exit without fetching. Use this to author '
+             'a --broll-manifest.'
     )
     
     parser.add_argument(
@@ -252,6 +268,58 @@ def validate_arguments(args: argparse.Namespace) -> None:
 
 
 
+def dump_beats(script_path: str, out_path: str) -> int:
+    """
+    Parse a script and write its beats to JSON for manifest authoring.
+
+    Heuristic queries are used (LLM disabled) so this is fast and needs no API
+    key. The beat ids are deterministic, so a manifest keyed by these ids lines
+    up with a later ``--broll-manifest`` run.
+
+    Args:
+        script_path: Path to the markdown script.
+        out_path: Path to write the beats JSON to.
+
+    Returns:
+        Process exit code (0 on success, 1 on failure).
+    """
+    import json
+
+    # Local imports keep the dump path independent of the fetch pipeline.
+    from .parsing.script_parser import ScriptParser
+
+    validation_result = validate_markdown_file(script_path)
+    if not validation_result.is_valid:
+        print(f"\nInput validation error: {validation_result.error_message}",
+              file=sys.stderr)
+        return 1
+
+    parser = ScriptParser(use_llm_queries=False)
+    beats = parser.parse(script_path, use_cache=False)
+
+    payload = {
+        'version': 1,
+        'script': script_path,
+        'beats': [
+            {
+                'id': beat.id,
+                'text': beat.text,
+                'duration': round(beat.duration, 2),
+                'visual_type': beat.visual_type,
+                'youtube_query': beat.youtube_search_phrase,
+                'stock_query': beat.stock_keyword,
+            }
+            for beat in beats
+        ],
+    }
+
+    with open(out_path, 'w', encoding='utf-8') as f:
+        json.dump(payload, f, indent=2, ensure_ascii=False)
+
+    print(f"Wrote {len(beats)} beats to {out_path}")
+    return 0
+
+
 def print_workflow_summary(result: dict) -> None:
     """
     Print a summary of the workflow results.
@@ -333,7 +401,12 @@ def main() -> int:
         
         # Set up logging
         setup_logging(args.verbose)
-        
+
+        # Dump-beats mode: parse and emit beats JSON, then exit before the
+        # fetch pipeline (no ffmpeg/key needed). Used to author a manifest.
+        if args.dump_beats:
+            return dump_beats(args.script, args.dump_beats)
+
         # Validate arguments with comprehensive error handling
         validate_arguments(args)
         
@@ -365,6 +438,7 @@ def main() -> int:
             'enable_asset_cache': not args.disable_cache,
             'prefer_stock_for_generic': not args.prefer_youtube,
             'use_llm_queries': not args.disable_llm_queries,
+            'broll_manifest': args.broll_manifest,
             'verbose': args.verbose
         }
         

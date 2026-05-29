@@ -2,6 +2,10 @@
 yt-dlp>=2023.11.16
 requests>=2.28.0
 
+# LLM visual-query generation (optional; lazily imported). Without it, set
+# BROLL_LLM_PROVIDER=gemini or rely on heuristic queries.
+anthropic>=0.40.0
+
 # Backend API
 Flask==3.0.0
 flask-cors==4.0.0

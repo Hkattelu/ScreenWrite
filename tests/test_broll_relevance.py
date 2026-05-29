@@ -122,6 +122,30 @@ class TestYouTubeRanking(unittest.TestCase):
         bad = [{"title": "x", "duration": 1, "url": "z"}]
         self.assertEqual(len(self.client._rank_and_filter(bad, count=3)), 1)
 
+    def test_query_terms_boost_on_topic_titles(self):
+        # Both are equally "good" B-roll (aerial drone), but only one is on-topic.
+        on_topic = {"title": "Aerial Drone Mountain Range", "duration": 60, "url": "a"}
+        off_topic = {"title": "Aerial Drone Beach Sunset", "duration": 60, "url": "b"}
+        ranked = self.client._rank_and_filter(
+            [off_topic, on_topic], count=2, query="snowy mountain peaks"
+        )
+        self.assertEqual(ranked[0]["url"], "a")
+
+    def test_score_entry_single_arg_still_works(self):
+        # Backward-compatible signature: query terms are optional.
+        score = self.client._score_entry({"title": "Cinematic Aerial 4K"})
+        self.assertGreater(score, 0)
+
+    def test_pick_start_offset(self):
+        # Unknown/short sources -> no offset (safe).
+        self.assertEqual(self.client._pick_start_offset(None, 5.0), 0.0)
+        self.assertEqual(self.client._pick_start_offset(0, 5.0), 0.0)
+        self.assertEqual(self.client._pick_start_offset(7.0, 5.0), 0.0)  # no room
+        # Long source -> skips an intro and keeps the full segment in bounds.
+        offset = self.client._pick_start_offset(120.0, 5.0)
+        self.assertGreater(offset, 0.0)
+        self.assertLessEqual(offset + 5.0, 120.0)
+
 
 class TestFetcherOrdering(unittest.TestCase):
     """Specificity-based ordering of fetchers in the AssetOrchestrator."""

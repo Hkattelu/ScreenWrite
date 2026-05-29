@@ -290,8 +290,130 @@ class TestScriptParserHelperMethods(unittest.TestCase):
         text = "This is a long run-on sentence without any punctuation marks to break it up so the parser needs to handle this case gracefully and still create reasonable chunks"
         
         chunks = self.parser._chunk_text(text)
-        
+
         self.assertGreater(len(chunks), 0)
+
+
+class TestManifestApplication(unittest.TestCase):
+    """Editor-authored manifest overriding auto-generated beat queries."""
+
+    SCRIPT = """# Tutorial
+
+## Intro
+Welcome to this test tutorial about Python programming and writing code.
+We will install software and build a small program on the computer today.
+"""
+
+    def setUp(self):
+        self.temp_dir = tempfile.mkdtemp(prefix="test_manifest_")
+        self.temp_path = Path(self.temp_dir)
+        self.script_path = self.temp_path / "script.md"
+        self.script_path.write_text(self.SCRIPT, encoding="utf-8")
+
+    def tearDown(self):
+        if self.temp_path.exists():
+            shutil.rmtree(self.temp_path)
+
+    def _write_manifest(self, beats_list):
+        import json
+        manifest_path = self.temp_path / "script.broll.json"
+        manifest_path.write_text(
+            json.dumps({"version": 1, "beats": beats_list}), encoding="utf-8"
+        )
+        return manifest_path
+
+    def _parse(self, manifest_path=None):
+        # LLM disabled to isolate manifest behavior and avoid any network call.
+        parser = ScriptParser(
+            use_llm_queries=False,
+            manifest_path=str(manifest_path) if manifest_path else None,
+        )
+        return parser.parse(str(self.script_path), use_cache=False)
+
+    def test_manifest_overrides_auto_beats(self):
+        baseline = self._parse()
+        first_id = baseline[0].id
+
+        manifest = self._write_manifest([
+            {"id": first_id, "youtube_query": "custom scene query",
+             "stock_query": "custom stock"}
+        ])
+        beats = self._parse(manifest)
+        target = next(b for b in beats if b.id == first_id)
+
+        self.assertEqual(target.youtube_search_phrase, "custom scene query")
+        self.assertEqual(target.stock_keyword, "custom stock")
+
+    def test_manifest_overrides_broll_instruction_beats(self):
+        # A [@Show: ...] beat is footage (b-roll); the editor manifest refines it.
+        content = ("# Title\n\n## Section\n"
+                   "[@Show: a red sports car driving] "
+                   "The narration here talks about speed and motion in great detail.\n")
+        script_path = self.temp_path / "explicit.md"
+        script_path.write_text(content, encoding="utf-8")
+
+        parser_plain = ScriptParser(use_llm_queries=False)
+        beats = parser_plain.parse(str(script_path), use_cache=False)
+        broll = next(b for b in beats if b.visual_type == "b-roll")
+
+        manifest = self._write_manifest([
+            {"id": broll.id, "youtube_query": "refined sports car query",
+             "stock_query": "sports car"}
+        ])
+        parser = ScriptParser(use_llm_queries=False, manifest_path=str(manifest))
+        beats2 = parser.parse(str(script_path), use_cache=False)
+        target = next(b for b in beats2 if b.id == broll.id)
+
+        self.assertEqual(target.youtube_search_phrase, "refined sports car query")
+        self.assertEqual(target.stock_keyword, "sports car")
+
+    def test_manifest_preserves_text_overlay_beats(self):
+        # Annotation beats are on-screen text, not footage; never overridden.
+        content = ("# Title\n\n## Section\n"
+                   "[@Annotation: Chapter One] "
+                   "The narration here introduces the very first chapter of our story.\n")
+        script_path = self.temp_path / "annotation.md"
+        script_path.write_text(content, encoding="utf-8")
+
+        parser_plain = ScriptParser(use_llm_queries=False)
+        beats = parser_plain.parse(str(script_path), use_cache=False)
+        ann = next(b for b in beats if b.visual_type == "annotation")
+        original_phrase = ann.youtube_search_phrase
+
+        manifest = self._write_manifest([
+            {"id": ann.id, "youtube_query": "SHOULD NOT APPLY", "stock_query": "nope"}
+        ])
+        parser = ScriptParser(use_llm_queries=False, manifest_path=str(manifest))
+        beats2 = parser.parse(str(script_path), use_cache=False)
+        target = next(b for b in beats2 if b.id == ann.id)
+
+        self.assertNotEqual(target.youtube_search_phrase, "SHOULD NOT APPLY")
+        self.assertEqual(target.youtube_search_phrase, original_phrase)
+
+    def test_missing_manifest_is_noop(self):
+        parser = ScriptParser(
+            use_llm_queries=False,
+            manifest_path=str(self.temp_path / "does_not_exist.json"),
+        )
+        beats = parser.parse(str(self.script_path), use_cache=False)
+        self.assertGreater(len(beats), 0)
+        self.assertTrue(beats[0].youtube_search_phrase.strip())
+
+    def test_malformed_manifest_is_noop(self):
+        bad = self.temp_path / "bad.json"
+        bad.write_text("this is not json", encoding="utf-8")
+        parser = ScriptParser(use_llm_queries=False, manifest_path=str(bad))
+        beats = parser.parse(str(self.script_path), use_cache=False)
+        self.assertGreater(len(beats), 0)
+
+    def test_unknown_ids_ignored(self):
+        manifest = self._write_manifest([
+            {"id": "beat_999", "youtube_query": "ghost", "stock_query": "ghost"}
+        ])
+        # Should not raise and should still parse normally.
+        beats = self._parse(manifest)
+        self.assertGreater(len(beats), 0)
+        self.assertNotIn("ghost", beats[0].youtube_search_phrase)
 
 
 if __name__ == '__main__':

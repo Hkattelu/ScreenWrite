@@ -7,6 +7,7 @@ using ffmpeg.
 """
 
 import os
+import re
 import subprocess
 import tempfile
 import logging
@@ -24,9 +25,17 @@ from ..config import (
     BROLL_TITLE_BOOST_PATTERNS,
     TALKING_HEAD_PENALTY,
     BROLL_BOOST,
+    QUERY_TERM_MATCH_BOOST,
+    INTRO_SKIP_SECONDS,
     MIN_YOUTUBE_DURATION,
     MAX_YOUTUBE_DURATION,
 )
+
+# Short words ignored when matching query terms against candidate titles.
+_QUERY_MATCH_STOP_WORDS = frozenset({
+    'the', 'a', 'an', 'and', 'or', 'of', 'in', 'on', 'at', 'to', 'for',
+    'with', 'from', 'into', 'over', 'his', 'her', 'its',
+})
 from ..utils.error_handling import (
     retry_with_backoff,
     check_dependency,
@@ -378,23 +387,33 @@ class YouTubeClient(AssetFetcher):
             return []
             
         try:
-            # Search for videos with retry logic
-            video_urls = self._search_with_retry(query, count=count)
-            if not video_urls:
+            # Search for videos with retry logic (returns ranked metadata entries)
+            entries = self._search_with_retry(query, count=count)
+            if not entries:
                 logger.warning(f"No YouTube results found for query: {query}")
                 return []
-            
+
             downloaded_paths = []
-            for i, video_url in enumerate(video_urls):
+            for i, entry in enumerate(entries):
                 try:
+                    # Entries are dicts from search; _download also accepts a URL.
+                    source_duration = entry.get('duration') if isinstance(entry, dict) else None
+
                     # Download video with retry logic
-                    downloaded_path = self._download_with_retry(video_url, f"{query}_{i}")
+                    downloaded_path = self._download_with_retry(entry, f"{query}_{i}")
                     if not downloaded_path:
                         continue
-                    
-                    # Trim video to target duration if ffmpeg is available
+
+                    # Trim video to target duration if ffmpeg is available,
+                    # skipping a likely intro/logo when the source allows it.
                     if self._ffmpeg_available:
-                        trimmed_path = self._trim_video_with_retry(downloaded_path, duration)
+                        start_offset = self._pick_start_offset(source_duration, duration)
+                        if start_offset > 0:
+                            trimmed_path = self._trim_video_with_retry(
+                                downloaded_path, duration, start_time=start_offset
+                            )
+                        else:
+                            trimmed_path = self._trim_video_with_retry(downloaded_path, duration)
                         if trimmed_path:
                             try:
                                 os.remove(downloaded_path)
@@ -439,12 +458,22 @@ class YouTubeClient(AssetFetcher):
             return True
         return MIN_YOUTUBE_DURATION <= duration <= MAX_YOUTUBE_DURATION
 
-    def _score_entry(self, entry: Dict[str, Any]) -> float:
+    @staticmethod
+    def _query_terms(query: Optional[str]) -> List[str]:
+        """Extract meaningful lowercase terms from a query for title matching."""
+        if not query:
+            return []
+        words = re.findall(r"[a-zA-Z0-9]+", query.lower())
+        return [w for w in words if len(w) > 2 and w not in _QUERY_MATCH_STOP_WORDS]
+
+    def _score_entry(self, entry: Dict[str, Any], query_terms: Optional[List[str]] = None) -> float:
         """
-        Score a search entry by how likely it is to be good background B-roll.
+        Score a search entry by how likely it is to be good, on-topic B-roll.
 
         Talking-head / explainer titles are penalized; B-roll / footage titles
-        are boosted. Higher is better.
+        are boosted; and titles that contain the query's subject terms are
+        boosted (so an on-topic clip outranks a generic "cinematic" one).
+        Higher is better.
         """
         title = (entry.get('title') or '').lower()
         score = 0.0
@@ -457,15 +486,27 @@ class YouTubeClient(AssetFetcher):
             if pattern in title:
                 score += BROLL_BOOST
 
+        if query_terms:
+            for term in query_terms:
+                if re.search(rf"\b{re.escape(term)}\b", title):
+                    score += QUERY_TERM_MATCH_BOOST
+
         return score
 
-    def _rank_and_filter(self, entries: List[Dict[str, Any]], count: int) -> List[Dict[str, Any]]:
+    def _rank_and_filter(
+        self,
+        entries: List[Dict[str, Any]],
+        count: int,
+        query: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
         """
-        Filter by duration and rank candidates toward background B-roll.
+        Filter by duration and rank candidates toward on-topic background B-roll.
 
         Args:
             entries: Raw search result entries from yt-dlp.
             count: Number of ranked results to return.
+            query: The search query, used to reward titles that mention the
+                query's subject terms.
 
         Returns:
             Up to `count` entries, best first. Talking-head results are demoted
@@ -479,18 +520,50 @@ class YouTubeClient(AssetFetcher):
         if not filtered:
             filtered = list(entries)
 
+        query_terms = self._query_terms(query)
+
         # Stable sort by score descending preserves YouTube's relevance order for
         # ties, so among equally-scored clips we keep the most relevant first.
-        ranked = sorted(filtered, key=self._score_entry, reverse=True)
+        ranked = sorted(
+            filtered,
+            key=lambda e: self._score_entry(e, query_terms),
+            reverse=True,
+        )
 
         if logger.isEnabledFor(logging.DEBUG):
             for entry in ranked[:count]:
                 logger.debug(
                     "B-roll candidate (score %.1f): %s",
-                    self._score_entry(entry), entry.get('title', '')
+                    self._score_entry(entry, query_terms), entry.get('title', '')
                 )
 
         return ranked[:count]
+
+    @staticmethod
+    def _pick_start_offset(source_duration: Optional[float], target_duration: float) -> float:
+        """
+        Choose a start offset that skips a likely intro/logo and lands on
+        representative footage.
+
+        Returns ``0.0`` when the source duration is unknown or too short to
+        spare an intro skip (so trimming stays safe). Otherwise skips
+        ``INTRO_SKIP_SECONDS`` and biases slightly into the clip, clamped so the
+        whole ``target_duration`` segment still fits inside the source.
+        """
+        try:
+            source = float(source_duration or 0)
+        except (TypeError, ValueError):
+            return 0.0
+
+        latest_start = source - target_duration
+        # Not enough room to skip an intro and still fit the segment.
+        if latest_start <= INTRO_SKIP_SECONDS:
+            return 0.0
+
+        # Bias a little further in than the bare intro skip, but never past the
+        # latest start that keeps the full segment inside the source.
+        preferred = max(INTRO_SKIP_SECONDS, source * 0.1)
+        return float(min(preferred, latest_start))
 
     def _search(self, query: str, count: int = 1) -> Optional[List[Dict[str, Any]]]:
         """
@@ -531,8 +604,8 @@ class YouTubeClient(AssetFetcher):
                 if not entries or len(entries) == 0:
                     return None
 
-                # Rank/filter toward background B-roll and away from talking heads.
-                ranked = self._rank_and_filter(list(entries), count)
+                # Rank/filter toward on-topic background B-roll, away from talking heads.
+                ranked = self._rank_and_filter(list(entries), count, query=query)
                 return ranked if ranked else list(entries[:count])
 
         except yt_dlp.utils.DownloadError as e:

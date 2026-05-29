@@ -54,6 +54,7 @@ class VideoOrchestrator:
                  enable_asset_cache: bool = True,
                  prefer_stock_for_generic: bool = True,
                  use_llm_queries: bool = True,
+                 broll_manifest: Optional[str] = None,
                  verbose: bool = False):
         """
         Initialize the video orchestrator.
@@ -70,7 +71,9 @@ class VideoOrchestrator:
             prefer_stock_for_generic: Prefer curated stock footage (Pexels) for
                 generic beats and YouTube for specific ones (default: True)
             use_llm_queries: Enhance B-roll queries with the LLM query generator
-                when a Gemini API key is configured (default: True)
+                when an API key is configured (default: True)
+            broll_manifest: Optional path to an editor-authored B-roll manifest
+                JSON whose per-beat queries override heuristic/LLM queries
             verbose: Enable debug logging
         """
         # Configure logging level
@@ -88,7 +91,10 @@ class VideoOrchestrator:
         logger.info(f"Video orchestrator initialized with output directory: {self.output_dir}")
         
         # Initialize components
-        self.script_parser = ScriptParser(use_llm_queries=use_llm_queries)
+        self.script_parser = ScriptParser(
+            use_llm_queries=use_llm_queries,
+            manifest_path=broll_manifest,
+        )
         self.asset_orchestrator = AssetOrchestrator(
             pexels_api_key=pexels_api_key,
             output_dir=str(self.output_dir),

@@ -224,6 +224,18 @@ BROLL_TITLE_BOOST_PATTERNS = [
 TALKING_HEAD_PENALTY = 5.0
 BROLL_BOOST = 3.0
 
+# Boost per meaningful query term that appears in a candidate's title. This
+# rewards on-topic results: a clip whose title actually mentions the query
+# subject outranks an off-topic clip that merely carries a "cinematic"/"4k"
+# label. Title ranking previously ignored the query entirely.
+QUERY_TERM_MATCH_BOOST = 2.0
+
+# Seconds to skip at the start of a source video before trimming a B-roll
+# segment. Many clips open with an intro/logo/title card; starting slightly
+# into the video yields more representative footage. Applied only when the
+# source is long enough to spare it (see YouTubeClient._pick_start_offset).
+INTRO_SKIP_SECONDS = 5.0
+
 # Acceptable duration bounds (seconds) for YouTube B-roll candidates. Results
 # outside this range are dropped before ranking (unless that would leave no
 # candidates). Unknown/zero durations are allowed through.
@@ -240,3 +252,15 @@ DEFAULT_GEMINI_MODEL = "gemini-2.0-flash"
 
 # Timeout (seconds) for Gemini API requests.
 GEMINI_REQUEST_TIMEOUT = 30
+
+# Default Anthropic (Claude) model for visual B-roll query generation.
+# Overridable via the ANTHROPIC_MODEL environment variable. Query generation is
+# a short, structured task, so a fast/cheap model is the right default.
+DEFAULT_ANTHROPIC_MODEL = "claude-haiku-4-5-20251001"
+
+# Timeout (seconds) for Anthropic API requests.
+ANTHROPIC_REQUEST_TIMEOUT = 30
+
+# Max tokens for the Anthropic query-generation response. The output is a small
+# JSON array (a couple of short queries per beat), so this stays modest.
+ANTHROPIC_MAX_TOKENS = 2048
