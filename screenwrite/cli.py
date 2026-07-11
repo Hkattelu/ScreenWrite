@@ -148,6 +148,23 @@ Examples:
         action='store_true',
         help='Disable LLM (Gemini) B-roll query generation and use heuristics only'
     )
+
+    parser.add_argument(
+        '--game',
+        type=str,
+        help='Game the script is about (e.g. "Dark Souls"). Activates the game '
+             'b-roll pipeline: beats are matched to chaptered gameplay videos '
+             'by extracted entity. Can also be set with a "game:" header in the '
+             'script; this flag wins. Requires GEMINI_API_KEY.'
+    )
+
+    parser.add_argument(
+        '--wiki-subdomain',
+        type=str,
+        help='Fandom wiki subdomain for the game (e.g. "darksouls" for '
+             'darksouls.fandom.com). Only needed when the guess from the game '
+             'title is wrong.'
+    )
     
     parser.add_argument(
         '--clear-cache',
@@ -291,6 +308,18 @@ def print_workflow_summary(result: dict) -> None:
         if result['beats_count'] != result['assets_fetched']:
             print(f"  Skipped/failed: {result['beats_count'] - result['assets_fetched']}")
     
+    # Print game-mode coverage (which source each class of beat got)
+    coverage = result.get('coverage')
+    if coverage:
+        counts = coverage['counts']
+        print(f"\nGame B-roll Coverage:")
+        print(f"  Entity beats with gameplay clips: {counts['game_entity_clips']}")
+        print(f"  Entity beats with wiki stills:    {counts['game_entity_stills']}")
+        print(f"  Entity beats uncovered (manual):  {counts['game_entity_uncovered']}")
+        print(f"  Abstract beats with stock:        {counts['abstract_stock']}")
+        print(f"  Abstract beats uncovered:         {counts['abstract_uncovered']}")
+        print(f"  Manual-fill beats (by design):    {counts['manual_fill']}")
+
     # Print warnings
     if result['warnings']:
         print(f"\nWarnings:")
@@ -365,6 +394,8 @@ def main() -> int:
             'enable_asset_cache': not args.disable_cache,
             'prefer_stock_for_generic': not args.prefer_youtube,
             'use_llm_queries': not args.disable_llm_queries,
+            'game': args.game,
+            'wiki_subdomain': args.wiki_subdomain,
             'verbose': args.verbose
         }
         

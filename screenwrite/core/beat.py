@@ -6,7 +6,7 @@ and metadata for B-roll asset fetching.
 """
 
 from dataclasses import dataclass, field
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 from ..config import WORDS_PER_SECOND, BEAT_TEXT_TRUNCATION_LENGTH
 
@@ -28,8 +28,17 @@ class Beat:
         youtube_search_phrase: Search term for YouTube (e.g., "programmer coding tutorial")
         duration: Duration in seconds (auto-calculated from word count)
         asset_paths: Mapping of fetcher names to downloaded file paths
+        game: Resolved game title for the script (e.g. "Dark Souls"), or None
+            when the script is not in game mode
+        entities: Named in-game entities this beat is about (e.g. ["Bell
+            Gargoyles"]), extracted by the LLM entity step
+        beat_class: Routing class - "game_entity" | "abstract" | "manual_fill"
+            | "unclassified" (legacy pipeline)
+        candidates: Fetched candidate clips for this beat, as
+            AssetCandidate.to_dict() dicts extended with the chosen segment
+            window and the downloaded 'local_path'
     """
-    
+
     id: str
     text: str
     stock_keyword: str
@@ -38,6 +47,10 @@ class Beat:
     asset_paths: Dict[str, Optional[str]] = field(default_factory=dict)
     visual_type: str = 'auto'
     visual_content: Optional[str] = None
+    game: Optional[str] = None
+    entities: List[str] = field(default_factory=list)
+    beat_class: str = 'unclassified'
+    candidates: List[dict] = field(default_factory=list)
     
     def __post_init__(self):
         """Auto-calculate duration from word count using the configured words per second heuristic."""

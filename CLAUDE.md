@@ -15,6 +15,7 @@ Setup & dev (creates venv, installs Python + frontend deps, runs onboarding wiza
 CLI (entry point `screenwrite.cli:main`, also `python -m screenwrite`):
 - `screenwrite script.md -o timeline.fcpxml`
 - Useful flags: `--no-fetch`/`--dry-run` (skip downloads), `--resolve` (import into DaVinci), `--disable-youtube` / `--disable-pexels`, `--max-workers N`, `--clear-cache`, `-v`.
+- Game-essay mode: `--game "Dark Souls"` (or a `game:` header in the script) activates the game b-roll pipeline described under Architecture; `--wiki-subdomain` overrides the guessed Fandom wiki. Requires `GEMINI_API_KEY`.
 
 Tests & lint (the canonical runner; targets `screenwrite/` and `tests/`):
 - `python tests/run_lint_and_tests.py` — runs flake8, pylint, then the unittest suite.
@@ -36,6 +37,10 @@ The pipeline is **parse → fetch → generate**, coordinated by `VideoOrchestra
 4. **`XMLGenerator` (`generators/xml_generator.py`)** — emits FCPXML 1.8. Optional `ResolveIntegration` (`resolve_integration.py`, lazily imported) imports the result into DaVinci.
 
 Cross-cutting: `utils/cache.py` provides persistent beat + asset caching (skippable via `--disable-cache`); all tunable magic numbers and the query-generation stop-word/pattern lists live in `config/constants.py`.
+
+### Game b-roll pipeline (game-essay mode)
+
+Activated by `--game` or a `game:` script header (spec: `game-broll-spec.md` in the parent workspace). Instead of narration-keyword search, beats are LLM-classified (`parsing/entity_extractor.py`, Gemini) into `beat_class` = `game_entity` / `abstract` / `manual_fill`, with named in-game `entities` extracted per beat. Routing (in `AssetOrchestrator.fetch_game_assets_batch`): game_entity → `ChapteredGameplayFetcher` (fuzzy-matches entities against chapter markers of "all bosses"/walkthrough videos read from yt-dlp metadata; 2–3 candidates at different start offsets within matched chapters, loose 9s+ windows) → `WikiStillFetcher` (Fandom infobox still) → labeled manual-fill gap. Abstract beats get at most one Pexels candidate; manual_fill beats never fetch. Every placed clip carries an FCPXML marker with beat text + source URL + chapter timestamp; coverage (clips/stills/uncovered per class) is reported in the CLI summary, never papered over. The game fetchers are deliberately kept out of the legacy fetcher fallback chain — their queries are entity names, not narration keywords. Without a `GEMINI_API_KEY` the classifier can't run and the script falls back to the legacy pipeline with a warning.
 
 ### Web app
 - **Backend** (`webapp/backend/app.py`): Flask + flask-cors, blueprints registered under `/api`: `upload`, `api`, `export`, `fetch`, `simple_broll`. State is **session-based** — `session_utils.py` persists each session to `SESSION_FOLDER/<id>/state.json` via atomic temp-file rename. Reads `PEXELS_API_KEY` etc. from `.env` (`python-dotenv`).

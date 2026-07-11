@@ -94,9 +94,9 @@ class YouTubeClient(AssetFetcher):
         base_delay=2.0,
         exceptions=(NetworkError, Exception)
     )
-    def _download_with_retry(self, video_url: str, query: str, target_duration: float = None, progress_callback=None) -> Optional[str]:
+    def _download_with_retry(self, video_url: str, query: str, target_duration: float = None, progress_callback=None, section=None) -> Optional[str]:
         """Download video with retry logic."""
-        return self._download(video_url, query, target_duration=target_duration, progress_callback=progress_callback)
+        return self._download(video_url, query, target_duration=target_duration, progress_callback=progress_callback, section=section)
     
     @retry_with_backoff(
         max_retries=1,
@@ -300,6 +300,41 @@ class YouTubeClient(AssetFetcher):
             
         except Exception as e:
             logger.error(f"Failed to download YouTube video {video_id}: {e}")
+            return None
+
+    def download_section(self, video_url: str, start_time: float, end_time: float, tag: str, progress_callback=None) -> Optional[str]:
+        """
+        Download only a specific time range of a video (yt-dlp --download-sections).
+
+        Unlike download_segment, this never pulls the video from 0 - essential
+        for chapters deep inside multi-hour walkthroughs. Requires ffmpeg.
+
+        Args:
+            video_url: YouTube video URL
+            start_time: Section start in seconds (in the source video)
+            end_time: Section end in seconds (in the source video)
+            tag: Identifier used to build a unique output filename
+            progress_callback: Optional function(percent, status)
+
+        Returns:
+            Path to the downloaded section file, or None if failed
+        """
+        if not self._yt_dlp_available:
+            logger.error("yt-dlp not available, cannot download from YouTube")
+            return None
+        if not self._ffmpeg_available:
+            logger.error("ffmpeg not available, cannot download video sections")
+            return None
+
+        try:
+            return self._download_with_retry(
+                video_url,
+                tag,
+                progress_callback=progress_callback,
+                section=(start_time, end_time),
+            )
+        except Exception as e:
+            logger.error(f"Failed to download section {start_time}-{end_time}s of {video_url}: {e}")
             return None
 
     def download_segment(self, video_id: str, metadata: Dict[str, Any], start_time: float, duration: float, progress_callback=None) -> Optional[str]:
@@ -548,19 +583,22 @@ class YouTubeClient(AssetFetcher):
             )
             raise NetworkError(f"YouTube search error: {e}")
 
-    def _download(self, video_url: str, query: str, target_duration: float = None, progress_callback=None) -> Optional[str]:
+    def _download(self, video_url: str, query: str, target_duration: float = None, progress_callback=None, section=None) -> Optional[str]:
         """
         Download video from YouTube URL.
-        
+
         Args:
             video_url: YouTube video URL
             query: Original search query (for filename)
             target_duration: Optional target duration in seconds to optimize download
             progress_callback: Optional function(percent, status) to report progress
-            
+            section: Optional (start_time, end_time) tuple in seconds; when set,
+                only that range of the video is downloaded (takes precedence over
+                the target_duration smart-pull, which always starts at 0)
+
         Returns:
             Path to downloaded video file, or None if failed
-            
+
         Raises:
             NetworkError: If download fails
         """
@@ -611,16 +649,32 @@ class YouTubeClient(AssetFetcher):
                 'cachedir': False,
                 'nocheckcertificate': True,
                 'progress_hooks': [yt_dlp_hook] if progress_callback else [],
+                # YouTube requires solving a JS challenge for media URLs; with
+                # no JS runtime, downloads get cut off mid-stream ("N bytes
+                # read, M more expected"). yt-dlp only enables Deno by default;
+                # also allow Node (present on this stack). Unavailable
+                # runtimes are skipped silently.
+                'js_runtimes': {'deno': {}, 'node': {}},
             }
 
+            # Explicit section: download only the requested range (chapters deep
+            # inside multi-hour videos must not be pulled from 0). NOTE: the
+            # Python API key is 'download_ranges' with a download_range_func -
+            # 'download_sections' is the CLI flag's name only and is silently
+            # ignored by YoutubeDL, causing full-video downloads.
+            if section and self._ffmpeg_available:
+                base_opts['download_ranges'] = yt_dlp.utils.download_range_func(
+                    None, [(max(0, section[0]), section[1])]
+                )
+                base_opts['force_keyframes_at_cuts'] = True
             # Smart Pulling: Limit download to a section if target_duration is provided
-            if target_duration and self._ffmpeg_available:
+            elif target_duration and self._ffmpeg_available:
                 # Limit download to first part of video (30s minimum or 2x duration)
                 # This prevents pulling hour-long videos for a 5s beat.
                 limit = max(30, target_duration * 2)
-                base_opts['download_sections'] = [
-                    {'start_time': 0, 'end_time': limit}
-                ]
+                base_opts['download_ranges'] = yt_dlp.utils.download_range_func(
+                    None, [(0, limit)]
+                )
                 base_opts['force_keyframes_at_cuts'] = True
 
             # Common browser headers
@@ -632,6 +686,11 @@ class YouTubeClient(AssetFetcher):
 
             # Strategies to try in order of likelihood to succeed
             strategies = [
+                # yt-dlp defaults first: with a JS runtime available this is
+                # the best-maintained path (the client overrides below predate
+                # YouTube's JS-challenge enforcement and mostly fail now).
+                {},
+
                 # Try Android Creator client (often bypasses main 403 blocks)
                 {'extractor_args': {'youtube': {'player_client': ['android_creator']}}},
                 

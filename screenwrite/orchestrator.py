@@ -54,15 +54,17 @@ class VideoOrchestrator:
                  enable_asset_cache: bool = True,
                  prefer_stock_for_generic: bool = True,
                  use_llm_queries: bool = True,
+                 game: Optional[str] = None,
+                 wiki_subdomain: Optional[str] = None,
                  verbose: bool = False):
         """
         Initialize the video orchestrator.
-        
+
         Args:
             pexels_api_key: API key for Pexels. If None, will try environment variable.
             output_dir: Directory for output files. If None, uses temp directory.
             youtube_enabled: Whether to enable YouTube fetching
-            pexels_enabled: Whether to enable Pexels fetching  
+            pexels_enabled: Whether to enable Pexels fetching
             resolve_enabled: Whether to enable DaVinci Resolve integration
             skip_failed_beats: Continue processing if some beats fail to fetch assets
             max_workers: Maximum number of parallel download threads (default: 4)
@@ -71,6 +73,10 @@ class VideoOrchestrator:
                 generic beats and YouTube for specific ones (default: True)
             use_llm_queries: Enhance B-roll queries with the LLM query generator
                 when a Gemini API key is configured (default: True)
+            game: Game title for the game b-roll skeleton pipeline (overrides
+                the script header's `game:` field). Beats are entity-extracted
+                and routed to chaptered gameplay / wiki stills / manual flags.
+            wiki_subdomain: Explicit Fandom subdomain for the game wiki
             verbose: Enable debug logging
         """
         # Configure logging level
@@ -88,13 +94,16 @@ class VideoOrchestrator:
         logger.info(f"Video orchestrator initialized with output directory: {self.output_dir}")
         
         # Initialize components
-        self.script_parser = ScriptParser(use_llm_queries=use_llm_queries)
+        self.game = game
+        self.script_parser = ScriptParser(use_llm_queries=use_llm_queries, game=game)
         self.asset_orchestrator = AssetOrchestrator(
             pexels_api_key=pexels_api_key,
             output_dir=str(self.output_dir),
             youtube_enabled=youtube_enabled,
             pexels_enabled=pexels_enabled,
-            prefer_stock_for_generic=prefer_stock_for_generic
+            prefer_stock_for_generic=prefer_stock_for_generic,
+            game=game,
+            wiki_subdomain=wiki_subdomain
         )
         self.xml_generator = XMLGenerator()
         
@@ -125,6 +134,7 @@ class VideoOrchestrator:
         self.last_beats: Optional[List[Beat]] = None
         self.last_asset_map: Optional[Dict[str, str]] = None
         self.last_fcpxml_path: Optional[str] = None
+        self.last_coverage: Optional[Dict[str, Any]] = None
     
     def orchestrate(self, 
                    script_path: str, 
@@ -185,8 +195,13 @@ class VideoOrchestrator:
                 assets_fetched = sum(1 for path in asset_map.values() if path)
                 workflow_result['assets_fetched'] = assets_fetched
                 logger.info(f"Successfully fetched {assets_fetched}/{len(beats)} assets")
-                
-                if assets_fetched == 0:
+
+                if self.last_coverage:
+                    # Game mode: report coverage per source and every fallback -
+                    # never silently paper over thin coverage.
+                    workflow_result['coverage'] = self.last_coverage
+                    workflow_result['warnings'].extend(self.last_coverage['notes'])
+                elif assets_fetched == 0:
                     workflow_result['warnings'].append("No assets were successfully fetched")
                 elif assets_fetched < len(beats):
                     workflow_result['warnings'].append(f"Only {assets_fetched}/{len(beats)} assets were fetched")
@@ -317,15 +332,33 @@ class VideoOrchestrator:
         if not beats:
             logger.warning("No beats provided for asset fetching")
             return {}
-        
+
         # Check if any fetchers are available
         available_fetchers = self.asset_orchestrator.get_available_fetchers()
         if not available_fetchers:
             logger.error("No asset fetchers available - cannot fetch assets")
             return {beat.id: None for beat in beats}
-        
+
         logger.info(f"Available fetchers: {', '.join(available_fetchers)}")
-        
+
+        # Game b-roll pipeline: beats classified by the entity step route
+        # through the chaptered-gameplay cascade instead of keyword queries.
+        self.last_coverage = None
+        script_game = next((beat.game for beat in beats if beat.game), None)
+        game_mode = script_game and any(beat.beat_class != 'unclassified' for beat in beats)
+        if game_mode:
+            self.asset_orchestrator.enable_game_mode(script_game)
+            logger.info(f"Game b-roll mode active for '{script_game}'")
+            asset_map = self.asset_orchestrator.fetch_game_assets_batch(
+                beats, max_workers=self.max_workers
+            )
+            for beat in beats:
+                paths = asset_map.get(beat.id) or []
+                if paths:
+                    beat.asset_paths['game_broll'] = paths[0]
+            self.last_coverage = self._build_coverage_report(beats, asset_map)
+            return asset_map
+
         # Prepare batch queries
         queries = []
         for beat in beats:
@@ -374,9 +407,69 @@ class VideoOrchestrator:
             return {beat.id: None for beat in beats}
     
     
-    def _generate_timeline(self, 
-                          beats: List[Beat], 
-                          asset_map: Dict[str, str], 
+    def _build_coverage_report(self,
+                               beats: List[Beat],
+                               asset_map: Dict[str, List[str]]) -> Dict[str, Any]:
+        """
+        Summarize game-mode coverage: what each beat got and every fallback.
+
+        Surfacing thin coverage is a design requirement - a beat that fell
+        back to a still or was flagged manual must be visible to the creator,
+        not silently papered over.
+        """
+        counts = {
+            'game_entity_clips': 0,
+            'game_entity_stills': 0,
+            'game_entity_uncovered': 0,
+            'abstract_stock': 0,
+            'abstract_uncovered': 0,
+            'manual_fill': 0,
+        }
+        notes: List[str] = []
+
+        for beat in beats:
+            sources = {c.get('source') for c in beat.candidates}
+            has_assets = bool(asset_map.get(beat.id))
+
+            if beat.beat_class == 'game_entity':
+                if 'chaptered_gameplay' in sources and has_assets:
+                    counts['game_entity_clips'] += 1
+                elif 'wiki_still' in sources and has_assets:
+                    counts['game_entity_stills'] += 1
+                    notes.append(
+                        f"{beat.id}: no chapter clip for {beat.entities} - "
+                        f"placed a wiki still instead"
+                    )
+                else:
+                    counts['game_entity_uncovered'] += 1
+                    notes.append(
+                        f"{beat.id}: no coverage for {beat.entities} - "
+                        f"flagged for manual fill"
+                    )
+            elif beat.beat_class == 'manual_fill':
+                counts['manual_fill'] += 1
+            else:  # abstract / unclassified
+                if has_assets:
+                    counts['abstract_stock'] += 1
+                else:
+                    counts['abstract_uncovered'] += 1
+                    notes.append(
+                        f"{beat.id}: abstract beat with no stock candidate - "
+                        f"flagged for manual fill"
+                    )
+
+        logger.info(
+            "Game b-roll coverage: %d entity beats with clips, %d with stills, "
+            "%d uncovered; %d abstract with stock, %d without; %d manual by design",
+            counts['game_entity_clips'], counts['game_entity_stills'],
+            counts['game_entity_uncovered'], counts['abstract_stock'],
+            counts['abstract_uncovered'], counts['manual_fill']
+        )
+        return {'counts': counts, 'notes': notes}
+
+    def _generate_timeline(self,
+                          beats: List[Beat],
+                          asset_map: Dict[str, str],
                           output_path: str) -> str:
         """
         Generate FCPXML timeline from beats and assets with enhanced error handling.
@@ -464,8 +557,14 @@ class VideoOrchestrator:
             return False
         
         try:
-            # Get list of asset files
-            asset_files = [path for path in asset_map.values() if path and os.path.exists(path)]
+            # Get list of asset files (game mode maps beats to LISTS of paths)
+            flat_paths = []
+            for value in asset_map.values():
+                if isinstance(value, list):
+                    flat_paths.extend(value)
+                elif value:
+                    flat_paths.append(value)
+            asset_files = [path for path in flat_paths if path and os.path.exists(path)]
             
             # Import to Resolve
             success = self.resolve_integration.import_to_resolve(fcpxml_path, asset_files)

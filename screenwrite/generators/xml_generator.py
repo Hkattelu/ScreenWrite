@@ -17,7 +17,11 @@ from ..config import (
     DEFAULT_VIDEO_WIDTH,
     DEFAULT_VIDEO_HEIGHT,
     MIN_FCPXML_FILE_SIZE,
+    STILL_IMAGE_EXTENSIONS,
 )
+
+# Beat text length carried into clip/gap markers (identify a clip at a glance).
+MARKER_TEXT_LENGTH = 90
 
 
 class XMLGenerator:
@@ -165,7 +169,9 @@ class XMLGenerator:
         asset.set("duration", "36000/1s")
         asset.set("hasVideo", "1")
         asset.set("format", self.format_id)
-        asset.set("hasAudio", "1")
+        # Still images (e.g. wiki-still fallbacks) carry no audio stream.
+        is_still = file_path.suffix.lower() in STILL_IMAGE_EXTENSIONS
+        asset.set("hasAudio", "0" if is_still else "1")
         
         # Add media-rep with file path
         media_rep = ET.SubElement(asset, "media-rep")
@@ -253,37 +259,102 @@ class XMLGenerator:
                 clip.set("duration", duration_tc)
                 clip.set("start", "0/1s")
 
-                # Add Marker with script text
+                # Add Marker with script text and, when known, provenance
+                # (source URL + labeled timestamp) so the creator can identify
+                # a clip at a glance during VO instead of re-watching it.
+                provenance = self._provenance_for(beat, asset_path)
                 marker = ET.SubElement(clip, "marker")
                 marker.set("start", "0/1s")
                 marker.set("duration", "1/30s")
-                marker.set("value", beat.text)
-                marker.set("note", "Script Text")
-                
+                if provenance:
+                    marker.set("value", beat.text[:MARKER_TEXT_LENGTH])
+                    marker.set("note", provenance)
+                else:
+                    marker.set("value", beat.text)
+                    marker.set("note", "Script Text")
+
                 # Add Keywords for organization
                 keywords = ET.SubElement(clip, "keyword")
                 keywords.set("start", "0/1s")
                 keywords.set("duration", duration_tc)
-                
+
                 # Determine keyword from beat context or fetcher
                 kw_val = "ScreenWrite"
-                if "pexels" in asset_path.lower():
+                if "wikistill" in Path(asset_path).name.lower():
+                    kw_val += ", WikiStill"
+                elif beat.beat_class == 'game_entity':
+                    kw_val += ", Gameplay"
+                elif "pexels" in asset_path.lower():
                     kw_val += ", Stock"
                 elif "youtube" in asset_path.lower():
                     kw_val += ", YouTube"
-                
+
                 keywords.set("value", kw_val)
             else:
-                # Placeholder gap if no asset
+                # Placeholder gap if no asset. In game mode gaps are deliberate:
+                # label them loudly so they read as intentional, not missing.
                 gap = ET.SubElement(spine, "gap")
-                gap.set("name", f"Gap - {beat.id}")
                 gap.set("offset", offset_tc)
                 gap.set("duration", duration_tc)
                 gap.set("start", "0/1s")
-            
+
+                if beat.game or beat.beat_class in ('manual_fill', 'game_entity', 'abstract'):
+                    gap.set("name", f"MANUAL FILL - {beat.id}")
+                    marker = ET.SubElement(gap, "marker")
+                    marker.set("start", "0/1s")
+                    marker.set("duration", "1/30s")
+                    marker.set("value", f"MANUAL: {beat.text[:MARKER_TEXT_LENGTH]}")
+                    if beat.beat_class == 'game_entity' and beat.entities:
+                        marker.set("note", f"No coverage found for: {', '.join(beat.entities)}")
+                    else:
+                        marker.set("note", "Creator-supplied shot needed")
+                else:
+                    gap.set("name", f"Gap - {beat.id}")
+
             current_offset += beat.duration
-        
+
         return spine
+
+    @staticmethod
+    def _provenance_for(beat: Beat, asset_path: str) -> Optional[str]:
+        """
+        Build a provenance note for the candidate that produced asset_path.
+
+        Includes the source label, the human-authored chapter/page label with
+        its source timestamp, the source URL, and any alternate candidate URLs
+        (the web state keeps full alternates; the note keeps them reachable
+        from inside the editor).
+        """
+        placed = None
+        alternates = []
+        for candidate in beat.candidates:
+            if candidate.get('local_path') == asset_path and placed is None:
+                placed = candidate
+            else:
+                alternates.append(candidate)
+        if placed is None:
+            return None
+
+        metadata = placed.get('metadata') or {}
+        parts = [f"Source: {placed.get('source', 'unknown')}"]
+        chapter_title = metadata.get('chapter_title') or metadata.get('title')
+        if chapter_title:
+            timestamp = metadata.get('segment_start')
+            if timestamp is not None:
+                parts.append(f"'{chapter_title}' @ {int(timestamp)}s")
+            else:
+                parts.append(f"'{chapter_title}'")
+        source_url = metadata.get('source_url') or metadata.get('url')
+        if source_url:
+            parts.append(source_url)
+        alternate_urls = [
+            (c.get('metadata') or {}).get('source_url')
+            for c in alternates
+            if (c.get('metadata') or {}).get('source_url')
+        ]
+        if alternate_urls:
+            parts.append("Alternates: " + " ; ".join(alternate_urls[:2]))
+        return " | ".join(parts)
 
     def _get_resource_id_for_asset(self, asset_path: str) -> str:
         """

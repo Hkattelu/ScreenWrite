@@ -17,6 +17,9 @@ from dataclasses import dataclass, asdict
 from .base_fetcher import AssetFetcher
 from .youtube_client import YouTubeClient
 from .pexels_client import PexelsClient
+from .chaptered_gameplay_fetcher import ChapteredGameplayFetcher
+from .wiki_still_fetcher import WikiStillFetcher
+from ..config import GAME_CANDIDATES_PER_BEAT
 from ..utils.cache import find_in_asset_cache, save_to_asset_cache
 
 try:
@@ -68,7 +71,9 @@ class AssetOrchestrator:
                  output_dir: Optional[str] = None,
                  youtube_enabled: bool = True,
                  pexels_enabled: bool = True,
-                 prefer_stock_for_generic: bool = True):
+                 prefer_stock_for_generic: bool = True,
+                 game: Optional[str] = None,
+                 wiki_subdomain: Optional[str] = None):
         """
         Initialize the asset orchestrator.
 
@@ -82,11 +87,19 @@ class AssetOrchestrator:
                 talking heads - while specific queries (proper nouns, years,
                 quoted names) try YouTube first. When False, YouTube is always
                 tried first (legacy behavior).
+            game: Game title for the game b-roll pipeline. When set, the
+                chaptered-gameplay and wiki-still fetchers are initialized and
+                classified beats route through fetch_game_assets_batch.
+            wiki_subdomain: Explicit Fandom subdomain for the game wiki
+                (overrides the guess derived from the game title).
         """
         self.output_dir = output_dir
         self.prefer_stock_for_generic = prefer_stock_for_generic
+        self.game = game
         self.fetchers: List[AssetFetcher] = []
-        
+        self.chaptered_fetcher: Optional[ChapteredGameplayFetcher] = None
+        self.wiki_fetcher: Optional[WikiStillFetcher] = None
+
         # Initialize fetchers in priority order (YouTube first, then Pexels)
         if youtube_enabled:
             try:
@@ -95,7 +108,7 @@ class AssetOrchestrator:
                 logger.info("YouTube fetcher initialized")
             except Exception as e:
                 logger.warning(f"Failed to initialize YouTube fetcher: {e}")
-        
+
         if pexels_enabled:
             try:
                 pexels_client = PexelsClient(api_key=pexels_api_key, output_dir=output_dir)
@@ -103,13 +116,75 @@ class AssetOrchestrator:
                 logger.info("Pexels fetcher initialized")
             except Exception as e:
                 logger.warning(f"Failed to initialize Pexels fetcher: {e}")
-        
+
+        if game:
+            self.enable_game_mode(game, wiki_subdomain=wiki_subdomain)
+
         if not self.fetchers:
             logger.error("No asset fetchers available - all fetchers failed to initialize")
         else:
             fetcher_names = [f.name for f in self.fetchers]
             logger.info(f"Asset orchestrator initialized with fetchers: {', '.join(fetcher_names)}")
     
+    def enable_game_mode(self, game: str, wiki_subdomain: Optional[str] = None) -> None:
+        """
+        Initialize the game b-roll fetchers for a game.
+
+        Called from the constructor when the game is known up front (--game
+        flag) and after parsing when the script header supplies it. The game
+        fetchers are kept out of self.fetchers: their queries are entity
+        names, not narration keywords, so they must never participate in the
+        legacy query-based fallback chain.
+        """
+        if self.game == game and (self.chaptered_fetcher or self.wiki_fetcher):
+            return
+        self.game = game
+
+        youtube_client = next(
+            (f for f in self.fetchers if isinstance(f, YouTubeClient)), None
+        )
+        if youtube_client is not None:
+            try:
+                self.chaptered_fetcher = ChapteredGameplayFetcher(
+                    game, output_dir=self.output_dir, youtube_client=youtube_client
+                )
+                logger.info(f"Chaptered gameplay fetcher initialized for '{game}'")
+            except Exception as e:
+                logger.warning(f"Failed to initialize chaptered gameplay fetcher: {e}")
+        else:
+            logger.warning(
+                "Game mode without YouTube fetcher: chaptered gameplay unavailable, "
+                "game entities will fall back to wiki stills"
+            )
+        try:
+            self.wiki_fetcher = WikiStillFetcher(
+                game, output_dir=self.output_dir, wiki_subdomain=wiki_subdomain
+            )
+            logger.info(f"Wiki still fetcher initialized for '{game}'")
+        except Exception as e:
+            logger.warning(f"Failed to initialize wiki still fetcher: {e}")
+
+    def _all_fetchers(self) -> List[AssetFetcher]:
+        """All initialized fetchers, including the game-pipeline ones."""
+        extra = [f for f in (self.chaptered_fetcher, self.wiki_fetcher) if f]
+        return self.fetchers + extra
+
+    def _fetcher_for_source(self, source: str) -> Optional[AssetFetcher]:
+        """
+        Find the fetcher responsible for a candidate's source label.
+
+        Names and sources are compared with punctuation stripped so labels
+        like "chaptered_gameplay" match the fetcher named "ChapteredGameplay".
+        """
+        source_norm = re.sub(r'[^a-z0-9]', '', (source or '').lower())
+        if not source_norm:
+            return None
+        for fetcher in self._all_fetchers():
+            name_norm = re.sub(r'[^a-z0-9]', '', getattr(fetcher, 'name', '').lower())
+            if source_norm in name_norm or name_norm in source_norm:
+                return fetcher
+        return None
+
     def _is_specific_query(self, query: str) -> bool:
         """
         Heuristically decide whether a query targets specific real-world footage.
@@ -255,23 +330,12 @@ class AssetOrchestrator:
             Path to downloaded file, or None if download failed
         """
         beat_context = f"[{beat_id}] " if beat_id else ""
-        
-        if not self.fetchers:
-            logger.error(f"{beat_context}No asset fetchers available")
-            return None
-        
-        # Find the appropriate fetcher based on source
-        fetcher = None
-        for f in self.fetchers:
-            fetcher_name = getattr(f, 'name', '').lower()
-            if candidate.source.lower() in fetcher_name:
-                fetcher = f
-                break
-        
+
+        fetcher = self._fetcher_for_source(candidate.source)
         if not fetcher:
             logger.error(f"{beat_context}No fetcher available for source: {candidate.source}")
             return None
-        
+
         try:
             logger.info(f"{beat_context}Downloading candidate {candidate.id} from {candidate.source} (Target: {target_duration}s)")
             
@@ -304,23 +368,12 @@ class AssetOrchestrator:
         Download a specific segment of an asset candidate.
         """
         beat_context = f"[{beat_id}] " if beat_id else ""
-        
-        if not self.fetchers:
-            logger.error(f"{beat_context}No asset fetchers available")
-            return None
-        
-        # Find the appropriate fetcher based on source
-        fetcher = None
-        for f in self.fetchers:
-            fetcher_name = getattr(f, 'name', '').lower()
-            if candidate.source.lower() in fetcher_name:
-                fetcher = f
-                break
-        
+
+        fetcher = self._fetcher_for_source(candidate.source)
         if not fetcher:
             logger.error(f"{beat_context}No fetcher available for source: {candidate.source}")
             return None
-        
+
         try:
             logger.info(f"{beat_context}Downloading segment of candidate {candidate.id} from {candidate.source} (Start: {start_time}s, Duration: {duration}s)")
             
@@ -482,7 +535,183 @@ class AssetOrchestrator:
         
         return results
 
-    
+    # ------------------------------------------------------------------
+    # Game b-roll pipeline (beat_class-driven routing)
+    # ------------------------------------------------------------------
+
+    def fetch_game_assets_batch(self,
+                                beats,
+                                max_workers: int = 4,
+                                candidates_per_beat: int = GAME_CANDIDATES_PER_BEAT) -> Dict[str, List[str]]:
+        """
+        Fetch candidates for classified beats, routed by beat_class:
+
+            game_entity:  ChapteredGameplay -> WikiStill -> manual flag
+            abstract:     Pexels (1 candidate) -> manual flag
+            manual_fill:  manual flag (no fetch)
+
+        Beats the classifier skipped ("unclassified") are treated as abstract -
+        stock is the only source that can't place a wrong-game clip.
+
+        Mutates each beat's ``candidates`` with provenance-carrying dicts
+        (including 'local_path' and 'source') and returns a mapping of beat id
+        -> downloaded file paths (empty list = manual fill / no coverage).
+        """
+        results: Dict[str, List[str]] = {}
+        if not beats:
+            return results
+
+        logger.info(
+            f"Starting game b-roll fetch for {len(beats)} beats "
+            f"(game='{self.game}', candidates per beat={candidates_per_beat})"
+        )
+
+        # No rich progress here: its stdout redirection breaks yt-dlp instances
+        # created inside the worker threads (KeyError in color policy).
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            future_to_id = {
+                executor.submit(self._fetch_for_game_beat, beat, candidates_per_beat): beat.id
+                for beat in beats
+            }
+            done = 0
+            for future in as_completed(future_to_id):
+                beat_id = future_to_id[future]
+                try:
+                    results[beat_id] = future.result()
+                except Exception as e:
+                    logger.error(f"Error fetching game b-roll for {beat_id}: {e}")
+                    results[beat_id] = []
+                done += 1
+                logger.info(f"Game b-roll progress: {done}/{len(beats)} beats")
+        return results
+
+    def _fetch_for_game_beat(self, beat, candidates_per_beat: int) -> List[str]:
+        """Run the source cascade for one classified beat."""
+        if beat.beat_class == 'manual_fill':
+            return []
+        if beat.beat_class == 'game_entity':
+            return self._fetch_game_entity_beat(beat, candidates_per_beat)
+        # abstract and unclassified: one atmospheric stock candidate at most.
+        return self._fetch_abstract_beat(beat)
+
+    def _fetch_game_entity_beat(self, beat, candidates_per_beat: int) -> List[str]:
+        """Chaptered gameplay first; labeled wiki still as fallback."""
+        paths: List[str] = []
+
+        if self.chaptered_fetcher:
+            found = []
+            for entity in beat.entities:
+                remaining = candidates_per_beat - len(found)
+                if remaining <= 0:
+                    break
+                try:
+                    found.extend(self.chaptered_fetcher.search(entity, count=remaining))
+                except Exception as e:
+                    logger.warning(f"[{beat.id}] Chapter search failed for '{entity}': {e}")
+
+            for result in found:
+                try:
+                    path = self.chaptered_fetcher.download_by_id(
+                        result['id'], result, target_duration=beat.duration
+                    )
+                except Exception as e:
+                    logger.warning(f"[{beat.id}] Chapter clip download failed: {e}")
+                    path = None
+                if not path:
+                    continue
+                candidate = AssetCandidate(
+                    id=result['id'],
+                    title=result.get('title', ''),
+                    thumbnail_url=result.get('thumbnail_url', ''),
+                    duration=result.get('duration', 0.0),
+                    source='chaptered_gameplay',
+                    metadata=result,
+                )
+                entry = candidate.to_dict()
+                entry['local_path'] = path
+                beat.candidates.append(entry)
+                paths.append(path)
+
+        if paths:
+            return paths
+
+        # Fallback: a labeled still of the RIGHT entity beats a clip of the
+        # wrong one. One still is enough - the human swaps it if needed.
+        if self.wiki_fetcher:
+            for entity in beat.entities:
+                try:
+                    stills = self.wiki_fetcher.search(entity, count=1)
+                except Exception as e:
+                    logger.warning(f"[{beat.id}] Wiki still search failed for '{entity}': {e}")
+                    continue
+                if not stills:
+                    continue
+                still = stills[0]
+                path = self.wiki_fetcher.download_by_id(still['id'], still)
+                if not path:
+                    continue
+                candidate = AssetCandidate(
+                    id=still['id'],
+                    title=f"Still: {still.get('title', entity)}",
+                    thumbnail_url=still.get('thumbnail_url', ''),
+                    duration=0.0,
+                    source='wiki_still',
+                    metadata=still,
+                )
+                entry = candidate.to_dict()
+                entry['local_path'] = path
+                beat.candidates.append(entry)
+                logger.info(
+                    f"[{beat.id}] No chapter clip for {beat.entities}; "
+                    f"fell back to wiki still '{still.get('title', '')}'"
+                )
+                return [path]
+
+        logger.info(f"[{beat.id}] No coverage for entities {beat.entities}; flagged for manual fill")
+        return []
+
+    def _fetch_abstract_beat(self, beat) -> List[str]:
+        """One atmospheric stock candidate for abstract beats, if available."""
+        query = (beat.stock_keyword or '').strip()
+        if not query:
+            return []
+
+        pexels = self._fetcher_for_source('pexels')
+        if not pexels:
+            return []
+
+        try:
+            found = pexels.search(query, count=1)
+        except Exception as e:
+            logger.warning(f"[{beat.id}] Stock search failed for '{query}': {e}")
+            return []
+        if not found:
+            return []
+
+        result = found[0]
+        try:
+            path = pexels.download_by_id(
+                result.get('id', ''), result, target_duration=beat.duration
+            )
+        except Exception as e:
+            logger.warning(f"[{beat.id}] Stock download failed: {e}")
+            return []
+        if not path:
+            return []
+
+        candidate = AssetCandidate(
+            id=str(result.get('id', '')),
+            title=result.get('title', 'Stock'),
+            thumbnail_url=result.get('thumbnail_url', ''),
+            duration=result.get('duration', 0.0),
+            source='pexels',
+            metadata=result,
+        )
+        entry = candidate.to_dict()
+        entry['local_path'] = path
+        beat.candidates.append(entry)
+        return [path]
+
     def get_available_fetchers(self) -> List[str]:
         """
         Get list of available fetcher names.

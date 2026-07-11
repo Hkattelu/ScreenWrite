@@ -38,6 +38,7 @@ from ..utils.error_handling import (
 )
 from ..utils.cache import load_cached_beats, cache_beats
 from .query_generator import QueryGenerator
+from .entity_extractor import EntityExtractor
 
 logger = logging.getLogger(__name__)
 
@@ -62,6 +63,7 @@ class ScriptMetadata:
     duration: Optional[str] = None
     thumbnail: Optional[str] = None
     tags: Optional[List[str]] = None
+    game: Optional[str] = None
     
     def to_context_string(self) -> str:
         """Convert metadata to context for B-roll generation."""
@@ -83,7 +85,7 @@ class ScriptParser:
     and chunks body text into logical beats with auto-generated search queries.
     """
     
-    def __init__(self, use_llm_queries: bool = True):
+    def __init__(self, use_llm_queries: bool = True, game: Optional[str] = None):
         """
         Initialize the script parser.
 
@@ -91,12 +93,18 @@ class ScriptParser:
             use_llm_queries: Whether to enhance auto-generated B-roll queries with
                 the LLM query generator when a Gemini API key is configured. When
                 disabled (or no key is present), heuristic queries are used.
+            game: Game title override (e.g. from a --game CLI flag). When set -
+                or when the script header has a ``game:`` field - beats are run
+                through LLM entity extraction + classification for the game
+                b-roll pipeline. The CLI flag wins over the header.
         """
         self.target_min_duration = TARGET_MIN_DURATION
         self.target_max_duration = TARGET_MAX_DURATION
         self.words_per_second = WORDS_PER_SECOND
         self.use_llm_queries = use_llm_queries
         self.query_generator = QueryGenerator() if use_llm_queries else None
+        self.game = game
+        self.entity_extractor = EntityExtractor()
     
     def parse(self, file_path: str, use_cache: bool = True) -> List[Beat]:
         """
@@ -257,6 +265,13 @@ class ScriptParser:
             if not beats:
                 raise InputValidationError(f"No valid beats could be generated from script: {file_path}")
 
+            # Game mode: classify beats + extract entities so fetching can match
+            # against human-labeled sources. The CLI --game flag wins over the
+            # script header's `game:` field.
+            resolved_game = self.game or metadata.game
+            if resolved_game:
+                self._classify_beats_for_game(beats, resolved_game)
+
             # Enhance auto-generated queries with the LLM query generator (no-op
             # if disabled, unavailable, or it fails - heuristic queries remain).
             self._enhance_queries_with_llm(beats, full_context)
@@ -335,6 +350,8 @@ class ScriptParser:
                         metadata.thumbnail = value
                     elif key == 'tags':
                         metadata.tags = [t.strip() for t in value.split(',')]
+                    elif key == 'game':
+                        metadata.game = value
                     else:
                         is_metadata = False
                     
@@ -593,6 +610,72 @@ class ScriptParser:
         
         return sentences
     
+    def _classify_beats_for_game(self, beats: List[Beat], game: str) -> None:
+        """
+        Run LLM entity extraction + classification for a game script.
+
+        Mutates beats in place: sets ``game`` on every beat, and
+        ``beat_class``/``entities`` per beat. Inline ``[@...]`` instructions win
+        over extraction - their content becomes the entity directly (the manual
+        escape hatch), and annotation/citation beats are flagged manual_fill.
+
+        When the extractor is unavailable or fails, beats keep
+        ``beat_class='unclassified'`` and the legacy pipeline handles them.
+        """
+        for beat in beats:
+            beat.game = game
+
+        auto_beats = []
+        for beat in beats:
+            if beat.visual_type in ('annotation', 'citation'):
+                beat.beat_class = 'manual_fill'
+            elif beat.visual_type != 'auto' and beat.visual_content:
+                beat.beat_class = 'game_entity'
+                beat.entities = [beat.visual_content]
+            else:
+                auto_beats.append(beat)
+
+        if not auto_beats:
+            return
+
+        if not self.entity_extractor.is_available():
+            logger.warning(
+                "Game mode requested for '%s' but no GEMINI_API_KEY is configured; "
+                "falling back to the standard keyword pipeline", game
+            )
+            return
+
+        payload = [{'id': beat.id, 'text': beat.text} for beat in auto_beats]
+        try:
+            extracted = self.entity_extractor.extract(payload, game)
+        except Exception as e:  # noqa: BLE001 - never let extraction break parsing
+            logger.warning(f"Entity extraction failed, using standard pipeline: {e}")
+            return
+
+        if not extracted:
+            logger.warning(
+                "Entity extraction returned nothing for '%s'; "
+                "using standard pipeline", game
+            )
+            return
+
+        counts = {'game_entity': 0, 'abstract': 0, 'manual_fill': 0, 'unclassified': 0}
+        for beat in auto_beats:
+            result = extracted.get(beat.id)
+            if not result:
+                counts['unclassified'] += 1
+                continue
+            beat.beat_class = result['beat_class']
+            beat.entities = result['entities']
+            counts[beat.beat_class] = counts.get(beat.beat_class, 0) + 1
+
+        logger.info(
+            "Classified beats for '%s': %d game_entity, %d abstract, "
+            "%d manual_fill, %d unclassified",
+            game, counts['game_entity'], counts['abstract'],
+            counts['manual_fill'], counts['unclassified']
+        )
+
     def _enhance_queries_with_llm(self, beats: List[Beat], context: str) -> None:
         """
         Replace heuristic queries on auto-generated beats with LLM visual queries.
@@ -609,7 +692,14 @@ class ScriptParser:
         if not self.query_generator or not self.query_generator.is_available():
             return
 
-        targets = [beat for beat in beats if beat.visual_type == 'auto']
+        # Game-classified beats don't use narration queries: game_entity beats
+        # fetch by entity, manual_fill beats never fetch. Abstract (and
+        # unclassified) beats still benefit from LLM visual stock queries.
+        targets = [
+            beat for beat in beats
+            if beat.visual_type == 'auto'
+            and beat.beat_class not in ('game_entity', 'manual_fill')
+        ]
         if not targets:
             return
 
