@@ -46,8 +46,12 @@ Activated by `--game` or a `game:` script header (spec: `game-broll-spec.md` in 
 
 Cross-run reuse: `utils/game_library.py` persists each game's chapter index (TTL 168h) and downloaded clips under `~/.cache/screenwrite/games/<slug>/`, and records per-source download success so `match_chapters` prefers videos that actually download (YouTube hard-blocks some streams). Disabled by `--disable-cache`, cleared by `--clear-cache`. VO conform lives in `screenwrite/vo/` (`aligner.py` is pure logic — SequenceMatcher token alignment, frame-quantized boundaries); the native Resolve builder is `ResolveTimelineBuilder` in `resolve_integration.py`.
 
-### Web app
-- **Backend** (`webapp/backend/app.py`): Flask + flask-cors, blueprints registered under `/api`: `upload`, `api`, `export`, `fetch`, `simple_broll`. State is **session-based** — `session_utils.py` persists each session to `SESSION_FOLDER/<id>/state.json` via atomic temp-file rename. Reads `PEXELS_API_KEY` etc. from `.env` (`python-dotenv`).
+### Desktop app (`desktop/`) — the non-engineer UI
+
+pywebview window → local Flask server (127.0.0.1, free port) → pipeline in a **child process** (`python -m desktop.runner --config run_config.json`) that appends JSONL progress events (`events.jsonl`; schema in `desktop/runner/events.py`) which the UI polls via `GET /api/run/current?after_seq=N`. Cancel = process terminate; Resolve availability is probed via `--probe-resolve` in a subprocess (never in-process — `ResolveIntegration.__init__` raises/hangs without Resolve). Progress derives from the orchestrator's log messages — a drift-guard test (`tests/test_desktop_runner_events.py`) pins the "Step N:"/"Game b-roll progress:" formats. `VideoOrchestrator` is the only pipeline entry; keys persist to the repo-root `.env` via `EnvManager`; run artifacts live in `~/.screenwrite/runs/<id>/`. Frontend: Vite+React+TS+Tailwind in `desktop/frontend/`, built `dist/` is committed and served by Flask (no Node at runtime). Launch: `desktop/scripts/create_shortcut.ps1` makes a Desktop shortcut → `pythonw.exe desktop/ScreenWrite.pyw`; dev mode: `python -m desktop.app --dev` (API on :8765) + `npm run dev` in `desktop/frontend` (proxies `/api`).
+
+### Web app (legacy, superseded by `desktop/`)
+- **Backend** (`webapp/backend/app.py`): Flask + flask-cors, blueprints registered under `/api`: `upload`, `api`, `export`, `fetch`, `simple_broll`. State is **session-based** — `session_utils.py` persists each session to `SESSION_FOLDER/<id>/state.json` via atomic temp-file rename. Reads `PEXELS_API_KEY` etc. from `.env` (`python-dotenv`). Predates the game pipeline / VO conform / Resolve builder and never uses `VideoOrchestrator`.
 - **Frontend** (`webapp/frontend/`): React 18 + TypeScript + Vite + Tailwind + framer-motion. Vite dev server proxies `/api` → `:5000`. Pages: `Home`, `Workflow`, `SimpleBRoll`, `SyntaxGuide`.
 
 ## Conventions

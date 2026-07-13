@@ -202,11 +202,21 @@ class VideoOrchestrator:
             # fetching, so download windows already use real durations).
             if self.vo_path:
                 logger.info("Step 1.5: Conforming beats to VO audio")
+                estimated_durations = [beat.duration for beat in beats]
                 report = self._conform_to_vo(beats)
                 workflow_result['vo_conformed'] = True
                 workflow_result['vo_matched_beats'] = sum(1 for s in report.spans if s.matched)
                 workflow_result['total_duration'] = report.audio_duration
                 workflow_result['warnings'].extend(report.warnings)
+                # Structured pacing table (beat id, word-count estimate, real
+                # VO timing) for UIs - conform mutates beat.duration, so the
+                # estimates are snapshotted above.
+                workflow_result['vo_pacing'] = [
+                    {'beat_id': beat.id, 'est': est, **timing}
+                    for beat, est, timing in zip(
+                        beats, estimated_durations, report.beat_timings()
+                    )
+                ]
 
             # Step 2: Fetch assets (unless skipped)
             asset_map = {}
