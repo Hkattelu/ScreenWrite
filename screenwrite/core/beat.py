@@ -51,6 +51,11 @@ class Beat:
     entities: List[str] = field(default_factory=list)
     beat_class: str = 'unclassified'
     candidates: List[dict] = field(default_factory=list)
+    # Set by VO conform (screenwrite.vo): absolute position of this beat in
+    # the recorded voiceover, and whether its text was found there at all.
+    vo_start: Optional[float] = None
+    vo_end: Optional[float] = None
+    vo_matched: Optional[bool] = None
     
     def __post_init__(self):
         """Auto-calculate duration from word count using the configured words per second heuristic."""

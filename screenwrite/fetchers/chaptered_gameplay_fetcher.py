@@ -99,7 +99,8 @@ class ChapteredGameplayFetcher(AssetFetcher):
     """
 
     def __init__(self, game: str, output_dir: str = None,
-                 youtube_client: Optional[YouTubeClient] = None):
+                 youtube_client: Optional[YouTubeClient] = None,
+                 library=None):
         """
         Initialize the fetcher for one game.
 
@@ -107,9 +108,12 @@ class ChapteredGameplayFetcher(AssetFetcher):
             game: Game title the script is about (e.g. "Dark Souls")
             output_dir: Directory for downloaded clips
             youtube_client: Existing YouTubeClient to reuse for downloads
+            library: Optional GameLibrary for persistent chapter-index and
+                clip reuse across runs (fetch the game's footage once, ever)
         """
         self.game = game
         self.youtube_client = youtube_client or YouTubeClient(output_dir=output_dir)
+        self.library = library
         self._chapter_index: Optional[List[Dict[str, Any]]] = None
         self._index_lock = threading.Lock()
         self._download_cache: Dict[str, Optional[str]] = {}
@@ -220,10 +224,20 @@ class ChapteredGameplayFetcher(AssetFetcher):
         return index
 
     def get_chapter_index(self) -> List[Dict[str, Any]]:
-        """Return the chapter index, building it on first use (thread-safe)."""
+        """Return the chapter index, building it on first use (thread-safe).
+
+        With a game library attached, the index persists across runs and is
+        only rebuilt after its TTL expires.
+        """
         with self._index_lock:
             if self._chapter_index is None:
-                self._chapter_index = self._build_chapter_index()
+                library = getattr(self, 'library', None)
+                if library is not None:
+                    self._chapter_index = library.load_chapter_index()
+                if self._chapter_index is None:
+                    self._chapter_index = self._build_chapter_index()
+                    if library is not None and self._chapter_index:
+                        library.save_chapter_index(self._chapter_index)
             return self._chapter_index
 
     # ------------------------------------------------------------------
@@ -258,7 +272,13 @@ class ChapteredGameplayFetcher(AssetFetcher):
                     'chapter_start': start,
                     'chapter_end': end,
                 })
-        matches.sort(key=lambda m: -m['score'])
+        # At equal match quality, prefer source videos that have actually
+        # downloaded successfully before (YouTube hard-blocks some streams).
+        library = getattr(self, 'library', None)
+        if library is not None:
+            matches.sort(key=lambda m: (-m['score'], -library.success_ratio(m['video_id'])))
+        else:
+            matches.sort(key=lambda m: -m['score'])
         return matches
 
     def search(self, query: str, count: int = 3) -> List[Dict[str, Any]]:
@@ -361,7 +381,13 @@ class ChapteredGameplayFetcher(AssetFetcher):
                          start_time: float,
                          duration: float,
                          progress_callback=None) -> Optional[str]:
-        """Download [start_time, start_time + duration] of the source video."""
+        """
+        Download [start_time, start_time + duration] of the source video.
+
+        Checked in order: this run's in-memory cache, the persistent game
+        library, then the network. Successful downloads are stored back into
+        the library and per-source success stats are recorded either way.
+        """
         video_id = metadata.get('video_id') or str(asset_id).split('@')[0]
         video_url = metadata.get('url', f"https://www.youtube.com/watch?v={video_id}")
         end_time = start_time + duration
@@ -371,13 +397,22 @@ class ChapteredGameplayFetcher(AssetFetcher):
             if cache_key in self._download_cache:
                 return self._download_cache[cache_key]
 
-        path = self.youtube_client.download_section(
-            video_url,
-            start_time=start_time,
-            end_time=end_time,
-            tag=f"{self.game}_{metadata.get('entity', video_id)}_{int(start_time)}",
-            progress_callback=progress_callback,
-        )
+        library = getattr(self, 'library', None)
+        path = library.find_clip(video_id, start_time, duration) if library else None
+        if path:
+            logger.info(f"Clip served from game library: {cache_key}")
+        else:
+            path = self.youtube_client.download_section(
+                video_url,
+                start_time=start_time,
+                end_time=end_time,
+                tag=f"{self.game}_{metadata.get('entity', video_id)}_{int(start_time)}",
+                progress_callback=progress_callback,
+            )
+            if library is not None:
+                library.record_result(video_id, ok=path is not None)
+                if path:
+                    path = library.store_clip(path, video_id, start_time, duration)
 
         with self._download_lock:
             self._download_cache[cache_key] = path

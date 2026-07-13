@@ -73,7 +73,8 @@ class AssetOrchestrator:
                  pexels_enabled: bool = True,
                  prefer_stock_for_generic: bool = True,
                  game: Optional[str] = None,
-                 wiki_subdomain: Optional[str] = None):
+                 wiki_subdomain: Optional[str] = None,
+                 use_game_library: bool = True):
         """
         Initialize the asset orchestrator.
 
@@ -92,10 +93,14 @@ class AssetOrchestrator:
                 classified beats route through fetch_game_assets_batch.
             wiki_subdomain: Explicit Fandom subdomain for the game wiki
                 (overrides the guess derived from the game title).
+            use_game_library: Persist chapter indexes and downloaded clips in
+                the per-game library (~/.cache/screenwrite/games) so a game's
+                footage is fetched once across runs.
         """
         self.output_dir = output_dir
         self.prefer_stock_for_generic = prefer_stock_for_generic
         self.game = game
+        self.use_game_library = use_game_library
         self.fetchers: List[AssetFetcher] = []
         self.chaptered_fetcher: Optional[ChapteredGameplayFetcher] = None
         self.wiki_fetcher: Optional[WikiStillFetcher] = None
@@ -140,13 +145,22 @@ class AssetOrchestrator:
             return
         self.game = game
 
+        library = None
+        if getattr(self, 'use_game_library', True):
+            try:
+                from ..utils.game_library import GameLibrary
+                library = GameLibrary(game)
+            except Exception as e:
+                logger.warning(f"Game library unavailable: {e}")
+
         youtube_client = next(
             (f for f in self.fetchers if isinstance(f, YouTubeClient)), None
         )
         if youtube_client is not None:
             try:
                 self.chaptered_fetcher = ChapteredGameplayFetcher(
-                    game, output_dir=self.output_dir, youtube_client=youtube_client
+                    game, output_dir=self.output_dir, youtube_client=youtube_client,
+                    library=library
                 )
                 logger.info(f"Chaptered gameplay fetcher initialized for '{game}'")
             except Exception as e:

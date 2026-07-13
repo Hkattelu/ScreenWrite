@@ -290,3 +290,24 @@ WIKI_REQUEST_TIMEOUT = 15
 
 # File extensions treated as still images by the timeline generator.
 STILL_IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp'}
+
+# ============================================================================
+# VO Conform Constants (voiceover-first timing)
+# ============================================================================
+
+# Default faster-whisper model for VO transcription. Overridable via --whisper-model.
+VO_WHISPER_MODEL = "small.en"
+VO_WHISPER_DEVICE = "cpu"
+VO_WHISPER_COMPUTE = "int8"
+
+# A beat counts as "found in the VO" when at least this fraction of its script
+# tokens match transcript words (reworded lines still anchor on their nouns).
+VO_MIN_BEAT_COVERAGE = 0.35
+
+# Below this overall script-token match ratio the audio is treated as the
+# wrong file entirely and conform aborts instead of producing garbage cuts.
+VO_MIN_OVERALL_COVERAGE = 0.5
+
+# Warn when this many seconds of unscripted speech sit between two beats
+# (likely an ad-lib or a retake the creator should check).
+VO_ADLIB_GAP_WARN_SECONDS = 4.0

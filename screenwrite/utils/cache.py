@@ -151,6 +151,11 @@ def clear_cache() -> None:
         for asset_file in asset_dir.glob("*"):
             if asset_file.is_file():
                 asset_file.unlink()
+
+        # Clear the per-game footage library (chapter indexes + stored clips)
+        games_dir = cache_dir / "games"
+        if games_dir.exists():
+            shutil.rmtree(games_dir, ignore_errors=True)
     except Exception:
         # Fail silently
         pass

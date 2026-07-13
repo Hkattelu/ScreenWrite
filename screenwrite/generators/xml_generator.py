@@ -6,10 +6,13 @@ and Final Cut Pro, containing spine tracks with gaps for voiceover and
 connected clips for B-roll ScreenWrite.
 """
 
+import logging
 import xml.etree.ElementTree as ET
 from typing import List, Dict, Optional, Any
 from pathlib import Path
 import os
+
+logger = logging.getLogger(__name__)
 
 from ..core.beat import Beat
 from ..config import (
@@ -240,12 +243,19 @@ class XMLGenerator:
         """
         spine = ET.Element("spine")
         current_offset = 0.0
-        
+
         for beat in beats:
+            # Beats the VO conform collapsed to zero (text not found in the
+            # recording) emit nothing - a 0-frame clip/gap is invalid FCPXML.
+            if round(beat.duration * self.framerate) == 0:
+                if beat.vo_matched is False:
+                    logger.info("Skipping %s in timeline: not found in VO", beat.id)
+                continue
+
             asset_val = asset_map.get(beat.id)
             # Use the first asset if it's a list
             asset_path = asset_val[0] if isinstance(asset_val, list) and asset_val else asset_val
-            
+
             duration_tc = self._seconds_to_timecode(beat.duration)
             offset_tc = self._seconds_to_timecode(current_offset)
             
@@ -317,44 +327,9 @@ class XMLGenerator:
 
     @staticmethod
     def _provenance_for(beat: Beat, asset_path: str) -> Optional[str]:
-        """
-        Build a provenance note for the candidate that produced asset_path.
-
-        Includes the source label, the human-authored chapter/page label with
-        its source timestamp, the source URL, and any alternate candidate URLs
-        (the web state keeps full alternates; the note keeps them reachable
-        from inside the editor).
-        """
-        placed = None
-        alternates = []
-        for candidate in beat.candidates:
-            if candidate.get('local_path') == asset_path and placed is None:
-                placed = candidate
-            else:
-                alternates.append(candidate)
-        if placed is None:
-            return None
-
-        metadata = placed.get('metadata') or {}
-        parts = [f"Source: {placed.get('source', 'unknown')}"]
-        chapter_title = metadata.get('chapter_title') or metadata.get('title')
-        if chapter_title:
-            timestamp = metadata.get('segment_start')
-            if timestamp is not None:
-                parts.append(f"'{chapter_title}' @ {int(timestamp)}s")
-            else:
-                parts.append(f"'{chapter_title}'")
-        source_url = metadata.get('source_url') or metadata.get('url')
-        if source_url:
-            parts.append(source_url)
-        alternate_urls = [
-            (c.get('metadata') or {}).get('source_url')
-            for c in alternates
-            if (c.get('metadata') or {}).get('source_url')
-        ]
-        if alternate_urls:
-            parts.append("Alternates: " + " ; ".join(alternate_urls[:2]))
-        return " | ".join(parts)
+        """Provenance note for the candidate behind asset_path (shared util)."""
+        from ..utils.provenance import build_provenance_note
+        return build_provenance_note(beat, asset_path)
 
     def _get_resource_id_for_asset(self, asset_path: str) -> str:
         """
@@ -371,11 +346,13 @@ class XMLGenerator:
     def _calculate_total_frames(self, beats: List[Beat]) -> int:
         """Calculate total timeline duration in frames."""
         total_seconds = sum(beat.duration for beat in beats)
-        return int(total_seconds * self.framerate)
-    
+        # round(), not int(): VO-conformed durations are frame-quantized
+        # floats (k/framerate) whose products can land at N - 1e-13.
+        return round(total_seconds * self.framerate)
+
     def _seconds_to_timecode(self, seconds: float) -> str:
         """Convert seconds to FCPXML timecode format."""
-        frames = int(seconds * self.framerate)
+        frames = round(seconds * self.framerate)
         return f"{frames}/{self.framerate}s"
     
     def _frames_to_timecode(self, frames: int) -> str:

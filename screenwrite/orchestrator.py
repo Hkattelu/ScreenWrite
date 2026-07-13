@@ -56,6 +56,9 @@ class VideoOrchestrator:
                  use_llm_queries: bool = True,
                  game: Optional[str] = None,
                  wiki_subdomain: Optional[str] = None,
+                 vo_path: Optional[str] = None,
+                 whisper_model: Optional[str] = None,
+                 resolve_force_fcpxml: bool = False,
                  verbose: bool = False):
         """
         Initialize the video orchestrator.
@@ -77,6 +80,12 @@ class VideoOrchestrator:
                 the script header's `game:` field). Beats are entity-extracted
                 and routed to chaptered gameplay / wiki stills / manual flags.
             wiki_subdomain: Explicit Fandom subdomain for the game wiki
+            vo_path: Recorded voiceover audio. When set, beats are conformed
+                to the VO's real timing (local Whisper transcription) before
+                fetching, so clip windows and the timeline match the voice.
+            whisper_model: faster-whisper model override for VO transcription
+            resolve_force_fcpxml: Skip the native Resolve project builder and
+                use the legacy FCPXML import path
             verbose: Enable debug logging
         """
         # Configure logging level
@@ -103,7 +112,8 @@ class VideoOrchestrator:
             pexels_enabled=pexels_enabled,
             prefer_stock_for_generic=prefer_stock_for_generic,
             game=game,
-            wiki_subdomain=wiki_subdomain
+            wiki_subdomain=wiki_subdomain,
+            use_game_library=enable_asset_cache
         )
         self.xml_generator = XMLGenerator()
         
@@ -112,6 +122,9 @@ class VideoOrchestrator:
         self.skip_failed_beats = skip_failed_beats
         self.max_workers = max_workers
         self.enable_asset_cache = enable_asset_cache
+        self.vo_path = vo_path
+        self.whisper_model = whisper_model
+        self.resolve_force_fcpxml = resolve_force_fcpxml
         self.resolve_integration = None
         
         if skip_failed_beats:
@@ -135,6 +148,7 @@ class VideoOrchestrator:
         self.last_asset_map: Optional[Dict[str, str]] = None
         self.last_fcpxml_path: Optional[str] = None
         self.last_coverage: Optional[Dict[str, Any]] = None
+        self.last_vo_report = None
     
     def orchestrate(self, 
                    script_path: str, 
@@ -183,7 +197,17 @@ class VideoOrchestrator:
             workflow_result['total_duration'] = total_duration
             duration_str = self.format_duration(total_duration)
             logger.info(f"Successfully parsed {len(beats)} beats from script ({duration_str} total)")
-            
+
+            # Step 1.5: Conform beats to the recorded VO's real timing (before
+            # fetching, so download windows already use real durations).
+            if self.vo_path:
+                logger.info("Step 1.5: Conforming beats to VO audio")
+                report = self._conform_to_vo(beats)
+                workflow_result['vo_conformed'] = True
+                workflow_result['vo_matched_beats'] = sum(1 for s in report.spans if s.matched)
+                workflow_result['total_duration'] = report.audio_duration
+                workflow_result['warnings'].extend(report.warnings)
+
             # Step 2: Fetch assets (unless skipped)
             asset_map = {}
             if skip_fetch:
@@ -213,19 +237,35 @@ class VideoOrchestrator:
             workflow_result['output_path'] = fcpxml_path
             logger.info(f"Successfully generated FCPXML: {fcpxml_path}")
             
-            # Step 4: Optional Resolve integration
+            # Step 4: Optional Resolve integration. Prefer the native project
+            # build (bins per beat, stacked alternates, VO track, markers);
+            # fall back to the legacy FCPXML import on any failure.
             if self.resolve_enabled and self.resolve_integration:
-                logger.info("Step 4: Importing to DaVinci Resolve")
-                try:
-                    resolve_success = self._import_to_resolve(fcpxml_path, asset_map)
-                    workflow_result['resolve_imported'] = resolve_success
-                    if resolve_success:
-                        logger.info("Successfully imported timeline to DaVinci Resolve")
-                    else:
-                        workflow_result['warnings'].append("Failed to import to DaVinci Resolve")
-                except Exception as e:
-                    logger.warning(f"Resolve import failed: {e}")
-                    workflow_result['warnings'].append(f"Resolve import error: {e}")
+                logger.info("Step 4: Building project in DaVinci Resolve")
+                native_built = False
+                if not self.resolve_force_fcpxml:
+                    try:
+                        native_built = self._build_native_resolve(
+                            beats, output_path, workflow_result
+                        )
+                        workflow_result['resolve_native_built'] = native_built
+                    except Exception as e:
+                        logger.warning(f"Native Resolve build failed: {e}")
+                        workflow_result['warnings'].append(
+                            f"Native Resolve build failed ({e}); "
+                            f"falling back to FCPXML import"
+                        )
+                if not native_built:
+                    try:
+                        resolve_success = self._import_to_resolve(fcpxml_path, asset_map)
+                        workflow_result['resolve_imported'] = resolve_success
+                        if resolve_success:
+                            logger.info("Successfully imported timeline to DaVinci Resolve")
+                        else:
+                            workflow_result['warnings'].append("Failed to import to DaVinci Resolve")
+                    except Exception as e:
+                        logger.warning(f"Resolve import failed: {e}")
+                        workflow_result['warnings'].append(f"Resolve import error: {e}")
             else:
                 logger.info("Step 4: Skipping Resolve integration (disabled)")
             
@@ -292,6 +332,41 @@ class VideoOrchestrator:
             raise InputValidationError(f"Failed to parse script: {e}")
     
     
+    def _build_native_resolve(self,
+                              beats: List[Beat],
+                              output_path: str,
+                              workflow_result: Dict[str, Any]) -> bool:
+        """
+        Build the project natively in Resolve via the scripting API.
+
+        Returns True on success; False lets the caller fall back to the
+        legacy FCPXML import.
+        """
+        from .resolve_integration import ResolveTimelineBuilder
+
+        timeline_name = Path(output_path).stem or "screenwrite"
+        builder = ResolveTimelineBuilder(self.resolve_integration)
+        result = builder.build(beats, self.vo_path, timeline_name)
+        workflow_result['warnings'].extend(result['warnings'])
+        if result['success']:
+            logger.info(f"Built Resolve timeline natively: {result['timeline_name']}")
+        return result['success']
+
+    def _conform_to_vo(self, beats: List[Beat]):
+        """
+        Conform beat timing to the recorded voiceover.
+
+        Lazy-imports screenwrite.vo so the faster-whisper dependency is only
+        touched when --vo is actually used.
+        """
+        from .vo import conform_beats_to_vo
+
+        report = conform_beats_to_vo(
+            self.vo_path, beats, model_size=self.whisper_model
+        )
+        self.last_vo_report = report
+        return report
+
     def estimate_duration(self, beats: List[Beat]) -> float:
         """
         Estimate the total timeline duration from beats.
