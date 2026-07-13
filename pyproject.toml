@@ -40,9 +40,13 @@ classifiers = [
 dependencies = [
     "yt-dlp>=2023.11.16",
     "requests>=2.28.0",
+    "rapidfuzz>=3.0.0",
 ]
 
 [project.optional-dependencies]
+vo = [
+    "faster-whisper>=1.1.0",
+]
 dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",

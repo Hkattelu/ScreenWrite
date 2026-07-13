@@ -6,10 +6,13 @@ and Final Cut Pro, containing spine tracks with gaps for voiceover and
 connected clips for B-roll ScreenWrite.
 """
 
+import logging
 import xml.etree.ElementTree as ET
 from typing import List, Dict, Optional, Any
 from pathlib import Path
 import os
+
+logger = logging.getLogger(__name__)
 
 from ..core.beat import Beat
 from ..config import (
@@ -17,7 +20,11 @@ from ..config import (
     DEFAULT_VIDEO_WIDTH,
     DEFAULT_VIDEO_HEIGHT,
     MIN_FCPXML_FILE_SIZE,
+    STILL_IMAGE_EXTENSIONS,
 )
+
+# Beat text length carried into clip/gap markers (identify a clip at a glance).
+MARKER_TEXT_LENGTH = 90
 
 
 class XMLGenerator:
@@ -165,7 +172,9 @@ class XMLGenerator:
         asset.set("duration", "36000/1s")
         asset.set("hasVideo", "1")
         asset.set("format", self.format_id)
-        asset.set("hasAudio", "1")
+        # Still images (e.g. wiki-still fallbacks) carry no audio stream.
+        is_still = file_path.suffix.lower() in STILL_IMAGE_EXTENSIONS
+        asset.set("hasAudio", "0" if is_still else "1")
         
         # Add media-rep with file path
         media_rep = ET.SubElement(asset, "media-rep")
@@ -234,12 +243,19 @@ class XMLGenerator:
         """
         spine = ET.Element("spine")
         current_offset = 0.0
-        
+
         for beat in beats:
+            # Beats the VO conform collapsed to zero (text not found in the
+            # recording) emit nothing - a 0-frame clip/gap is invalid FCPXML.
+            if round(beat.duration * self.framerate) == 0:
+                if beat.vo_matched is False:
+                    logger.info("Skipping %s in timeline: not found in VO", beat.id)
+                continue
+
             asset_val = asset_map.get(beat.id)
             # Use the first asset if it's a list
             asset_path = asset_val[0] if isinstance(asset_val, list) and asset_val else asset_val
-            
+
             duration_tc = self._seconds_to_timecode(beat.duration)
             offset_tc = self._seconds_to_timecode(current_offset)
             
@@ -253,37 +269,67 @@ class XMLGenerator:
                 clip.set("duration", duration_tc)
                 clip.set("start", "0/1s")
 
-                # Add Marker with script text
+                # Add Marker with script text and, when known, provenance
+                # (source URL + labeled timestamp) so the creator can identify
+                # a clip at a glance during VO instead of re-watching it.
+                provenance = self._provenance_for(beat, asset_path)
                 marker = ET.SubElement(clip, "marker")
                 marker.set("start", "0/1s")
                 marker.set("duration", "1/30s")
-                marker.set("value", beat.text)
-                marker.set("note", "Script Text")
-                
+                if provenance:
+                    marker.set("value", beat.text[:MARKER_TEXT_LENGTH])
+                    marker.set("note", provenance)
+                else:
+                    marker.set("value", beat.text)
+                    marker.set("note", "Script Text")
+
                 # Add Keywords for organization
                 keywords = ET.SubElement(clip, "keyword")
                 keywords.set("start", "0/1s")
                 keywords.set("duration", duration_tc)
-                
+
                 # Determine keyword from beat context or fetcher
                 kw_val = "ScreenWrite"
-                if "pexels" in asset_path.lower():
+                if "wikistill" in Path(asset_path).name.lower():
+                    kw_val += ", WikiStill"
+                elif beat.beat_class == 'game_entity':
+                    kw_val += ", Gameplay"
+                elif "pexels" in asset_path.lower():
                     kw_val += ", Stock"
                 elif "youtube" in asset_path.lower():
                     kw_val += ", YouTube"
-                
+
                 keywords.set("value", kw_val)
             else:
-                # Placeholder gap if no asset
+                # Placeholder gap if no asset. In game mode gaps are deliberate:
+                # label them loudly so they read as intentional, not missing.
                 gap = ET.SubElement(spine, "gap")
-                gap.set("name", f"Gap - {beat.id}")
                 gap.set("offset", offset_tc)
                 gap.set("duration", duration_tc)
                 gap.set("start", "0/1s")
-            
+
+                if beat.game or beat.beat_class in ('manual_fill', 'game_entity', 'abstract'):
+                    gap.set("name", f"MANUAL FILL - {beat.id}")
+                    marker = ET.SubElement(gap, "marker")
+                    marker.set("start", "0/1s")
+                    marker.set("duration", "1/30s")
+                    marker.set("value", f"MANUAL: {beat.text[:MARKER_TEXT_LENGTH]}")
+                    if beat.beat_class == 'game_entity' and beat.entities:
+                        marker.set("note", f"No coverage found for: {', '.join(beat.entities)}")
+                    else:
+                        marker.set("note", "Creator-supplied shot needed")
+                else:
+                    gap.set("name", f"Gap - {beat.id}")
+
             current_offset += beat.duration
-        
+
         return spine
+
+    @staticmethod
+    def _provenance_for(beat: Beat, asset_path: str) -> Optional[str]:
+        """Provenance note for the candidate behind asset_path (shared util)."""
+        from ..utils.provenance import build_provenance_note
+        return build_provenance_note(beat, asset_path)
 
     def _get_resource_id_for_asset(self, asset_path: str) -> str:
         """
@@ -300,11 +346,13 @@ class XMLGenerator:
     def _calculate_total_frames(self, beats: List[Beat]) -> int:
         """Calculate total timeline duration in frames."""
         total_seconds = sum(beat.duration for beat in beats)
-        return int(total_seconds * self.framerate)
-    
+        # round(), not int(): VO-conformed durations are frame-quantized
+        # floats (k/framerate) whose products can land at N - 1e-13.
+        return round(total_seconds * self.framerate)
+
     def _seconds_to_timecode(self, seconds: float) -> str:
         """Convert seconds to FCPXML timecode format."""
-        frames = int(seconds * self.framerate)
+        frames = round(seconds * self.framerate)
         return f"{frames}/{self.framerate}s"
     
     def _frames_to_timecode(self, frames: int) -> str:

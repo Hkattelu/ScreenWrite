@@ -148,6 +148,47 @@ Examples:
         action='store_true',
         help='Disable LLM (Gemini) B-roll query generation and use heuristics only'
     )
+
+    parser.add_argument(
+        '--game',
+        type=str,
+        help='Game the script is about (e.g. "Dark Souls"). Activates the game '
+             'b-roll pipeline: beats are matched to chaptered gameplay videos '
+             'by extracted entity. Can also be set with a "game:" header in the '
+             'script; this flag wins. Requires GEMINI_API_KEY.'
+    )
+
+    parser.add_argument(
+        '--wiki-subdomain',
+        type=str,
+        help='Fandom wiki subdomain for the game (e.g. "darksouls" for '
+             'darksouls.fandom.com). Only needed when the guess from the game '
+             'title is wrong.'
+    )
+
+    parser.add_argument(
+        '--vo',
+        type=str,
+        metavar='AUDIO',
+        help='Recorded voiceover audio file. Beats are conformed to its real '
+             'timing (local Whisper transcription with word timestamps) so '
+             'cuts land on your pauses instead of word-count estimates. '
+             'Requires: pip install "screenwrite[vo]". Combine with --dry-run '
+             'for a pacing preview without downloads.'
+    )
+
+    parser.add_argument(
+        '--whisper-model',
+        type=str,
+        help='faster-whisper model for --vo transcription (default: small.en)'
+    )
+
+    parser.add_argument(
+        '--resolve-fcpxml',
+        action='store_true',
+        help='With --resolve: force the legacy FCPXML import instead of the '
+             'native project build (bins per beat, stacked alternates, markers)'
+    )
     
     parser.add_argument(
         '--clear-cache',
@@ -233,6 +274,20 @@ def validate_arguments(args: argparse.Namespace) -> None:
         print(f"  - Set PEXELS_API_KEY environment variable", file=sys.stderr)
         print(f"  - Use --disable-pexels to suppress this warning", file=sys.stderr)
     
+    # Validate VO conform prerequisites early (before any downloads)
+    if args.vo:
+        if not Path(args.vo).is_file():
+            raise InputValidationError(f"VO audio file not found: {args.vo}")
+        import importlib.util
+        if importlib.util.find_spec('faster_whisper') is None:
+            raise DependencyError(
+                "--vo requires faster-whisper, which is not installed.\n"
+                "Install it with: pip install 'screenwrite[vo]' "
+                "(or pip install faster-whisper)"
+            )
+    elif args.whisper_model:
+        print("Warning: --whisper-model has no effect without --vo", file=sys.stderr)
+
     # Check for conflicting options
     if args.disable_youtube and args.disable_pexels and not args.no_fetch:
         raise InputValidationError(
@@ -277,9 +332,15 @@ def print_workflow_summary(result: dict) -> None:
             duration_str = f"{seconds}s"
         print(f"Timeline duration: {duration_str}")
     
+    if result.get('vo_conformed'):
+        print(f"VO conformed: Yes ({result.get('vo_matched_beats', '?')}/"
+              f"{result['beats_count']} beats matched)")
     print(f"Assets fetched: {result['assets_fetched']}")
     print(f"FCPXML generated: {'Yes' if result['fcpxml_generated'] else 'No'}")
-    print(f"Resolve imported: {'Yes' if result['resolve_imported'] else 'No'}")
+    if result.get('resolve_native_built'):
+        print("Resolve: native project built (bins + stacked alternates + markers)")
+    else:
+        print(f"Resolve imported: {'Yes' if result['resolve_imported'] else 'No'}")
     
     # Print detailed metrics
     if result['beats_count'] > 0:
@@ -291,6 +352,18 @@ def print_workflow_summary(result: dict) -> None:
         if result['beats_count'] != result['assets_fetched']:
             print(f"  Skipped/failed: {result['beats_count'] - result['assets_fetched']}")
     
+    # Print game-mode coverage (which source each class of beat got)
+    coverage = result.get('coverage')
+    if coverage:
+        counts = coverage['counts']
+        print(f"\nGame B-roll Coverage:")
+        print(f"  Entity beats with gameplay clips: {counts['game_entity_clips']}")
+        print(f"  Entity beats with wiki stills:    {counts['game_entity_stills']}")
+        print(f"  Entity beats uncovered (manual):  {counts['game_entity_uncovered']}")
+        print(f"  Abstract beats with stock:        {counts['abstract_stock']}")
+        print(f"  Abstract beats uncovered:         {counts['abstract_uncovered']}")
+        print(f"  Manual-fill beats (by design):    {counts['manual_fill']}")
+
     # Print warnings
     if result['warnings']:
         print(f"\nWarnings:")
@@ -365,6 +438,11 @@ def main() -> int:
             'enable_asset_cache': not args.disable_cache,
             'prefer_stock_for_generic': not args.prefer_youtube,
             'use_llm_queries': not args.disable_llm_queries,
+            'game': args.game,
+            'wiki_subdomain': args.wiki_subdomain,
+            'vo_path': args.vo,
+            'whisper_model': args.whisper_model,
+            'resolve_force_fcpxml': args.resolve_fcpxml,
             'verbose': args.verbose
         }
         

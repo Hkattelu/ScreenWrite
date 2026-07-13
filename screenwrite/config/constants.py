@@ -240,3 +240,74 @@ DEFAULT_GEMINI_MODEL = "gemini-2.0-flash"
 
 # Timeout (seconds) for Gemini API requests.
 GEMINI_REQUEST_TIMEOUT = 30
+
+# ============================================================================
+# Game B-roll Skeleton Constants (chaptered-gameplay pipeline)
+# ============================================================================
+
+# Search templates used to discover chaptered source videos for a game. These
+# target human-labeled corpora (walkthroughs, boss compilations) whose chapter
+# markers are ground truth for "what's on screen".
+CHAPTER_SOURCE_QUERY_TEMPLATES = [
+    "{game} all bosses",
+    "{game} all cutscenes",
+    "{game} walkthrough no commentary",
+    "{game} 100% walkthrough",
+]
+
+# Flat search results to consider per source query.
+CHAPTER_SEARCH_RESULTS_PER_QUERY = 5
+
+# Cap on full metadata fetches (chapters live in per-video metadata, which is
+# one network round-trip each; flat search results do not include them).
+CHAPTER_MAX_SOURCE_VIDEOS = 8
+
+# Source videos need at least this many chapters to be a useful labeled corpus.
+CHAPTER_MIN_CHAPTERS = 3
+
+# Ignore source videos shorter than this (seconds) - chaptered walkthroughs and
+# compilations are long; short videos are rarely labeled corpora.
+CHAPTER_MIN_SOURCE_DURATION = 600
+
+# Fuzzy-match score (0-100) required for an entity to claim a chapter title.
+CHAPTER_MATCH_THRESHOLD = 70
+
+# Candidate-variety trick: alternates within one chapter start this many
+# seconds apart, so at least one offset tends to avoid walk-up/menu moments.
+CHAPTER_OFFSET_STEP_SECONDS = 8.0
+
+# Downloaded clip windows are cut loose (window = beat duration + slack, with a
+# floor) so the editor can slide the in-point instead of re-fetching.
+CHAPTER_WINDOW_MIN_SECONDS = 9.0
+CHAPTER_WINDOW_SLACK_SECONDS = 4.0
+
+# Candidates fetched per game-entity beat (the human picks among these).
+GAME_CANDIDATES_PER_BEAT = 3
+
+# Fandom (game wiki) API endpoint and request timeout for labeled stills.
+FANDOM_API_URL = "https://{subdomain}.fandom.com/api.php"
+WIKI_REQUEST_TIMEOUT = 15
+
+# File extensions treated as still images by the timeline generator.
+STILL_IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp'}
+
+# ============================================================================
+# VO Conform Constants (voiceover-first timing)
+# ============================================================================
+
+# Default faster-whisper model for VO transcription. Overridable via --whisper-model.
+VO_WHISPER_MODEL = "small.en"
+VO_WHISPER_DEVICE = "cpu"
+VO_WHISPER_COMPUTE = "int8"
+
+# A beat counts as "found in the VO" when at least this fraction of its script
+# tokens match transcript words (reworded lines still anchor on their nouns).
+VO_MIN_BEAT_COVERAGE = 0.35
+
+# Below this overall script-token match ratio the audio is treated as the
+# wrong file entirely and conform aborts instead of producing garbage cuts.
+VO_MIN_OVERALL_COVERAGE = 0.5
+
+# Warn when this many seconds of unscripted speech sit between two beats
+# (likely an ad-lib or a retake the creator should check).
+VO_ADLIB_GAP_WARN_SECONDS = 4.0

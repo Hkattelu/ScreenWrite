@@ -67,7 +67,10 @@ def cache_beats(file_path: str, beats: List[Beat],
                 'stock_keyword': beat.stock_keyword,
                 'youtube_search_phrase': beat.youtube_search_phrase,
                 'duration': beat.duration,
-                'asset_paths': beat.asset_paths
+                'asset_paths': beat.asset_paths,
+                'game': beat.game,
+                'entities': beat.entities,
+                'beat_class': beat.beat_class,
             }
             beats_data.append(beat_dict)
         
@@ -123,6 +126,10 @@ def load_cached_beats(file_path: str, max_age_hours: int = 24) -> Optional[List[
             # Restore asset_paths if they were cached
             if 'asset_paths' in beat_dict:
                 beat.asset_paths = beat_dict['asset_paths']
+            # Restore game b-roll classification (older caches lack these)
+            beat.game = beat_dict.get('game')
+            beat.entities = beat_dict.get('entities') or []
+            beat.beat_class = beat_dict.get('beat_class', 'unclassified')
             beats.append(beat)
         
         return beats
@@ -144,6 +151,11 @@ def clear_cache() -> None:
         for asset_file in asset_dir.glob("*"):
             if asset_file.is_file():
                 asset_file.unlink()
+
+        # Clear the per-game footage library (chapter indexes + stored clips)
+        games_dir = cache_dir / "games"
+        if games_dir.exists():
+            shutil.rmtree(games_dir, ignore_errors=True)
     except Exception:
         # Fail silently
         pass
